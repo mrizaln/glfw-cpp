@@ -2,10 +2,18 @@
 #include "glfw_cpp/context.hpp"
 #include "glfw_cpp/window.hpp"
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
+#include <chrono>
 #include <format>
+#include <functional>
 #include <mutex>
+#include <optional>
 #include <stdexcept>
+#include <string>
 #include <thread>
+#include <utility>
 
 using LogLevel = glfw_cpp::Context::LogLevel;
 
@@ -34,6 +42,11 @@ namespace glfw_cpp
             }
         {
         }
+    };
+
+    void WindowManager::GLFWwindowDeleter::operator()(GLFWwindow* handle) const
+    {
+        glfwDestroyWindow(handle);
     };
 
     WindowManager::WindowManager(Context& context)

@@ -1,14 +1,16 @@
 #include "glfw_cpp/window.hpp"
+#include "glfw_cpp/context.hpp"
 #include "glfw_cpp/window_manager.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
-#include <glbinding/glbinding.h>
 
 #include <cassert>
+#include <format>
 #include <functional>
-#include <initializer_list>
 #include <mutex>
+#include <optional>
+#include <ranges>
 #include <thread>
 #include <utility>
 

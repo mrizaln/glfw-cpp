@@ -3,12 +3,10 @@
 
 #include "glfw_cpp/context.hpp"
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 #include <chrono>
 #include <cstddef>
 #include <functional>
+#include <memory>
 #include <mutex>
 #include <optional>
 #include <queue>
@@ -31,44 +29,6 @@ namespace glfw_cpp
     {
     public:
         class ErrorAccessFromWrongThread;
-
-        class UniqueGLFWwindow
-        {
-        public:
-            UniqueGLFWwindow(GLFWwindow* handle)
-                : m_handle{ handle }
-            {
-            }
-
-            UniqueGLFWwindow(const UniqueGLFWwindow&)            = delete;
-            UniqueGLFWwindow& operator=(const UniqueGLFWwindow&) = delete;
-
-            UniqueGLFWwindow(UniqueGLFWwindow&& other) noexcept
-                : m_handle{ std::exchange(other.m_handle, nullptr) }
-            {
-            }
-
-            UniqueGLFWwindow& operator=(UniqueGLFWwindow&& other) noexcept
-            {
-                if (this != &other) {
-                    m_handle = std::exchange(other.m_handle, nullptr);
-                }
-                return *this;
-            }
-
-            ~UniqueGLFWwindow()
-            {
-                if (m_handle != nullptr) {
-                    glfwDestroyWindow(m_handle);
-                }
-            }
-
-            operator bool() const { return m_handle != nullptr; }
-            GLFWwindow* get() { return m_handle; }
-
-        private:
-            GLFWwindow* m_handle;
-        };
 
         WindowManager(Context& context);
         WindowManager(WindowManager&&) noexcept;
@@ -108,6 +68,12 @@ namespace glfw_cpp
         std::thread::id attachedThreadId() const;
 
     private:
+        struct GLFWwindowDeleter
+        {
+            void operator()(GLFWwindow* handle) const;
+        };
+        using UniqueGLFWwindow = std::unique_ptr<GLFWwindow, GLFWwindowDeleter>;
+
         Context*           m_context;
         mutable std::mutex m_mutex;    // protects current instance
 
