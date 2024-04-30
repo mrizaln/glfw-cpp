@@ -47,9 +47,10 @@ namespace glfw_cpp
         using GLProc        = void (*)();
         using GLGetProc     = GLProc(const char*);
         using GLContext     = ::GLFWwindow*;
+        using GLLoaderFun   = std::function<void(GLContext handle, GLGetProc proc)>;
 
-        // loader must be a valid function pointer to a function that loads OpenGL functions
-        Context(Hint hint, std::function<void(GLContext, GLGetProc)> glLoader);
+        // loader must be a valid lambda/function pointer to a function that loads OpenGL functions
+        Context(Hint hint, GLLoaderFun glLoader);
         ~Context();
         Context(Context&&) noexcept;
         Context& operator=(Context&&) noexcept;
@@ -68,10 +69,10 @@ namespace glfw_cpp
     private:
         mutable std::shared_mutex m_mutex;
 
-        Hint   m_hint;
-        LogFun m_logCallback;
-
-        std::function<void(GLContext, GLGetProc)> m_loader;
+        bool        m_initialized = false;
+        Hint        m_hint;
+        GLLoaderFun m_loader;
+        LogFun      m_logCallback;
 
         // can be called from any thread
         void log(LogLevel level, std::string msg) const;

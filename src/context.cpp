@@ -22,13 +22,14 @@ namespace
 
 namespace glfw_cpp
 {
-    Context::Context(Hint hint, std::function<void(GLContext, GLGetProc)> glLoader)
+    Context::Context(Hint hint, GLLoaderFun glLoader)
         : m_hint{ hint }
         , m_loader{ std::move(glLoader) }
     {
         if (glfwInit() != GLFW_TRUE) {
             throw std::runtime_error{ "Failed to initialize GLFW!" };
         }
+        m_initialized = true;
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_hint.m_major);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_hint.m_minor);
@@ -37,25 +38,30 @@ namespace glfw_cpp
 
     Context::~Context()
     {
-        if (!m_logCallback || !m_loader) {
+        if (m_initialized) {
             glfwTerminate();
         }
     }
 
     Context::Context(Context&& other) noexcept
-        : m_hint{ std::exchange(other.m_hint, {}) }
-        , m_loader{ std::move(other.m_loader) }
+        : m_initialized{ std::exchange(other.m_initialized, false) }
+        , m_hint{ std::exchange(other.m_hint, {}) }
+        , m_loader{ std::exchange(other.m_loader, {}) }
+        , m_logCallback{ std::exchange(other.m_logCallback, {}) }
     {
     }
 
     Context& Context::operator=(Context&& other) noexcept
     {
         if (this != &other) {
-            if (!m_logCallback || !m_loader) {
+            if (m_initialized) {
                 glfwTerminate();
             }
-            m_hint   = std::exchange(other.m_hint, {});
-            m_loader = std::move(other.m_loader);
+
+            m_initialized = std::exchange(other.m_initialized, false);
+            m_hint        = std::exchange(other.m_hint, {});
+            m_loader      = std::exchange(other.m_loader, {});
+            m_logCallback = std::exchange(other.m_logCallback, {});
         }
         return *this;
     }
