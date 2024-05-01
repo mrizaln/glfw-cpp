@@ -2,6 +2,11 @@
 
 A C++ wrapper for GLFW with RAII support and with multi-window and multithreading in mind
 
+## TODO
+
+- [ ] Add event queue mechanism in addition to callback on input handling per window ([see](https://github.com/glfw/gleq))
+- [ ] Use better error types instead of just using `std::runtime_error`
+
 ## Dependencies
 
 - C++20
