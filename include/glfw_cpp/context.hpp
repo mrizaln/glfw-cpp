@@ -1,6 +1,7 @@
 #ifndef CONTEXT_HPP_AO39EW8FOEW
 #define CONTEXT_HPP_AO39EW8FOEW
 
+#include <atomic>
 #include <functional>
 #include <shared_mutex>
 #include <string>
@@ -12,11 +13,14 @@ namespace glfw_cpp
     class Window;
     class WindowManager;
 
+    // Context is an instance that can only be instantiated once but can be moved around
     class Context
     {
     public:
         friend WindowManager;
         friend Window;
+
+        static inline std::atomic<bool> s_hasInstance = false;
 
         enum class Profile
         {
@@ -59,12 +63,11 @@ namespace glfw_cpp
         Context(const Context&)            = delete;
         Context& operator=(const Context&) = delete;
 
-        // I use C-style function since it needs global state if I use std::function in order for it
-        // to be able to be passed to glfwSetErrorCallback
-        void setErrorCallback(ErrorCallback* callback);
-
         // can be called from any thread
         void setLogCallback(LogFun callback);
+
+        // set internal GLFW error (do this once)
+        static void setErrorCallback(ErrorCallback* callback);
 
     private:
         mutable std::shared_mutex m_mutex;

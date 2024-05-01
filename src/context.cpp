@@ -26,9 +26,14 @@ namespace glfw_cpp
         : m_hint{ hint }
         , m_loader{ std::move(glLoader) }
     {
+        if (s_hasInstance) {
+            throw std::runtime_error{ "Context can only have one active instance" };
+        }
+
         if (glfwInit() != GLFW_TRUE) {
             throw std::runtime_error{ "Failed to initialize GLFW!" };
         }
+        s_hasInstance = true;
         m_initialized = true;
 
         glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_hint.m_major);
@@ -39,6 +44,7 @@ namespace glfw_cpp
     Context::~Context()
     {
         if (m_initialized) {
+            s_hasInstance = false;
             glfwTerminate();
         }
     }
