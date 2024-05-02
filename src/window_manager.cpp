@@ -24,6 +24,37 @@ namespace
         auto hash{ std::hash<std::thread::id>{} };
         return hash(threadId);
     }
+
+    void configureHints(glfw_cpp::WindowHint hint)
+    {
+        using F = glfw_cpp::WindowHint::FlagBit;
+
+        const auto setFlag = [&](int flag, F bit) {
+            glfwWindowHint(flag, (hint.m_flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
+        };
+
+        setFlag(GLFW_RESIZABLE, F::RESIZABLE);
+        setFlag(GLFW_VISIBLE, F::VISIBLE);
+        setFlag(GLFW_DECORATED, F::DECORATED);
+        setFlag(GLFW_FOCUSED, F::FOCUSED);
+        setFlag(GLFW_AUTO_ICONIFY, F::AUTO_ICONIFY);
+        setFlag(GLFW_FLOATING, F::FLOATING);
+        setFlag(GLFW_MAXIMIZED, F::MAXIMIZED);
+        setFlag(GLFW_CENTER_CURSOR, F::CENTER_CURSOR);
+        setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TRANSPARENT_FRAMEBUFFER);
+        setFlag(GLFW_FOCUS_ON_SHOW, F::FOCUS_ON_SHOW);
+        setFlag(GLFW_SCALE_TO_MONITOR, F::SCALE_TO_MONITOR);
+
+        glfwWindowHint(GLFW_RED_BITS, hint.m_redBits);
+        glfwWindowHint(GLFW_GREEN_BITS, hint.m_greenBits);
+        glfwWindowHint(GLFW_BLUE_BITS, hint.m_blueBits);
+        glfwWindowHint(GLFW_ALPHA_BITS, hint.m_alphaBits);
+        glfwWindowHint(GLFW_DEPTH_BITS, hint.m_depthBits);
+        glfwWindowHint(GLFW_STENCIL_BITS, hint.m_stencilBits);
+
+        glfwWindowHint(GLFW_SAMPLES, hint.m_samples);
+        glfwWindowHint(GLFW_REFRESH_RATE, hint.m_refreshRate);
+    }
 }
 
 namespace glfw_cpp
@@ -85,6 +116,7 @@ namespace glfw_cpp
     }
 
     Window WindowManager::createWindow(
+        WindowHint  hint,
         std::string title,
         int         width,
         int         height,
@@ -93,17 +125,16 @@ namespace glfw_cpp
     {
         validateAccess(true);
 
-        UniqueGLFWwindow glfwWindow{
-            glfwCreateWindow(width, height, title.data(), nullptr, nullptr)
-        };
-        if (!glfwWindow) {
+        configureHints(hint);
+
+        auto handle = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
+        if (handle == nullptr) {
             m_context->logC("(WindowManager) Window creation failed");
             throw std::runtime_error{ "Failed to create window" };
         }
 
-        auto  id     = ++m_windowCount;
-        auto* handle = glfwWindow.get();
-        m_windows.emplace(id, std::move(glfwWindow));
+        auto id = ++m_windowCount;
+        m_windows.emplace(id, handle);
 
         m_context->logI(std::format("(WindowManager) Window ({}) created", id));
 

@@ -169,7 +169,13 @@ namespace glfw_cpp
     {
         bind();
         if (!m_contextInitialized) {
-            m_context->m_loader(handle, glfwGetProcAddress);
+            if (auto* api = std::get_if<Api::OpenGL>(&m_context->m_api)) {
+                api->m_loader(handle, glfwGetProcAddress);
+            } else if (auto* api = std::get_if<Api::OpenGLES>(&m_context->m_api)) {
+                api->m_loader(handle, glfwGetProcAddress);
+            } else {
+                // don't need to do anything for Vulkan
+            }
             m_contextInitialized = true;
 
             glfwSetFramebufferSizeCallback(m_windowHandle, Window::framebufferSizeCallback);
@@ -326,12 +332,14 @@ namespace glfw_cpp
 
     void Window::run(std::function<void()>&& func)
     {
-        for (std::scoped_lock lock{ m_windowMutex }; glfwWindowShouldClose(m_windowHandle) == 0;) {
-            updateDeltaTime();
-            processInput();
-            processQueuedTasks();
-
-            func();
+        while (glfwWindowShouldClose(m_windowHandle) == 0) {
+            {
+                std::scoped_lock lock{ m_windowMutex };
+                updateDeltaTime();
+                processInput();
+                processQueuedTasks();
+                func();
+            }
             glfwSwapBuffers(m_windowHandle);
         }
     }

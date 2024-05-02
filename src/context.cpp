@@ -6,15 +6,18 @@
 #include <mutex>
 #include <stdexcept>
 #include <utility>
+#include <type_traits>
+#include <variant>
 
 namespace
 {
-    int toGLFWProfile(glfw_cpp::Context::Profile profile)
+    int toGLFWProfile(glfw_cpp::Api::OpenGL::Profile profile)
     {
+        using P = glfw_cpp::Api::OpenGL::Profile;
         switch (profile) {
-        case glfw_cpp::Context::Profile::CORE: return GLFW_OPENGL_CORE_PROFILE;
-        case glfw_cpp::Context::Profile::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
-        case glfw_cpp::Context::Profile::ANY: return GLFW_OPENGL_ANY_PROFILE;
+        case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
+        case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
+        case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
         default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
         }
     }
@@ -22,9 +25,8 @@ namespace
 
 namespace glfw_cpp
 {
-    Context::Context(Hint hint, GLLoaderFun glLoader)
-        : m_hint{ hint }
-        , m_loader{ std::move(glLoader) }
+    Context::Context(Api::Variant api)
+        : m_api{ std::move(api) }
     {
         if (s_hasInstance) {
             throw std::runtime_error{ "Context can only have one active instance" };
@@ -36,9 +38,24 @@ namespace glfw_cpp
         s_hasInstance = true;
         m_initialized = true;
 
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, m_hint.m_major);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, m_hint.m_minor);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, toGLFWProfile(m_hint.m_profile));
+        // clang-format off
+        std::visit([](auto& api) {
+            using A = std::remove_reference_t<decltype(api)>;
+            if constexpr (std::same_as<A, Api::OpenGL>) {
+                glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, toGLFWProfile(api.m_profile));
+            } else if constexpr (std::same_as<A, Api::OpenGLES>) {
+                glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_ANY_PROFILE);
+            } else {
+                glfwWindowHint(GLFW_CLIENT_API,            GLFW_NO_API);
+            }
+        }, m_api);
+        // clang-format on
     }
 
     Context::~Context()
@@ -51,8 +68,7 @@ namespace glfw_cpp
 
     Context::Context(Context&& other) noexcept
         : m_initialized{ std::exchange(other.m_initialized, false) }
-        , m_hint{ std::exchange(other.m_hint, {}) }
-        , m_loader{ std::exchange(other.m_loader, {}) }
+        , m_api{ std::exchange(other.m_api, {}) }
         , m_logCallback{ std::exchange(other.m_logCallback, {}) }
     {
     }
@@ -65,8 +81,7 @@ namespace glfw_cpp
             }
 
             m_initialized = std::exchange(other.m_initialized, false);
-            m_hint        = std::exchange(other.m_hint, {});
-            m_loader      = std::exchange(other.m_loader, {});
+            m_api         = std::exchange(other.m_api, {});
             m_logCallback = std::exchange(other.m_logCallback, {});
         }
         return *this;

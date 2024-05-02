@@ -1,6 +1,10 @@
 # glfw-cpp
 
-A C++ wrapper for GLFW with RAII support and with multi-window and multithreading in mind
+A C++ wrapper for GLFW with RAII support and with multi-window and multithreading in mind.
+
+This wrapper is personalized and written to suit my needs. This is not a wrapper that is a one-to-one "port" of glfw C-API to C++ API. This repository will be updated iteratively as needed. I mainly use this repository to facilitate my graphics programming project that requires painless window management. You can see my projects here:
+
+- [game-of-life](https://github.com/mrizaln/game-of-life)
 
 ## TODO
 
@@ -40,9 +44,12 @@ target_link_libraries(main PRIVATE glfw-cpp)  # you don't need to link to glfw h
 
 Using this library is as simple as
 
+> [single.cpp](./example/source/single.cpp)
+
 ```cpp
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
+#include <GLFW/glfw3.h>
 
 #include <cmath>
 
@@ -50,25 +57,29 @@ namespace glfw = glfw_cpp;
 
 int main()
 {
-    glfw::Context context{
-        glfw::Context::Hint{
-            .m_major   = 3,
-            .m_minor   = 3,
-            .m_profile = glfw::Context::Profile::CORE,
-        },
-        [](auto handle [[maybe_unused]], auto proc) {
-            if (gladLoadGLLoader((GLADloadproc)proc) == 0) {
-                throw std::runtime_error{ "Failed to initialize glad" };
-            };
-        },
-    };
+    // Context here refers to global state that glfw initializes not OpenGL context.
+    // This class can only have one valid instance and throws when instantiated again.
+    // The class can be moved around, though if you have instantiated a WindowManager (and
+    // subsequently Window), it will become a problem since WindowManager and Window each have a
+    // pointer to Context and if Context is moved the pointer will point to a moved value.
+    glfw::Context context{ glfw::Api::OpenGL{
+        .m_major   = 3,
+        .m_minor   = 3,
+        .m_profile = glfw::Api::OpenGL::Profile::CORE,
+        .m_loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    } };
 
     glfw::WindowManager windowManager{ context };
 
-    auto window = windowManager.createWindow("Learn glfw-cpp", 800, 600);    // NOLINT
-    window.addKeyEventHandler(
-        GLFW_KEY_ESCAPE, 0, glfw::Window::KeyActionType::CALLBACK, [](auto& w) { w.requestClose(); }
-    );
+    glfw::WindowHint hint{};    // use default hint
+    glfw::Window     window = windowManager.createWindow(hint, "Learn glfw-cpp", 800, 600);
+
+    window.addKeyEventHandler(GLFW_KEY_Q, 0, glfw::Window::KeyActionType::CALLBACK, [](auto& w) {
+        w.requestClose();
+    });
+    window.setFramebuffersizeCallback([](glfw::Window& /* window */, int width, int height) {
+        glViewport(0, 0, width, height);
+    });
 
     window.run([&, elapsed = 0.0F]() mutable {
         elapsed += (float)window.deltaTime();
@@ -78,11 +89,8 @@ int main()
         const auto g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
         const auto b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
 
-        glClearColor(r, g, b, 1.0F);    // NOLINT
+        glClearColor(r, g, b, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT);
-
-        const auto& prop = window.properties();
-        glViewport(0, 0, prop.m_width, prop.m_height);
 
         windowManager.pollEvents();
     });
@@ -93,4 +101,4 @@ No manual cleanup necessary, the classes defined already using RAII pattern.
 
 One caveat is that you need to make sure that `glfw_cpp::Context` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
-The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see it in the [example](./example) directory (I also use a different OpenGL loader library there).
+The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see it in the [example](./example/source/multi.cpp) directory (I also use a different OpenGL loader library there).

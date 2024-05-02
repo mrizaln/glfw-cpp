@@ -42,15 +42,15 @@ void threadFun(glfw::Window&& window, float side, float color)
     window.addKeyEventHandler(GLFW_KEY_Q, 0, glfw::Window::KeyActionType::CALLBACK, [](auto& win) {
         win.requestClose();
     });
+    window.setFramebuffersizeCallback([](glfw::Window& /* window */, int width, int height) {
+        gl::glViewport(0, 0, width, height);
+    });
 
     window.run([&] {
         using namespace gl;
 
         glClearColor(0.1F * color, 0.1F * color, 0.11F * color, 1.0F);    // NOLINT
         glClear(GL_COLOR_BUFFER_BIT);
-
-        const auto& prop = window.properties();
-        glViewport(0, 0, prop.m_width, prop.m_height);
 
         shader.use();
         plane.draw();
@@ -59,23 +59,25 @@ void threadFun(glfw::Window&& window, float side, float color)
 
 int main()
 {
-    auto hint = glfw::Context::Hint{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw::Context::Profile::CORE,
+    auto loader = [](auto handle, auto proc) {
+        glbinding::initialize((glbinding::ContextHandle)handle, proc);
     };
 
-    auto context = glfw::Context{
-        hint,
-        [](auto glContext, auto proc) {
-            glbinding::initialize((glbinding::ContextHandle)glContext, proc);
-        },
-    };
+    auto context = glfw::Context{ glfw::Api::OpenGL{
+        .m_major   = 3,
+        .m_minor   = 3,
+        .m_profile = glfw::Api::OpenGL::Profile::CORE,
+        .m_loader  = loader,
+    } };
     context.setLogCallback(logCallback);
 
     auto windowManager = glfw::WindowManager{ context };
-    auto window1 = windowManager.createWindow("Learn glfw-cpp 1", 800, 600, false);    // NOLINT
-    auto window2 = windowManager.createWindow("Learn glfw-cpp 2", 800, 600, false);    // NOLINT
+
+    auto window1 = windowManager.createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
+
+    using F      = glfw::WindowHint::FlagBit;
+    auto hint    = glfw::WindowHint{ .m_flags = F::DEFAULT ^ F::RESIZABLE };
+    auto window2 = windowManager.createWindow(hint, "Learn glfw-cpp 2", 800, 600, false);
 
     auto thread1 = std::jthread{ threadFun, std::move(window1), 1.0F, 1 };
     auto thread2 = std::jthread{ threadFun, std::move(window2), -1.0F, 2 };

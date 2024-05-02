@@ -5,6 +5,7 @@
 #include <functional>
 #include <shared_mutex>
 #include <string>
+#include <variant>
 
 struct GLFWwindow;
 
@@ -12,6 +13,43 @@ namespace glfw_cpp
 {
     class Window;
     class WindowManager;
+
+    class Api
+    {
+    public:
+        using GLProc      = void (*)();
+        using GLGetProc   = GLProc(const char*);
+        using GLContext   = ::GLFWwindow*;
+        using GLLoaderFun = std::function<void(GLContext handle, GLGetProc proc)>;
+
+        struct OpenGLES
+        {
+            int         m_major = 2;
+            int         m_minor = 0;
+            GLLoaderFun m_loader;
+        };
+
+        struct OpenGL
+        {
+            enum class Profile
+            {
+                CORE,
+                COMPAT,
+                ANY,
+            };
+
+            int         m_major   = 3;
+            int         m_minor   = 3;
+            Profile     m_profile = Profile::CORE;
+            GLLoaderFun m_loader;
+        };
+
+        struct Vulkan
+        {
+        };
+
+        using Variant = std::variant<OpenGL, OpenGLES, Vulkan>;
+    };
 
     // Context is an instance that can only be instantiated once but can be moved around
     class Context
@@ -21,20 +59,6 @@ namespace glfw_cpp
         friend Window;
 
         static inline std::atomic<bool> s_hasInstance = false;
-
-        enum class Profile
-        {
-            CORE,
-            COMPAT,
-            ANY,
-        };
-
-        struct Hint
-        {
-            int     m_major;
-            int     m_minor;
-            Profile m_profile;
-        };
 
         enum class LogLevel
         {
@@ -48,13 +72,9 @@ namespace glfw_cpp
 
         using ErrorCallback = void(int errc, const char* description);
         using LogFun        = std::function<void(LogLevel level, std::string msg)>;
-        using GLProc        = void (*)();
-        using GLGetProc     = GLProc(const char*);
-        using GLContext     = ::GLFWwindow*;
-        using GLLoaderFun   = std::function<void(GLContext handle, GLGetProc proc)>;
 
         // loader must be a valid lambda/function pointer to a function that loads OpenGL functions
-        Context(Hint hint, GLLoaderFun glLoader);
+        Context(Api::Variant api);
         ~Context();
         Context(Context&&) noexcept;
         Context& operator=(Context&&) noexcept;
@@ -72,10 +92,9 @@ namespace glfw_cpp
     private:
         mutable std::shared_mutex m_mutex;
 
-        bool        m_initialized = false;
-        Hint        m_hint;
-        GLLoaderFun m_loader;
-        LogFun      m_logCallback;
+        bool         m_initialized = false;
+        Api::Variant m_api;
+        LogFun       m_logCallback;
 
         // can be called from any thread
         void log(LogLevel level, std::string msg) const;

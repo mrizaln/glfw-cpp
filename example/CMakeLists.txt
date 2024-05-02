@@ -11,23 +11,26 @@ set(CMAKE_COLOR_DIAGNOSTICS ON) # You might want to enable this (CMake 3.24+)
 
 find_package(fmt REQUIRED)
 find_package(glbinding REQUIRED)
+find_package(glad REQUIRED)
 find_package(glm REQUIRED)
+find_package(glfw3 3.4 REQUIRED)
 
 add_subdirectory(lib/glfw-cpp)
 
-add_executable(example source/example.cpp)
-target_include_directories(example PRIVATE source)
-target_compile_options(example PRIVATE -Wall -Wextra -Wconversion)
-target_link_libraries(example PRIVATE fmt::fmt glbinding::glbinding glm::glm
-                                      glfw-cpp)
+add_executable(single source/single.cpp)
+target_include_directories(single PRIVATE source)
+target_compile_options(single PRIVATE -Wall -Wextra -Wconversion)
+target_link_libraries(single PRIVATE fmt::fmt glad::glad glm::glm glfw-cpp)
 
-# sanitizer
-target_compile_options(example PRIVATE -fsanitize=thread)
-target_link_options(example PRIVATE -fsanitize=thread)
+add_executable(multi source/multi.cpp)
+target_include_directories(multi PRIVATE source)
+target_compile_options(multi PRIVATE -Wall -Wextra -Wconversion)
+target_link_libraries(multi PRIVATE fmt::fmt glbinding::glbinding glm::glm
+                                    glfw-cpp)
 
 # copy assets to build directory
 add_custom_command(
-  TARGET example
+  TARGET multi
   POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/asset
-          $<TARGET_FILE_DIR:example>/asset)
+          $<TARGET_FILE_DIR:multi>/asset)

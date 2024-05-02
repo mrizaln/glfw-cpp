@@ -25,6 +25,39 @@ namespace glfw_cpp
 
     class Window;
 
+    struct WindowHint
+    {
+        using Flag = std::int32_t;
+        enum FlagBit : Flag
+        {
+            RESIZABLE               = 1 << 0,
+            VISIBLE                 = 1 << 1,
+            DECORATED               = 1 << 2,
+            FOCUSED                 = 1 << 3,
+            AUTO_ICONIFY            = 1 << 4,
+            FLOATING                = 1 << 5,
+            MAXIMIZED               = 1 << 6,
+            CENTER_CURSOR           = 1 << 7,
+            TRANSPARENT_FRAMEBUFFER = 1 << 8,
+            FOCUS_ON_SHOW           = 1 << 9,
+            SCALE_TO_MONITOR        = 1 << 10,
+
+            DEFAULT = RESIZABLE | VISIBLE | DECORATED | FOCUSED | AUTO_ICONIFY | FOCUS_ON_SHOW,
+        };
+
+        Flag m_flags = FlagBit::DEFAULT;
+
+        int m_redBits     = 8;
+        int m_greenBits   = 8;
+        int m_blueBits    = 8;
+        int m_alphaBits   = 8;
+        int m_depthBits   = 24;
+        int m_stencilBits = 8;
+
+        int m_samples     = 0;
+        int m_refreshRate = -1;
+    };
+
     class WindowManager
     {
     public:
@@ -40,7 +73,13 @@ namespace glfw_cpp
         WindowManager& operator=(const WindowManager&) = delete;
 
         // @thread_safety: call this function from the main thread only
-        Window createWindow(std::string title, int width, int height, bool bindImmediately = true);
+        Window createWindow(
+            WindowHint  hint,
+            std::string title,
+            int         width,
+            int         height,
+            bool        bindImmediately = true
+        );
 
         // this function poll events for all windows and then sleep for specified time. won't sleep
         // after polling events if `msPollRate` is `std::nullopt`.
