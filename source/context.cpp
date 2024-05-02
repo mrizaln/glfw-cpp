@@ -10,20 +10,6 @@
 #include <type_traits>
 #include <utility>
 
-namespace
-{
-    int toGLFWProfile(glfw_cpp::Api::OpenGL::Profile profile)
-    {
-        using P = glfw_cpp::Api::OpenGL::Profile;
-        switch (profile) {
-        case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
-        case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
-        case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
-        default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
-        }
-    }
-}
-
 namespace glfw_cpp
 {
     Context::~Context()
@@ -78,10 +64,20 @@ namespace glfw_cpp
             [](auto& api) {
                 using A = std::remove_reference_t<decltype(api)>;
                 if constexpr (std::same_as<A, Api::OpenGL>) {
+                    auto glProfile = [&] {
+                        using P = glfw_cpp::Api::OpenGL::Profile;
+                        switch (api.m_profile) {
+                        case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
+                        case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
+                        case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
+                        default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
+                        }
+                    }();
+
                     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
-                    glfwWindowHint(GLFW_OPENGL_PROFILE, toGLFWProfile(api.m_profile));
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, glProfile);
                 } else if constexpr (std::same_as<A, Api::OpenGLES>) {
                     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);

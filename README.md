@@ -31,6 +31,9 @@ FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
   GIT_TAG main)
+
+# set this variable to ON to enable Vulkan support (requires Vulkan loader and headers)
+option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)
 FetchContent_MakeAvailable(glfw-cpp)
 
 # # If you clone/submodule the repository
@@ -39,6 +42,10 @@ FetchContent_MakeAvailable(glfw-cpp)
 add_executable(main main.cpp)
 target_link_libraries(main PRIVATE glfw-cpp)  # you don't need to link to glfw here, glfw-cpp already link to it
 ```
+
+### Option
+
+This library supports Vulkan, just set `GLFW_CPP_VULKAN_SUPPORT` before adding this repository to the project to enable it. Note that it requires Vulkan loader and the headers to compile.
 
 ### Example
 

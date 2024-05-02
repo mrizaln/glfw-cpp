@@ -1,7 +1,8 @@
 #include "glfw_cpp/window.hpp"
 #include "glfw_cpp/context.hpp"
 #include "glfw_cpp/window_manager.hpp"
-#include <variant>
+
+#include "util.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -17,12 +18,6 @@
 
 namespace
 {
-    std::size_t getThreadNum(const std::thread::id& threadId)
-    {
-        auto hash{ std::hash<std::thread::id>{} };
-        return hash(threadId);
-    }
-
     // helper function that decides whether to execute the task immediately or enqueue it.
     void runTask(
         glfw_cpp::Window*        windowPtr,
@@ -280,8 +275,8 @@ namespace glfw_cpp
                 "(Window) Context ({}) already attached to another thread [{:#x}], cannot attach "
                 "to this thread [{:#x}].",
                 m_id,
-                getThreadNum(*m_attachedThreadId),
-                getThreadNum(std::this_thread::get_id())
+                util::getThreadNum(*m_attachedThreadId),
+                util::getThreadNum(std::this_thread::get_id())
             ));
 
             // should I throw instead?

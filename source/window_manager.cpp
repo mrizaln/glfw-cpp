@@ -2,6 +2,8 @@
 #include "glfw_cpp/context.hpp"
 #include "glfw_cpp/window.hpp"
 
+#include "util.hpp"
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -19,12 +21,6 @@ using LogLevel = glfw_cpp::Context::LogLevel;
 
 namespace
 {
-    std::size_t getThreadNum(const std::thread::id& threadId)
-    {
-        auto hash{ std::hash<std::thread::id>{} };
-        return hash(threadId);
-    }
-
     void configureHints(glfw_cpp::WindowHint hint)
     {
         using F = glfw_cpp::WindowHint::FlagBit;
@@ -67,8 +63,8 @@ namespace glfw_cpp
                 std::format(
                     "(WindowManager) Instance accessed from different thread from initialization! "
                     "[at init: {} | current: {}]",
-                    getThreadNum(initThreadId),
-                    getThreadNum(std::this_thread::get_id())
+                    util::getThreadNum(initThreadId),
+                    util::getThreadNum(std::this_thread::get_id())
                 ),
             }
         {
