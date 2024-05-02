@@ -63,15 +63,17 @@ int main()
         glbinding::initialize((glbinding::ContextHandle)handle, proc);
     };
 
-    auto context = glfw::Context{ glfw::Api::OpenGL{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw::Api::OpenGL::Profile::CORE,
-        .m_loader  = loader,
-    } };
-    context.setLogCallback(logCallback);
+    auto context = glfw::init(
+        glfw::Api::OpenGL{
+            .m_major   = 3,
+            .m_minor   = 3,
+            .m_profile = glfw::Api::OpenGL::Profile::CORE,
+            .m_loader  = loader,
+        },
+        logCallback
+    );
 
-    auto windowManager = glfw::WindowManager{ context };
+    auto windowManager = context->createWindowManager();
 
     auto window1 = windowManager.createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
 

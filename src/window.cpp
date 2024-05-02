@@ -154,15 +154,13 @@ namespace glfw_cpp
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
     Window::Window(
-        Context&           context,
         WindowManager&     manager,
         std::size_t        id,
         GLFWwindow*        handle,
         WindowProperties&& properties,
         bool               bindImmediately
     )
-        : m_context{ &context }
-        , m_manager{ &manager }
+        : m_manager{ &manager }
         , m_id{ id }
         , m_windowHandle{ handle }
         , m_properties{ std::move(properties) }
@@ -170,9 +168,9 @@ namespace glfw_cpp
     {
         bind();
         if (!m_contextInitialized) {
-            if (auto* api = std::get_if<Api::OpenGL>(&m_context->m_api)) {
+            if (auto* api = std::get_if<Api::OpenGL>(&Context::get().m_api)) {
                 api->m_loader(handle, glfwGetProcAddress);
-            } else if (auto* api = std::get_if<Api::OpenGLES>(&m_context->m_api)) {
+            } else if (auto* api = std::get_if<Api::OpenGLES>(&Context::get().m_api)) {
                 api->m_loader(handle, glfwGetProcAddress);
             } else {
                 // don't need to do anything for NoApi
@@ -195,8 +193,7 @@ namespace glfw_cpp
 
     // clang-format off
     Window::Window(Window&& other) noexcept
-        : m_context                { std::exchange(other.m_context, nullptr) }
-        , m_manager                { std::exchange(other.m_manager, nullptr) }
+        : m_manager                { std::exchange(other.m_manager, nullptr) }
         , m_id                     { std::exchange(other.m_id, 0) }
         , m_contextInitialized     { std::exchange(other.m_contextInitialized, false) }
         , m_windowHandle           { std::exchange(other.m_windowHandle, nullptr) }
@@ -228,7 +225,6 @@ namespace glfw_cpp
             m_manager->requestDeleteWindow(m_id);
         }
 
-        m_context                 = std::exchange(other.m_context, nullptr);
         m_manager                 = std::exchange(other.m_manager, nullptr);
         m_id                      = std::exchange(other.m_id, 0);
         m_contextInitialized      = std::exchange(other.m_contextInitialized, false);
@@ -267,9 +263,9 @@ namespace glfw_cpp
             // no thread attached, attach to this thread
 
             m_attachedThreadId = std::this_thread::get_id();
-            m_context->logI(std::format("(Window) Context ({}) attached (+)", m_id));
+            Context::logI(std::format("(Window) Context ({}) attached (+)", m_id));
 
-            if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+            if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
                 glfwMakeContextCurrent(m_windowHandle);
             }
 
@@ -280,7 +276,7 @@ namespace glfw_cpp
         } else {
             // different thread, cannot attach
 
-            m_context->logC(std::format(
+            Context::logC(std::format(
                 "(Window) Context ({}) already attached to another thread [{:#x}], cannot attach "
                 "to this thread [{:#x}].",
                 m_id,
@@ -295,12 +291,12 @@ namespace glfw_cpp
 
     void Window::unbind()
     {
-        if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+        if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
             glfwMakeContextCurrent(nullptr);
         }
 
         if (m_attachedThreadId.has_value()) {
-            m_context->logI(std::format("(Window) Context ({}) detached (-)", m_id));
+            Context::logI(std::format("(Window) Context ({}) detached (-)", m_id));
         }
 
         m_attachedThreadId.reset();
@@ -348,7 +344,7 @@ namespace glfw_cpp
                 func();
             }
 
-            if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+            if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
                 glfwSwapBuffers(m_windowHandle);
             }
         }
@@ -363,7 +359,7 @@ namespace glfw_cpp
     void Window::requestClose()
     {
         glfwSetWindowShouldClose(m_windowHandle, 1);
-        m_context->logI(std::format("(Window) Window ({}) requested to close", m_id));
+        Context::logI(std::format("(Window) Window ({}) requested to close", m_id));
     }
 
     double Window::deltaTime() const

@@ -1,17 +1,16 @@
 #ifndef WINDOW_MANAGER_HPP_OR5VIUQW
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
-#include "glfw_cpp/context.hpp"
-
 #include <chrono>
 #include <cstddef>
 #include <functional>
-#include <memory>
 #include <mutex>
 #include <optional>
 #include <queue>
 #include <thread>
 #include <utility>
+
+struct GLFWwindow;
 
 namespace glfw_cpp
 {
@@ -23,6 +22,7 @@ namespace glfw_cpp
         return duration;
     }
 
+    class Context;
     class Window;
 
     struct WindowHint
@@ -61,9 +61,10 @@ namespace glfw_cpp
     class WindowManager
     {
     public:
+        friend Context;
+
         class ErrorAccessFromWrongThread;
 
-        WindowManager(Context& context);
         WindowManager(WindowManager&&) noexcept;
         WindowManager& operator=(WindowManager&&) noexcept;
 
@@ -113,7 +114,6 @@ namespace glfw_cpp
         };
         using UniqueGLFWwindow = std::unique_ptr<GLFWwindow, GLFWwindowDeleter>;
 
-        Context*           m_context;
         mutable std::mutex m_mutex;    // protects current instance
 
         std::unordered_map<std::size_t, UniqueGLFWwindow>         m_windows;
@@ -124,6 +124,7 @@ namespace glfw_cpp
         std::size_t     m_windowCount{ 0 };
         std::thread::id m_attachedThreadId;
 
+        WindowManager(std::thread::id threadId);
         void validateAccess(bool checkThread) const;
 
         void checkTasks();

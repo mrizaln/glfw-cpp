@@ -1,13 +1,14 @@
 #include "glfw_cpp/context.hpp"
+#include "glfw_cpp/window_manager.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include <mutex>
+#include <cassert>
+#include <format>
 #include <stdexcept>
-#include <utility>
 #include <type_traits>
-#include <variant>
+#include <utility>
 
 namespace
 {
@@ -25,84 +26,79 @@ namespace
 
 namespace glfw_cpp
 {
-    Context::Context(Api::Variant api)
-        : m_api{ std::move(api) }
-    {
-        if (s_hasInstance) {
-            throw std::runtime_error{ "Context can only have one active instance" };
-        }
-
-        if (glfwInit() != GLFW_TRUE) {
-            throw std::runtime_error{ "Failed to initialize GLFW!" };
-        }
-        s_hasInstance = true;
-        m_initialized = true;
-
-        // clang-format off
-        std::visit([](auto& api) {
-            using A = std::remove_reference_t<decltype(api)>;
-            if constexpr (std::same_as<A, Api::OpenGL>) {
-                glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, toGLFWProfile(api.m_profile));
-            } else if constexpr (std::same_as<A, Api::OpenGLES>) {
-                glfwWindowHint(GLFW_CLIENT_API,            GLFW_OPENGL_ES_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
-                glfwWindowHint(GLFW_OPENGL_PROFILE,        GLFW_OPENGL_ANY_PROFILE);
-            } else {
-                glfwWindowHint(GLFW_CLIENT_API,            GLFW_NO_API);
-            }
-        }, m_api);
-        // clang-format on
-    }
-
     Context::~Context()
     {
         if (m_initialized) {
-            s_hasInstance = false;
             glfwTerminate();
         }
     }
 
-    Context::Context(Context&& other) noexcept
-        : m_initialized{ std::exchange(other.m_initialized, false) }
-        , m_api{ std::exchange(other.m_api, {}) }
-        , m_logCallback{ std::exchange(other.m_logCallback, {}) }
+    void Context::reset()
     {
+        glfwTerminate();
+        m_initialized = false;
     }
 
-    Context& Context::operator=(Context&& other) noexcept
+    Context& Context::get()
     {
-        if (this != &other) {
-            if (m_initialized) {
-                glfwTerminate();
-            }
+        return Context::s_instance;
+    }
 
-            m_initialized = std::exchange(other.m_initialized, false);
-            m_api         = std::exchange(other.m_api, {});
-            m_logCallback = std::exchange(other.m_logCallback, {});
+    void Context::log(LogLevel level, std::string msg)
+    {
+        auto& ctx = Context::get();
+        assert(ctx.m_initialized && "Context not initialized!");
+
+        if (ctx.m_logCallback) {
+            ctx.m_logCallback(level, std::move(msg));
         }
-        return *this;
     }
 
-    void Context::setErrorCallback(ErrorCallback* callback)
+    Context::Handle init(Api::Variant&& api, Context::LogFun&& logCallback)
     {
-        glfwSetErrorCallback(callback);
-    }
+        auto& ctx = Context::get();
 
-    void Context::setLogCallback(LogFun callback)
-    {
-        std::unique_lock lock{ m_mutex };
-        m_logCallback = std::move(callback);
-    }
-
-    void Context::log(LogLevel level, std::string msg) const
-    {
-        std::shared_lock lock{ m_mutex };
-        if (m_logCallback) {
-            m_logCallback(level, std::move(msg));
+        if (ctx.m_initialized) {
+            throw std::runtime_error{ "Context already initialized!" };
         }
+
+        ctx.m_api         = std::move(api);
+        ctx.m_logCallback = std::move(logCallback);
+        ctx.m_initialized = true;
+
+        if (glfwInit() != GLFW_TRUE) {
+            throw std::runtime_error{ "Failed to initialize GLFW!" };
+        }
+
+        glfwSetErrorCallback([](int err, const char* msg) {
+            Context::log(Context::LogLevel::ERROR, std::format("Internal error ({}) {}", err, msg));
+        });
+
+        std::visit(
+            [](auto& api) {
+                using A = std::remove_reference_t<decltype(api)>;
+                if constexpr (std::same_as<A, Api::OpenGL>) {
+                    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, toGLFWProfile(api.m_profile));
+                } else if constexpr (std::same_as<A, Api::OpenGLES>) {
+                    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                } else {
+                    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+                }
+            },
+            ctx.m_api
+        );
+
+        return { &Context::s_instance, [](Context* instance) { instance->reset(); } };
+    }
+
+    WindowManager Context::createWindowManager()
+    {
+        return WindowManager{ std::this_thread::get_id() };
     }
 }

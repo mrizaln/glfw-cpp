@@ -1,9 +1,8 @@
 #ifndef CONTEXT_HPP_AO39EW8FOEW
 #define CONTEXT_HPP_AO39EW8FOEW
 
-#include <atomic>
 #include <functional>
-#include <shared_mutex>
+#include <memory>
 #include <string>
 #include <variant>
 
@@ -51,14 +50,12 @@ namespace glfw_cpp
         using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
     };
 
-    // Context is an instance that can only be instantiated once but can be moved around
+    // Context is a singleton that manages the global state required to interface with GLFW
     class Context
     {
     public:
         friend WindowManager;
         friend Window;
-
-        static inline std::atomic<bool> s_hasInstance = false;
 
         enum class LogLevel
         {
@@ -70,41 +67,48 @@ namespace glfw_cpp
             DEBUG,
         };
 
-        using ErrorCallback = void(int errc, const char* description);
-        using LogFun        = std::function<void(LogLevel level, std::string msg)>;
+        using LogFun = std::function<void(LogLevel level, std::string msg)>;
+        using Handle = std::unique_ptr<Context, void (*)(Context*)>;
 
-        // loader must be a valid lambda/function pointer to a function that loads OpenGL functions
-        Context(Api::Variant api);
+        friend Handle init(Api::Variant&&, Context::LogFun&&);
+
+        WindowManager createWindowManager();
+
         ~Context();
-        Context(Context&&) noexcept;
-        Context& operator=(Context&&) noexcept;
-
-        Context()                          = default;
+        Context& operator=(Context&&)      = delete;
+        Context(Context&&)                 = delete;
         Context(const Context&)            = delete;
         Context& operator=(const Context&) = delete;
 
-        // can be called from any thread
-        void setLogCallback(LogFun callback);
-
-        // set internal GLFW error (do this once)
-        static void setErrorCallback(ErrorCallback* callback);
-
     private:
-        mutable std::shared_mutex m_mutex;
+        static Context s_instance;
 
         bool         m_initialized = false;
         Api::Variant m_api;
         LogFun       m_logCallback;
 
-        // can be called from any thread
-        void log(LogLevel level, std::string msg) const;
+        Context() = default;
 
-        void logD(std::string msg) const { log(LogLevel::DEBUG, std::move(msg)); }
-        void logI(std::string msg) const { log(LogLevel::INFO, std::move(msg)); }
-        void logW(std::string msg) const { log(LogLevel::WARNING, std::move(msg)); }
-        void logE(std::string msg) const { log(LogLevel::ERROR, std::move(msg)); }
-        void logC(std::string msg) const { log(LogLevel::CRITICAL, std::move(msg)); }
+        void            reset();
+        static Context& get();
+
+        // can be called from any thread
+        static void log(LogLevel level, std::string msg);
+
+        static void logD(std::string msg) { log(LogLevel::DEBUG, std::move(msg)); }
+        static void logI(std::string msg) { log(LogLevel::INFO, std::move(msg)); }
+        static void logW(std::string msg) { log(LogLevel::WARNING, std::move(msg)); }
+        static void logE(std::string msg) { log(LogLevel::ERROR, std::move(msg)); }
+        static void logC(std::string msg) { log(LogLevel::CRITICAL, std::move(msg)); }
     };
+
+    // Global state required to interface with GLFW
+    inline Context Context::s_instance = {};
+
+    // Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction
+    Context::Handle init(Api::Variant&& api, Context::LogFun&& logCallback = nullptr);
+
+    WindowManager createWindowManager();
 }
 
 #endif /* end of include guard: CONTEXT_HPP_AO39EW8FOEW */

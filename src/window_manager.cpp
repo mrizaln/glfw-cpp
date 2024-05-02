@@ -80,9 +80,8 @@ namespace glfw_cpp
         glfwDestroyWindow(handle);
     };
 
-    WindowManager::WindowManager(Context& context)
-        : m_context{ &context }
-        , m_attachedThreadId{ std::this_thread::get_id() }
+    WindowManager::WindowManager(std::thread::id threadId)
+        : m_attachedThreadId{ threadId }
     {
         // yeah, that's it.
         // attached thread id will not be changed for the lifetime of this class instance.
@@ -90,8 +89,7 @@ namespace glfw_cpp
 
     // clang-format off
     WindowManager::WindowManager(WindowManager&& other) noexcept
-        : m_context          { std::exchange(other.m_context, nullptr) }
-        , m_windows          { std::move(other.m_windows) }
+        : m_windows          { std::move(other.m_windows) }
         , m_windowDeleteQueue{ std::move(other.m_windowDeleteQueue) }
         , m_taskQueue        { std::move(other.m_taskQueue) }
         , m_windowTaskQueue  { std::move(other.m_windowTaskQueue) }
@@ -104,7 +102,6 @@ namespace glfw_cpp
     WindowManager& WindowManager::operator=(WindowManager&& other) noexcept
     {
         if (this != &other) {
-            m_context           = std::exchange(other.m_context, nullptr);
             m_windows           = std::move(other.m_windows);
             m_windowDeleteQueue = std::move(other.m_windowDeleteQueue);
             m_taskQueue         = std::move(other.m_taskQueue);
@@ -129,17 +126,16 @@ namespace glfw_cpp
 
         auto handle = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
         if (handle == nullptr) {
-            m_context->logC("(WindowManager) Window creation failed");
+            Context::logC("(WindowManager) Window creation failed");
             throw std::runtime_error{ "Failed to create window" };
         }
 
         auto id = ++m_windowCount;
         m_windows.emplace(id, handle);
 
-        m_context->logI(std::format("(WindowManager) Window ({}) created", id));
+        Context::logI(std::format("(WindowManager) Window ({}) created", id));
 
         return Window{
-            *m_context,
             *this,
             id,
             handle,
@@ -223,7 +219,7 @@ namespace glfw_cpp
             throw ErrorAccessFromWrongThread{ m_attachedThreadId };
         }
 
-        if (m_context == nullptr) {
+        if (m_attachedThreadId == std::thread::id{}) {
             throw std::runtime_error{ "WindowManager instance is moved" };
         }
     }
@@ -237,7 +233,7 @@ namespace glfw_cpp
 
             if (auto found{ m_windows.find(windowId) }; found != m_windows.end()) {
                 const auto& [id, window]{ *found };
-                m_context->logI(std::format("(WindowManager) Window ({}) deleted", id));
+                Context::logI(std::format("(WindowManager) Window ({}) deleted", id));
                 m_windows.erase(found);
             }
         }
@@ -249,7 +245,7 @@ namespace glfw_cpp
             if (m_windows.contains(id)) {
                 fun();
             } else {
-                m_context->logW(std::format(
+                Context::logW(std::format(
                     "(WindowManager) Task for window ({}) failed: window has destroyed", id
                 ));
             }

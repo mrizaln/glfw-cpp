@@ -1,13 +1,13 @@
 #ifndef WINDOW_HPP_IROQWEOX
 #define WINDOW_HPP_IROQWEOX
 
-#include "glfw_cpp/context.hpp"
-
 #include <concepts>
 #include <functional>
 #include <optional>
 #include <thread>
 #include <queue>
+
+struct GLFWwindow;
 
 namespace glfw_cpp
 {
@@ -153,7 +153,6 @@ namespace glfw_cpp
         Window() = default;
 
         Window(
-            Context&           context,
             WindowManager&     manager,
             std::size_t        id,
             GLFWwindow*        handle,
@@ -173,7 +172,6 @@ namespace glfw_cpp
 
         void swap(Window& other) noexcept;
 
-        Context*       m_context;
         WindowManager* m_manager;
 
         // window stuff

@@ -13,14 +13,14 @@ int main()
     // The class can be moved around, though if you have instantiated a WindowManager (and
     // subsequently Window), it will become a problem since WindowManager and Window each have a
     // pointer to Context and if Context is moved the pointer will point to a moved value.
-    glfw::Context context{ glfw::Api::OpenGL{
+    auto context = glfw_cpp::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
         .m_profile = glfw::Api::OpenGL::Profile::CORE,
         .m_loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-    } };
+    });
 
-    glfw::WindowManager windowManager{ context };
+    auto windowManager = context->createWindowManager();
 
     glfw::WindowHint hint{};    // use default hint
     glfw::Window     window = windowManager.createWindow(hint, "Learn glfw-cpp", 800, 600);
