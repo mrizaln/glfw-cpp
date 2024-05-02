@@ -1,6 +1,7 @@
 #include "glfw_cpp/window.hpp"
 #include "glfw_cpp/context.hpp"
 #include "glfw_cpp/window_manager.hpp"
+#include <variant>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -174,7 +175,7 @@ namespace glfw_cpp
             } else if (auto* api = std::get_if<Api::OpenGLES>(&m_context->m_api)) {
                 api->m_loader(handle, glfwGetProcAddress);
             } else {
-                // don't need to do anything for Vulkan
+                // don't need to do anything for NoApi
             }
             m_contextInitialized = true;
 
@@ -267,7 +268,10 @@ namespace glfw_cpp
 
             m_attachedThreadId = std::this_thread::get_id();
             m_context->logI(std::format("(Window) Context ({}) attached (+)", m_id));
-            glfwMakeContextCurrent(m_windowHandle);
+
+            if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+                glfwMakeContextCurrent(m_windowHandle);
+            }
 
         } else if (m_attachedThreadId == std::this_thread::get_id()) {
 
@@ -291,7 +295,10 @@ namespace glfw_cpp
 
     void Window::unbind()
     {
-        glfwMakeContextCurrent(nullptr);
+        if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+            glfwMakeContextCurrent(nullptr);
+        }
+
         if (m_attachedThreadId.has_value()) {
             m_context->logI(std::format("(Window) Context ({}) detached (-)", m_id));
         }
@@ -332,7 +339,7 @@ namespace glfw_cpp
 
     void Window::run(std::function<void()>&& func)
     {
-        while (glfwWindowShouldClose(m_windowHandle) == 0) {
+        while (glfwWindowShouldClose(m_windowHandle) == GLFW_FALSE) {
             {
                 std::scoped_lock lock{ m_windowMutex };
                 updateDeltaTime();
@@ -340,7 +347,10 @@ namespace glfw_cpp
                 processQueuedTasks();
                 func();
             }
-            glfwSwapBuffers(m_windowHandle);
+
+            if (!std::holds_alternative<Api::NoApi>(m_context->m_api)) {
+                glfwSwapBuffers(m_windowHandle);
+            }
         }
     }
 

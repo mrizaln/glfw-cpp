@@ -17,16 +17,16 @@ namespace glfw_cpp
     class Api
     {
     public:
-        using GLProc      = void (*)();
-        using GLGetProc   = GLProc(const char*);
-        using GLContext   = ::GLFWwindow*;
-        using GLLoaderFun = std::function<void(GLContext handle, GLGetProc proc)>;
+        using GlProc      = void (*)();
+        using GlGetProc   = GlProc(const char*);
+        using GlContext   = ::GLFWwindow*;
+        using GlLoaderFun = std::function<void(GlContext handle, GlGetProc proc)>;
 
         struct OpenGLES
         {
             int         m_major = 2;
             int         m_minor = 0;
-            GLLoaderFun m_loader;
+            GlLoaderFun m_loader;
         };
 
         struct OpenGL
@@ -41,14 +41,14 @@ namespace glfw_cpp
             int         m_major   = 3;
             int         m_minor   = 3;
             Profile     m_profile = Profile::CORE;
-            GLLoaderFun m_loader;
+            GlLoaderFun m_loader;
         };
 
-        struct Vulkan
+        struct NoApi
         {
         };
 
-        using Variant = std::variant<OpenGL, OpenGLES, Vulkan>;
+        using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
     };
 
     // Context is an instance that can only be instantiated once but can be moved around
