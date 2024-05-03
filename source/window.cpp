@@ -36,6 +36,9 @@ namespace glfw_cpp
             return;
         }
 
+        w->m_properties.m_width  = width;
+        w->m_properties.m_height = height;
+
         w->m_eventQueue.emplace_back(Event::WindowResized{
             .m_width  = width,
             .m_height = height,

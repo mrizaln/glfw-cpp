@@ -20,13 +20,18 @@ add_subdirectory(lib/glfw-cpp)
 add_executable(single source/single.cpp)
 target_include_directories(single PRIVATE source)
 target_compile_options(single PRIVATE -Wall -Wextra -Wconversion)
-target_link_libraries(single PRIVATE fmt::fmt glad::glad glm::glm glfw-cpp)
+target_link_libraries(single PRIVATE fmt::fmt glad::glad glfw-cpp)
 
 add_executable(multi source/multi.cpp)
 target_include_directories(multi PRIVATE source)
 target_compile_options(multi PRIVATE -Wall -Wextra -Wconversion)
 target_link_libraries(multi PRIVATE fmt::fmt glbinding::glbinding glm::glm
                                     glfw-cpp)
+
+add_executable(multi_multi_manager source/multi_multi_manager.cpp)
+target_include_directories(multi_multi_manager PRIVATE source)
+target_compile_options(multi_multi_manager PRIVATE -Wall -Wextra -Wconversion)
+target_link_libraries(multi_multi_manager PRIVATE fmt::fmt glad::glad glfw-cpp)
 
 # copy assets to build directory
 add_custom_command(
