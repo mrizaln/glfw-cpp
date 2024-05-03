@@ -1,16 +1,10 @@
 #include "shader.hpp"
 #include "plane.hpp"
 
-// this header only includes the wrapper and does not include the GLFW header itself
-#include <glbinding/gl/functions.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-
 #include <fmt/core.h>
 #include <glbinding/glbinding.h>
 #include <glbinding/gl/gl.h>
-
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>    // you include the GLFW header manually if you want to use it
+#include <glfw_cpp/glfw_cpp.hpp>
 
 #include <filesystem>
 #include <thread>

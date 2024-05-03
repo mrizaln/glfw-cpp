@@ -2,6 +2,8 @@
 #define GLFW_CPP_HPP_23OERFAF7EW
 
 #include "context.hpp"
+#include "input.hpp"
+#include "event.hpp"
 #include "window_manager.hpp"
 #include "window.hpp"
 
