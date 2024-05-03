@@ -35,12 +35,12 @@ namespace glfw_cpp
         auto& ctx = Context::get();
         assert(ctx.m_initialized && "Context not initialized!");
 
-        if (ctx.m_logCallback) {
-            ctx.m_logCallback(level, std::move(msg));
+        if (ctx.m_loggger) {
+            ctx.m_loggger(level, std::move(msg));
         }
     }
 
-    Context::Handle init(Api::Variant&& api, Context::LogFun&& logCallback)
+    Context::Handle init(Api::Variant&& api, Context::LogFun&& logger)
     {
         auto& ctx = Context::get();
 
@@ -49,7 +49,7 @@ namespace glfw_cpp
         }
 
         ctx.m_api         = std::move(api);
-        ctx.m_logCallback = std::move(logCallback);
+        ctx.m_loggger     = std::move(logger);
         ctx.m_initialized = true;
 
         if (glfwInit() != GLFW_TRUE) {
@@ -62,7 +62,7 @@ namespace glfw_cpp
 
         std::visit(
             [](auto& api) {
-                using A = std::remove_reference_t<decltype(api)>;
+                using A = std::decay_t<decltype(api)>;
                 if constexpr (std::same_as<A, Api::OpenGL>) {
                     auto glProfile = [&] {
                         using P = glfw_cpp::Api::OpenGL::Profile;

@@ -8,7 +8,7 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 
 ## TODO
 
-- [ ] Add event queue mechanism in addition to callback on input handling per window ([see](https://github.com/glfw/gleq))
+- [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
 - [ ] Use better error types instead of just using `std::runtime_error`
 
 ## Dependencies
@@ -54,6 +54,7 @@ Using this library is as simple as
 > [single.cpp](./example/source/single.cpp)
 
 ```cpp
+#include <fmt/core.h>
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 #include <GLFW/glfw3.h>
@@ -64,11 +65,6 @@ namespace glfw = glfw_cpp;
 
 int main()
 {
-    // Context here refers to global state that glfw initializes not OpenGL context.
-    // This class can only have one valid instance and throws when instantiated again.
-    // The class can be moved around, though if you have instantiated a WindowManager (and
-    // subsequently Window), it will become a problem since WindowManager and Window each have a
-    // pointer to Context and if Context is moved the pointer will point to a moved value.
     auto context = glfw_cpp::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
@@ -81,14 +77,16 @@ int main()
     glfw::WindowHint hint{};    // use default hint
     glfw::Window     window = windowManager.createWindow(hint, "Learn glfw-cpp", 800, 600);
 
-    window.addKeyEventHandler(GLFW_KEY_Q, 0, glfw::Window::KeyActionType::CALLBACK, [](auto& w) {
-        w.requestClose();
-    });
-    window.setFramebuffersizeCallback([](glfw::Window& /* window */, int width, int height) {
-        glViewport(0, 0, width, height);
-    });
-
-    window.run([&, elapsed = 0.0F]() mutable {
+    window.run([&, elapsed = 0.0F](auto&& events) mutable {
+        for (const glfw::Event& event : events) {
+            if (auto e = event.getIf<glfw::Event::KeyPressed>()) {
+                if (e->m_key == glfw::KeyCode::Q) {
+                    window.requestClose();
+                }
+            } else if (auto e = event.getIf<glfw::Event::FramebufferResized>()) {
+                glViewport(0, 0, e->m_width, e->m_height);
+            }
+        }
         elapsed += (float)window.deltaTime();
 
         // funny color cycle
@@ -108,4 +106,4 @@ No manual cleanup necessary, the classes defined already using RAII pattern.
 
 One caveat is that you need to make sure that `glfw_cpp::Context` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
-The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see it in the [example](./example/source/multi.cpp) directory (I also use a different OpenGL loader library there).
+The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/multi.cpp) or [here](./example/source/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).
