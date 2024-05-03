@@ -13,9 +13,8 @@ namespace glfw_cpp
     class Window;
     class WindowManager;
 
-    class Api
+    struct Api
     {
-    public:
         using GlProc      = void (*)();
         using GlGetProc   = GlProc(const char*);
         using GlContext   = ::GLFWwindow*;
@@ -85,11 +84,13 @@ namespace glfw_cpp
 
         bool         m_initialized = false;
         Api::Variant m_api;
-        LogFun       m_logCallback;
+        LogFun       m_loggger;
 
         Context() = default;
 
-        void            reset();
+        void setLogger(LogFun&& logger);
+        void reset();
+
         static Context& get();
 
         // can be called from any thread
@@ -106,7 +107,7 @@ namespace glfw_cpp
     inline Context Context::s_instance = {};
 
     // Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction
-    Context::Handle init(Api::Variant&& api, Context::LogFun&& logCallback = nullptr);
+    Context::Handle init(Api::Variant&& api, Context::LogFun&& logger = nullptr);
 
     WindowManager createWindowManager();
 }

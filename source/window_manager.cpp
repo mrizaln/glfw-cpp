@@ -3,6 +3,7 @@
 #include "glfw_cpp/window.hpp"
 
 #include "util.hpp"
+#include <algorithm>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -85,12 +86,12 @@ namespace glfw_cpp
 
     // clang-format off
     WindowManager::WindowManager(WindowManager&& other) noexcept
-        : m_windows          { std::move(other.m_windows) }
-        , m_windowDeleteQueue{ std::move(other.m_windowDeleteQueue) }
-        , m_taskQueue        { std::move(other.m_taskQueue) }
-        , m_windowTaskQueue  { std::move(other.m_windowTaskQueue) }
-        , m_windowCount      { std::exchange(other.m_windowCount, 0) }
+        : m_windowCount      { std::exchange(other.m_windowCount, 0) }
         , m_attachedThreadId { std::exchange(other.m_attachedThreadId, std::thread::id{}) }
+        , m_windows          { std::move(other.m_windows) }
+        , m_windowDeleteQueue{ std::move(other.m_windowDeleteQueue) }
+        , m_windowTaskQueue  { std::move(other.m_windowTaskQueue) }
+        , m_taskQueue        { std::move(other.m_taskQueue) }
     // clang-format on
     {
     }
@@ -98,12 +99,12 @@ namespace glfw_cpp
     WindowManager& WindowManager::operator=(WindowManager&& other) noexcept
     {
         if (this != &other) {
-            m_windows           = std::move(other.m_windows);
-            m_windowDeleteQueue = std::move(other.m_windowDeleteQueue);
-            m_taskQueue         = std::move(other.m_taskQueue);
-            m_windowTaskQueue   = std::move(other.m_windowTaskQueue);
             m_windowCount       = std::exchange(other.m_windowCount, 0);
             m_attachedThreadId  = std::exchange(other.m_attachedThreadId, std::thread::id{});
+            m_windows           = std::move(other.m_windows);
+            m_windowDeleteQueue = std::move(other.m_windowDeleteQueue);
+            m_windowTaskQueue   = std::move(other.m_windowTaskQueue);
+            m_taskQueue         = std::move(other.m_taskQueue);
         }
         return *this;
     }
@@ -127,7 +128,7 @@ namespace glfw_cpp
         }
 
         auto id = ++m_windowCount;
-        m_windows.emplace(id, handle);
+        m_windows.emplace_back(id, UniqueGLFWwindow{ handle });
 
         Context::logI(std::format("(WindowManager) Window ({}) created", id));
 
@@ -135,12 +136,11 @@ namespace glfw_cpp
             *this,
             id,
             handle,
-            WindowProperties{
-                .m_title       = std::move(title),
-                .m_width       = width,
-                .m_height      = height,
-                .m_cursorPos   = {},
-                .m_mouseButton = {},
+            Window::Properties{
+                .m_title     = std::move(title),
+                .m_width     = width,
+                .m_height    = height,
+                .m_cursorPos = {},
             },
             bindImmediately,
         };
@@ -152,17 +152,17 @@ namespace glfw_cpp
         std::unique_lock lock{ m_mutex };
 
         // accept request only for available windows
-        if (m_windows.contains(id)) {
-            m_windowDeleteQueue.push(id);
+        if (std::ranges::find(m_windows, id, &WindowEntry::m_id) != m_windows.end()) {
+            m_windowDeleteQueue.push_back(id);
         }
     }
 
-    void WindowManager::pollEvents(std::optional<std::chrono::milliseconds> msPollRate)
+    void WindowManager::pollEvents(std::optional<std::chrono::milliseconds> pollRate)
     {
         validateAccess(true);
 
-        if (msPollRate) {
-            auto sleepUntilTime{ std::chrono::steady_clock::now() + *msPollRate };
+        if (pollRate) {
+            auto sleepUntilTime{ std::chrono::steady_clock::now() + *pollRate };
 
             glfwPollEvents();
             checkTasks();
@@ -176,10 +176,16 @@ namespace glfw_cpp
         }
     }
 
-    void WindowManager::waitEvents()
+    void WindowManager::waitEvents(std::optional<std::chrono::milliseconds> timeout)
     {
         validateAccess(true);
-        glfwWaitEvents();
+        if (timeout) {
+            using SecondsDouble = std::chrono::duration<double>;
+            const auto seconds  = std::chrono::duration_cast<SecondsDouble>(*timeout);
+            glfwWaitEventsTimeout(seconds.count());
+        } else {
+            glfwWaitEvents();
+        }
         checkTasks();
     }
 
@@ -189,18 +195,18 @@ namespace glfw_cpp
         return !m_windows.empty();
     }
 
-    void WindowManager::enqueueWindowTask(std::size_t windowId, std::function<void()>&& task)
+    void WindowManager::enqueueWindowTask(std::size_t windowId, Fun<void()>&& task)
     {
         validateAccess(false);
         std::unique_lock lock{ m_mutex };
-        m_windowTaskQueue.emplace(windowId, std::move(task));
+        m_windowTaskQueue.emplace_back(windowId, std::move(task));
     }
 
-    void WindowManager::enqueueTask(std::function<void()>&& task)
+    void WindowManager::enqueueTask(Fun<void()>&& task)
     {
         std::unique_lock lock{ m_mutex };
         validateAccess(false);
-        m_taskQueue.emplace(std::move(task));
+        m_taskQueue.emplace_back(std::move(task));
     }
 
     std::thread::id WindowManager::attachedThreadId() const
@@ -223,23 +229,16 @@ namespace glfw_cpp
     void WindowManager::checkTasks()
     {
         // window deletion
-        while (!m_windowDeleteQueue.empty()) {
-            std::size_t windowId{ m_windowDeleteQueue.front() };
-            m_windowDeleteQueue.pop();
-
-            if (auto found{ m_windows.find(windowId) }; found != m_windows.end()) {
-                const auto& [id, window]{ *found };
+        for (auto id : std::exchange(m_windowDeleteQueue, {})) {
+            if (std::erase_if(m_windows, [id](auto& e) { return e.m_id == id; }) != 0) {
                 Context::logI(std::format("(WindowManager) Window ({}) deleted", id));
-                m_windows.erase(found);
             }
         }
 
         // window task requests
-        while (!m_windowTaskQueue.empty()) {
-            auto [id, fun]{ std::move(m_windowTaskQueue.front()) };
-            m_windowTaskQueue.pop();
-            if (m_windows.contains(id)) {
-                fun();
+        for (auto&& [id, task] : std::exchange(m_windowTaskQueue, {})) {
+            if (std::ranges::find(m_windows, id, &WindowEntry::m_id) != m_windows.end()) {
+                task();
             } else {
                 Context::logW(std::format(
                     "(WindowManager) Task for window ({}) failed: window has destroyed", id
@@ -248,10 +247,8 @@ namespace glfw_cpp
         }
 
         // general task request
-        while (!m_taskQueue.empty()) {
-            auto fun{ std::move(m_taskQueue.front()) };
-            m_taskQueue.pop();
-            fun();
+        for (auto&& task : std::exchange(m_taskQueue, {})) {
+            task();
         }
     }
 }
