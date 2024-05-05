@@ -12,7 +12,7 @@ option(GLFW_CPP_VULKAN_SUPPORT "Enable Vulkan support" OFF)
 find_package(glfw3 3.4 REQUIRED)
 
 set(glfw-cpp_SOURCES source/window.cpp source/window_manager.cpp
-                     source/context.cpp)
+                     source/context.cpp source/monitor.cpp)
 
 add_library(glfw-cpp STATIC ${glfw-cpp_SOURCES})
 target_include_directories(glfw-cpp PUBLIC include source)

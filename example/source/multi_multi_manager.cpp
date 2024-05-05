@@ -13,7 +13,7 @@ void windowThread(glfw::Window&& window)
 {
     window.bind();
 
-    auto mul = 1.0F / static_cast<float>(std::rand() % 10);
+    auto mul = 1.0F / static_cast<float>(std::rand() % 10 + 1);
 
     window.run([&, elapsed = 0.0F](auto&& events) mutable {
         for (const glfw::Event& event : events) {

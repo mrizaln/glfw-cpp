@@ -33,6 +33,21 @@ target_include_directories(multi_multi_manager PRIVATE source)
 target_compile_options(multi_multi_manager PRIVATE -Wall -Wextra -Wconversion)
 target_link_libraries(multi_multi_manager PRIVATE fmt::fmt glad::glad glfw-cpp)
 
+add_executable(monitor source/monitor.cpp)
+target_include_directories(monitor PRIVATE source)
+target_compile_options(monitor PRIVATE -Wall -Wextra -Wconversion)
+target_link_libraries(monitor PRIVATE fmt::fmt glfw-cpp)
+
+function(do_sanitize_on TARGET)
+  target_compile_options(${TARGET} PRIVATE -fsanitize=thread)
+  target_link_options(${TARGET} PRIVATE -fsanitize=thread)
+endfunction()
+
+do_sanitize_on(single)
+do_sanitize_on(multi)
+do_sanitize_on(multi_multi_manager)
+do_sanitize_on(monitor)
+
 # copy assets to build directory
 add_custom_command(
   TARGET multi
