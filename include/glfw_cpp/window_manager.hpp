@@ -1,6 +1,9 @@
 #ifndef WINDOW_MANAGER_HPP_OR5VIUQW
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
+#include "glfw_cpp/context.hpp"
+#include "glfw_cpp/monitor.hpp"
+
 #include <chrono>
 #include <functional>
 #include <mutex>
@@ -44,6 +47,9 @@ namespace glfw_cpp
             DEFAULT = RESIZABLE | VISIBLE | DECORATED | FOCUSED | AUTO_ICONIFY | FOCUS_ON_SHOW,
         };
 
+        Monitor* m_monitor = nullptr;
+        Window*  m_share   = nullptr;
+
         Flag m_flags = FlagBit::DEFAULT;
 
         int m_redBits     = 8;
@@ -78,11 +84,11 @@ namespace glfw_cpp
 
         // @thread_safety: call this function from the main thread only
         Window createWindow(
-            WindowHint  hint,
-            std::string title,
-            int         width,
-            int         height,
-            bool        bindImmediately = true
+            const WindowHint& hint,
+            std::string_view  title,
+            int               width,
+            int               height,
+            bool              bindImmediately = true
         );
 
         // this function poll events for all windows and then sleep for specified time. won't sleep

@@ -22,7 +22,7 @@ using LogLevel = glfw_cpp::Context::LogLevel;
 
 namespace
 {
-    void configureHints(glfw_cpp::WindowHint hint)
+    void configureHints(const glfw_cpp::WindowHint& hint)
     {
         using F = glfw_cpp::WindowHint::FlagBit;
 
@@ -108,18 +108,24 @@ namespace glfw_cpp
     }
 
     Window WindowManager::createWindow(
-        WindowHint  hint,
-        std::string title,
-        int         width,
-        int         height,
-        bool        bindImmediately
+        const WindowHint& hint,
+        std::string_view  title,
+        int               width,
+        int               height,
+        bool              bindImmediately
     )
     {
         validateAccess(true);
 
         configureHints(hint);
 
-        auto handle = glfwCreateWindow(width, height, title.data(), nullptr, nullptr);
+        const auto handle = glfwCreateWindow(
+            width,
+            height,
+            title.data(),
+            hint.m_monitor ? hint.m_monitor->handle() : nullptr,
+            hint.m_share ? hint.m_share->handle() : nullptr
+        );
         if (handle == nullptr) {
             Context::logC("(WindowManager) Window creation failed");
             throw std::runtime_error{ "Failed to create window" };
@@ -128,7 +134,7 @@ namespace glfw_cpp
 
         Context::logI("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
 
-        Window::Properties prop{ .m_title = std::move(title) };
+        Window::Properties prop{ .m_title = { title.begin(), title.end() } };
 
         glfwGetWindowPos(handle, &prop.m_pos.m_x, &prop.m_pos.m_y);
         glfwGetWindowSize(handle, &prop.m_dimension.m_width, &prop.m_dimension.m_height);
