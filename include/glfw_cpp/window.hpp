@@ -23,18 +23,30 @@ namespace glfw_cpp
         struct Properties
         {
             std::string m_title;
-            int         m_width;
-            int         m_height;
+
+            struct
+            {
+                int m_x;
+                int m_y;
+            } m_pos;
+
+            struct
+            {
+                int m_width;
+                int m_height;
+            } m_dimension;
 
             struct
             {
                 double m_x;
                 double m_y;
-            } m_cursorPos;
+                bool   m_inside;
+            } m_cursor;
         };
 
         template <typename Sig>
-        using Fun = std::function<Sig>;    // use std::move_only_function in the future
+        using Fun    = std::function<Sig>;    // use std::move_only_function in the future
+        using Handle = GLFWwindow*;
 
         Window(Window&&) noexcept;
         Window& operator=(Window&&) noexcept;
@@ -63,8 +75,7 @@ namespace glfw_cpp
         bool              isMouseCaptured() const { return m_captureMouse; }
         const Properties& properties() const { return m_properties; }
         double            deltaTime() const;
-        GLFWwindow*       handle() const { return m_windowHandle; }
-        std::size_t       id() const { return m_id; }
+        Handle            handle() const { return m_handle; }
 
         // may return a defaulted std::thread::id
         std::thread::id attachedThreadId() const { return m_attachedThreadId; };
@@ -74,8 +85,7 @@ namespace glfw_cpp
 
         Window(
             WindowManager& manager,
-            std::size_t    id,
-            GLFWwindow*    handle,
+            Handle         handle,
             Properties&&   properties,
             bool           bindImmediately
         );
@@ -96,17 +106,17 @@ namespace glfw_cpp
 
         // TODO; implement more callbacks
 
+        void pushEvent(Event&& event);
         void processQueuedTasks();
         void updateDeltaTime();
 
         void swap(Window& other) noexcept;
 
         WindowManager* m_manager;
+        Handle         m_handle;
 
         // window stuff
-        std::size_t     m_id;
         std::thread::id m_attachedThreadId;
-        GLFWwindow*     m_windowHandle;
         Properties      m_properties;
         double          m_lastFrameTime = 0.0;
         double          m_deltaTime     = 0.0;

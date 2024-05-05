@@ -2,7 +2,6 @@
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
 #include <chrono>
-#include <cstddef>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -64,7 +63,8 @@ namespace glfw_cpp
         friend Context;
 
         template <typename Sig>
-        using Fun = std::function<Sig>;
+        using Fun    = std::function<Sig>;
+        using Handle = GLFWwindow*;
 
         class ErrorAccessFromWrongThread;
 
@@ -96,11 +96,11 @@ namespace glfw_cpp
         void waitEvents(std::optional<std::chrono::milliseconds> timeout = {});
 
         // @thread_safety: this function can be called from any thread
-        void requestDeleteWindow(std::size_t id);
+        void requestDeleteWindow(Handle handle);
 
         // this function is supposed to be called from a window thread.
         // @thread_safety: this function can be called from any thread
-        void enqueueWindowTask(std::size_t windowId, Fun<void()>&& task);
+        void enqueueWindowTask(Handle handle, Fun<void()>&& task);
 
         // this function can be called for any task that needs to be executed in the main thread.
         // for window task, use `enqueueWindowTask` instead.
@@ -114,30 +114,23 @@ namespace glfw_cpp
     private:
         struct GLFWwindowDeleter
         {
-            void operator()(GLFWwindow* handle) const;
+            void operator()(Handle handle) const;
         };
         using UniqueGLFWwindow = std::unique_ptr<GLFWwindow, GLFWwindowDeleter>;
 
-        struct WindowEntry
-        {
-            std::size_t      m_id;
-            UniqueGLFWwindow m_window;
-        };
-
         struct WindowTask
         {
-            std::size_t m_id;
+            Handle      m_handle;
             Fun<void()> m_task;
         };
 
-        mutable std::mutex m_mutex;              // protects current instance
-        std::size_t        m_windowCount = 0;    // id will be generated from here
+        mutable std::mutex m_mutex;    // protects current instance
         std::thread::id    m_attachedThreadId;
 
-        std::vector<WindowEntry> m_windows;
-        std::deque<std::size_t>  m_windowDeleteQueue;
-        std::deque<WindowTask>   m_windowTaskQueue;    // window task (checked)
-        std::deque<Fun<void()>>  m_taskQueue;          // general task
+        std::vector<UniqueGLFWwindow> m_windows;
+        std::deque<Handle>            m_windowDeleteQueue;
+        std::deque<WindowTask>        m_windowTaskQueue;    // window task (checked)
+        std::deque<Fun<void()>>       m_taskQueue;          // general task
 
         WindowManager(std::thread::id threadId);
         void validateAccess(bool checkThread) const;

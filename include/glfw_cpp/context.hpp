@@ -1,6 +1,7 @@
 #ifndef CONTEXT_HPP_AO39EW8FOEW
 #define CONTEXT_HPP_AO39EW8FOEW
 
+#include <format>
 #include <functional>
 #include <memory>
 #include <string>
@@ -96,11 +97,35 @@ namespace glfw_cpp
         // can be called from any thread
         static void log(LogLevel level, std::string msg);
 
-        static void logD(std::string msg) { log(LogLevel::DEBUG, std::move(msg)); }
-        static void logI(std::string msg) { log(LogLevel::INFO, std::move(msg)); }
-        static void logW(std::string msg) { log(LogLevel::WARNING, std::move(msg)); }
-        static void logE(std::string msg) { log(LogLevel::ERROR, std::move(msg)); }
-        static void logC(std::string msg) { log(LogLevel::CRITICAL, std::move(msg)); }
+        template <typename... Args>
+        static void logD(std::format_string<Args...> fmt, Args&&... args)
+        {
+            log(LogLevel::DEBUG, std::format(fmt, std::forward<Args>(args)...));
+        }
+
+        template <typename... Args>
+        static void logI(std::format_string<Args...> fmt, Args&&... args)
+        {
+            log(LogLevel::INFO, std::format(fmt, std::forward<Args>(args)...));
+        }
+
+        template <typename... Args>
+        static void logW(std::format_string<Args...> fmt, Args&&... args)
+        {
+            log(LogLevel::WARNING, std::format(fmt, std::forward<Args>(args)...));
+        }
+
+        template <typename... Args>
+        static void logE(std::format_string<Args...> fmt, Args&&... args)
+        {
+            log(LogLevel::ERROR, std::format(fmt, std::forward<Args>(args)...));
+        }
+
+        template <typename... Args>
+        static void logC(std::format_string<Args...> fmt, Args&&... args)
+        {
+            log(LogLevel::CRITICAL, std::format(fmt, std::forward<Args>(args)...));
+        }
     };
 
     // Global state required to interface with GLFW

@@ -9,7 +9,6 @@
 #include <GLFW/glfw3.h>
 
 #include <cassert>
-#include <format>
 #include <functional>
 #include <mutex>
 #include <thread>
@@ -24,7 +23,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::WindowMoved{
+        w->pushEvent(Event::WindowMoved{
             .m_xPos = x,
             .m_yPos = y,
         });
@@ -36,10 +35,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_properties.m_width  = width;
-        w->m_properties.m_height = height;
-
-        w->m_eventQueue.emplace_back(Event::WindowResized{
+        w->pushEvent(Event::WindowResized{
             .m_width  = width,
             .m_height = height,
         });
@@ -52,7 +48,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::WindowClosed{});
+        w->pushEvent(Event::WindowClosed{});
     }
 
     void Window::window_refresh_callback(GLFWwindow* window)
@@ -62,7 +58,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::WindowRefreshed{});
+        w->pushEvent(Event::WindowRefreshed{});
     }
 
     void Window::window_focus_callback(GLFWwindow* window, int focused)
@@ -72,7 +68,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::WindowFocused{
+        w->pushEvent(Event::WindowFocused{
             .m_focused = focused == GLFW_TRUE,
         });
     }
@@ -84,7 +80,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::WindowIconified{
+        w->pushEvent(Event::WindowIconified{
             .m_iconified = iconified == GLFW_TRUE,
         });
     }
@@ -96,7 +92,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::FramebufferResized{
+        w->pushEvent(Event::FramebufferResized{
             .m_width  = width,
             .m_height = height,
         });
@@ -110,11 +106,11 @@ namespace glfw_cpp
         }
 
         if (button > GLFW_MOUSE_BUTTON_LAST) {
-            Context::logW(std::format("(Window) Invalid mouse button: {}", button));
+            Context::logW("(Window) Invalid mouse button: {}", button);
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::ButtonPressed{
+        w->pushEvent(Event::ButtonPressed{
             .m_button = static_cast<MouseButton>(button),
             .m_state  = static_cast<MouseButtonState>(action),
             .m_mods   = static_cast<ModifierKey::Base>(mods),
@@ -128,12 +124,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_properties.m_cursorPos = {
-            .m_x = x,
-            .m_y = y,
-        };
-
-        w->m_eventQueue.emplace_back(Event::CursorMoved{
+        w->pushEvent(Event::CursorMoved{
             .m_xPos = x,
             .m_yPos = y,
         });
@@ -146,7 +137,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::CursorEntered{
+        w->pushEvent(Event::CursorEntered{
             .m_entered = entered == GLFW_TRUE,
         });
     }
@@ -158,7 +149,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::Scrolled{
+        w->pushEvent(Event::Scrolled{
             .m_xOffset = x,
             .m_yOffset = y,
         });
@@ -171,7 +162,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::KeyPressed{
+        w->pushEvent(Event::KeyPressed{
             .m_key      = static_cast<KeyCode>(key),
             .m_scancode = scancode,
             .m_state    = static_cast<KeyState>(action),
@@ -186,7 +177,7 @@ namespace glfw_cpp
             return;
         }
 
-        w->m_eventQueue.emplace_back(Event::CharInput{
+        w->pushEvent(Event::CharInput{
             .m_codepoint = codepoint,
         });
     }
@@ -194,15 +185,13 @@ namespace glfw_cpp
     // this constructor must be called only from main thread (WindowManager run in main thread)
     Window::Window(
         WindowManager& manager,
-        std::size_t    id,
-        GLFWwindow*    handle,
+        Handle         handle,
         Properties&&   properties,
         bool           bindImmediately
     )
         : m_manager{ &manager }
-        , m_id{ id }
+        , m_handle{ handle }
         , m_attachedThreadId{}
-        , m_windowHandle{ handle }
         , m_properties{ std::move(properties) }
     {
         bind();
@@ -215,22 +204,22 @@ namespace glfw_cpp
             // don't need to do anything for NoApi
         }
 
-        glfwSetWindowPosCallback(m_windowHandle, window_pos_callback);
-        glfwSetWindowSizeCallback(m_windowHandle, window_size_callback);
-        glfwSetWindowCloseCallback(m_windowHandle, window_close_callback);
-        glfwSetWindowRefreshCallback(m_windowHandle, window_refresh_callback);
-        glfwSetWindowFocusCallback(m_windowHandle, window_focus_callback);
-        glfwSetWindowIconifyCallback(m_windowHandle, window_iconify_callback);
-        glfwSetFramebufferSizeCallback(m_windowHandle, framebuffer_size_callback);
-        glfwSetMouseButtonCallback(m_windowHandle, mouse_button_callback);
-        glfwSetCursorPosCallback(m_windowHandle, cursor_pos_callback);
-        glfwSetCursorEnterCallback(m_windowHandle, cursor_enter_callback);
-        glfwSetScrollCallback(m_windowHandle, scroll_callback);
-        glfwSetKeyCallback(m_windowHandle, key_callback);
-        glfwSetCharCallback(m_windowHandle, char_callback);
+        glfwSetWindowPosCallback(m_handle, window_pos_callback);
+        glfwSetWindowSizeCallback(m_handle, window_size_callback);
+        glfwSetWindowCloseCallback(m_handle, window_close_callback);
+        glfwSetWindowRefreshCallback(m_handle, window_refresh_callback);
+        glfwSetWindowFocusCallback(m_handle, window_focus_callback);
+        glfwSetWindowIconifyCallback(m_handle, window_iconify_callback);
+        glfwSetFramebufferSizeCallback(m_handle, framebuffer_size_callback);
+        glfwSetMouseButtonCallback(m_handle, mouse_button_callback);
+        glfwSetCursorPosCallback(m_handle, cursor_pos_callback);
+        glfwSetCursorEnterCallback(m_handle, cursor_enter_callback);
+        glfwSetScrollCallback(m_handle, scroll_callback);
+        glfwSetKeyCallback(m_handle, key_callback);
+        glfwSetCharCallback(m_handle, char_callback);
 
         setVsync(m_vsync);
-        glfwSetWindowUserPointer(m_windowHandle, this);
+        glfwSetWindowUserPointer(m_handle, this);
 
         if (!bindImmediately) {
             unbind();
@@ -240,9 +229,8 @@ namespace glfw_cpp
     // clang-format off
     Window::Window(Window&& other) noexcept
         : m_manager          { std::exchange(other.m_manager, nullptr) }
-        , m_id               { std::exchange(other.m_id, 0) }
+        , m_handle           { std::exchange(other.m_handle, nullptr) }
         , m_attachedThreadId { std::exchange(other.m_attachedThreadId, {}) }
-        , m_windowHandle     { std::exchange(other.m_windowHandle, nullptr) }
         , m_properties       { std::move(other.m_properties) }
         , m_lastFrameTime    { other.m_lastFrameTime }
         , m_deltaTime        { other.m_deltaTime }
@@ -252,7 +240,7 @@ namespace glfw_cpp
         , m_eventQueue       { std::move(other.m_eventQueue) }
     // clang-format on
     {
-        glfwSetWindowUserPointer(m_windowHandle, this);
+        glfwSetWindowUserPointer(m_handle, this);
     }
 
     Window& Window::operator=(Window&& other) noexcept
@@ -261,16 +249,15 @@ namespace glfw_cpp
             return *this;
         }
 
-        if (m_windowHandle != nullptr && m_id != 0) {
+        if (m_handle != nullptr) {
             unbind();
-            glfwSetWindowUserPointer(m_windowHandle, nullptr);    // remove user pointer
-            m_manager->requestDeleteWindow(m_id);
+            glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
+            m_manager->requestDeleteWindow(m_handle);
         }
 
         m_manager          = std::exchange(other.m_manager, nullptr);
-        m_id               = std::exchange(other.m_id, 0);
+        m_handle           = std::exchange(other.m_handle, nullptr);
         m_attachedThreadId = other.m_attachedThreadId;
-        m_windowHandle     = std::exchange(other.m_windowHandle, nullptr);
         m_properties       = std::move(other.m_properties);
         m_lastFrameTime    = other.m_lastFrameTime;
         m_deltaTime        = other.m_deltaTime;
@@ -279,17 +266,17 @@ namespace glfw_cpp
         m_taskQueue        = std::move(other.m_taskQueue);
         m_eventQueue       = std::move(other.m_eventQueue);
 
-        glfwSetWindowUserPointer(m_windowHandle, this);
+        glfwSetWindowUserPointer(m_handle, this);
 
         return *this;
     }
 
     Window::~Window()
     {
-        if (m_windowHandle != nullptr && m_id != 0) {
+        if (m_handle != nullptr) {
             unbind();
-            glfwSetWindowUserPointer(m_windowHandle, nullptr);    // remove user pointer
-            m_manager->requestDeleteWindow(m_id);
+            glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
+            m_manager->requestDeleteWindow(m_handle);
         } else {
             // window is in invalid state (probably moved)
         }
@@ -301,10 +288,10 @@ namespace glfw_cpp
             // no thread attached, attach to this thread
 
             m_attachedThreadId = std::this_thread::get_id();
-            Context::logI(std::format("(Window) Context ({}) attached (+)", m_id));
+            Context::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
             if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
-                glfwMakeContextCurrent(m_windowHandle);
+                glfwMakeContextCurrent(m_handle);
             }
 
         } else if (m_attachedThreadId == std::this_thread::get_id()) {
@@ -314,13 +301,14 @@ namespace glfw_cpp
         } else {
             // different thread, cannot attach
 
-            Context::logC(std::format(
-                "(Window) Context ({}) already attached to another thread [{:#x}], cannot attach "
+            Context::logC(
+                "(Window) Context ({:#x}) already attached to another thread [{:#x}], cannot "
+                "attach "
                 "to this thread [{:#x}].",
-                m_id,
+                (std::size_t)m_handle,
                 util::getThreadNum(m_attachedThreadId),
                 util::getThreadNum(std::this_thread::get_id())
-            ));
+            );
 
             // should I throw instead?
             assert(false && "Context already attached to another thread");
@@ -334,7 +322,7 @@ namespace glfw_cpp
         }
 
         if (m_attachedThreadId != std::thread::id{}) {
-            Context::logI(std::format("(Window) Context ({}) detached (-)", m_id));
+            Context::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
             m_attachedThreadId = std::thread::id{};
         }
     }
@@ -351,25 +339,27 @@ namespace glfw_cpp
 
     void Window::setWindowSize(int width, int height)
     {
-        m_properties.m_width  = width;
-        m_properties.m_height = height;
+        m_properties.m_dimension = {
+            .m_width  = width,
+            .m_height = height,
+        };
 
-        m_manager->enqueueWindowTask(m_id, [this, width, height] {
-            glfwSetWindowSize(m_windowHandle, width, height);
+        m_manager->enqueueWindowTask(m_handle, [this, width, height] {
+            glfwSetWindowSize(m_handle, width, height);
         });
     }
 
     void Window::updateTitle(const std::string& title)
     {
         m_properties.m_title = title;
-        m_manager->enqueueWindowTask(m_id, [this] {
-            glfwSetWindowTitle(m_windowHandle, m_properties.m_title.c_str());
+        m_manager->enqueueWindowTask(m_handle, [this] {
+            glfwSetWindowTitle(m_handle, m_properties.m_title.c_str());
         });
     }
 
     void Window::run(Fun<void(std::deque<Event>&&)>&& func)
     {
-        while (glfwWindowShouldClose(m_windowHandle) == GLFW_FALSE) {
+        while (glfwWindowShouldClose(m_handle) == GLFW_FALSE) {
             updateDeltaTime();
             processQueuedTasks();
 
@@ -381,7 +371,7 @@ namespace glfw_cpp
             func(std::move(events));
 
             if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
-                glfwSwapBuffers(m_windowHandle);
+                glfwSwapBuffers(m_handle);
             }
         }
     }
@@ -394,8 +384,8 @@ namespace glfw_cpp
 
     void Window::requestClose()
     {
-        glfwSetWindowShouldClose(m_windowHandle, 1);
-        Context::logI(std::format("(Window) Window ({}) requested to close", m_id));
+        glfwSetWindowShouldClose(m_handle, 1);
+        Context::logI("(Window) Window ({:#x}) requested to close", (std::size_t)m_handle);
     }
 
     double Window::deltaTime() const
@@ -408,14 +398,33 @@ namespace glfw_cpp
         m_captureMouse = value;
         m_manager->enqueueTask([this] {
             if (m_captureMouse) {
-                auto [x, y] = m_properties.m_cursorPos;
-                glfwGetCursorPos(m_windowHandle, &x, &y);    // prevent sudden jump on first capture
-                glfwSetInputMode(m_windowHandle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                auto [x, y, _] = m_properties.m_cursor;
+                glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
+                glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
-                glfwSetInputMode(m_windowHandle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+                glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
         });
         return *this;
+    }
+
+    void Window::pushEvent(Event&& event)
+    {
+        std::scoped_lock lock{ m_queueMutex };
+
+        // update properties from event before pushing it to the queue
+        if (auto e = event.getIf<Event::WindowMoved>()) {
+            m_properties.m_pos = { e->m_xPos, e->m_yPos };
+        } else if (auto e = event.getIf<Event::WindowResized>()) {
+            m_properties.m_dimension = { e->m_width, e->m_height };
+        } else if (auto e = event.getIf<Event::CursorMoved>()) {
+            m_properties.m_cursor.m_x = e->m_xPos;
+            m_properties.m_cursor.m_y = e->m_yPos;
+        } else if (auto e = event.getIf<Event::CursorEntered>()) {
+            m_properties.m_cursor.m_inside = e->m_entered;
+        }
+
+        m_eventQueue.push_back(std::move(event));
     }
 
     void Window::processQueuedTasks()
