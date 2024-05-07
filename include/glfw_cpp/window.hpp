@@ -107,8 +107,8 @@ namespace glfw_cpp
         static void window_maximize_callback(GLFWwindow* window, int maximized);
         static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
 
-        // NOTE: These two callbacks are beyond Window control alone, maybe setting it in the
-        //       glfw_cpp::Context makes more sense. But then, there's the problem of how to
+        // NOTE: These two callbacks are beyond glfw_cpp::Window control alone, maybe setting it in
+        //       the glfw_cpp::Instance makes more sense. But then, there's the problem of how to
         //       'broadcast' the event to all opened windows...
         /*
             static void monitor_callback(GLFWmonitor* monitor, int action);

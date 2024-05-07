@@ -1,7 +1,7 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 #include <fmt/core.h>
-#include <glfw_cpp/context.hpp>
+#include <glfw_cpp/instance.hpp>
 #include <glfw_cpp/monitor.hpp>
 
 auto operator==(const glfw_cpp::VideoMode& lhs, const glfw_cpp::VideoMode& rhs) -> bool
@@ -16,8 +16,7 @@ auto operator==(const glfw_cpp::VideoMode& lhs, const glfw_cpp::VideoMode& rhs) 
 
 int main()
 {
-    auto context = glfw_cpp::init(glfw_cpp::Api::NoApi{});
-
+    auto instance = glfw_cpp::init(glfw_cpp::Api::NoApi{});
     auto monitors = glfw_cpp::getMonitors();
 
     for (int count = 1; auto monitor : monitors) {

@@ -1,7 +1,7 @@
 #ifndef WINDOW_MANAGER_HPP_OR5VIUQW
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
-#include "glfw_cpp/context.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/monitor.hpp"
 
 #include <chrono>
@@ -24,7 +24,7 @@ namespace glfw_cpp
         return duration;
     }
 
-    class Context;
+    class Instance;
     class Window;
 
     struct WindowHint
@@ -66,7 +66,7 @@ namespace glfw_cpp
     class WindowManager
     {
     public:
-        friend Context;
+        friend Instance;
 
         template <typename Sig>
         using Fun    = std::function<Sig>;

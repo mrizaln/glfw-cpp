@@ -12,16 +12,16 @@
 
 namespace glfw = glfw_cpp;
 
-void logCallback(glfw::Context::LogLevel level, std::string message)
+void logCallback(glfw::Instance::LogLevel level, std::string message)
 {
     auto levelStr = [&] {
         switch (level) {
-        case glfw::Context::LogLevel::NONE: return "NONE";
-        case glfw::Context::LogLevel::DEBUG: return "DEBUG";
-        case glfw::Context::LogLevel::INFO: return "INFO";
-        case glfw::Context::LogLevel::WARNING: return "WARNING";
-        case glfw::Context::LogLevel::ERROR: return "ERROR";
-        case glfw::Context::LogLevel::CRITICAL: return "CRITICAL";
+        case glfw::Instance::LogLevel::NONE: return "NONE";
+        case glfw::Instance::LogLevel::DEBUG: return "DEBUG";
+        case glfw::Instance::LogLevel::INFO: return "INFO";
+        case glfw::Instance::LogLevel::WARNING: return "WARNING";
+        case glfw::Instance::LogLevel::ERROR: return "ERROR";
+        case glfw::Instance::LogLevel::CRITICAL: return "CRITICAL";
         default: [[unlikely]] return "UNKNOWN";
         }
     };
@@ -93,8 +93,8 @@ int main()
         .m_loader  = loader,
     };
 
-    auto context       = glfw::init(api, logCallback);
-    auto windowManager = context->createWindowManager();
+    auto isntance      = glfw::init(api, logCallback);
+    auto windowManager = isntance->createWindowManager();
 
     auto window1 = windowManager.createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
 

@@ -1,5 +1,5 @@
 #include "glfw_cpp/window_manager.hpp"
-#include "glfw_cpp/context.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window.hpp"
 
 #include "util.hpp"
@@ -14,11 +14,10 @@
 #include <mutex>
 #include <optional>
 #include <stdexcept>
-#include <string>
 #include <thread>
 #include <utility>
 
-using LogLevel = glfw_cpp::Context::LogLevel;
+using LogLevel = glfw_cpp::Instance::LogLevel;
 
 namespace
 {
@@ -127,12 +126,12 @@ namespace glfw_cpp
             hint.m_share ? hint.m_share->handle() : nullptr
         );
         if (handle == nullptr) {
-            Context::logC("(WindowManager) Window creation failed");
+            Instance::logC("(WindowManager) Window creation failed");
             throw std::runtime_error{ "Failed to create window" };
         }
         m_windows.emplace_back(handle);
 
-        Context::logI("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
+        Instance::logI("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
 
         Window::Properties prop{ .m_title = { title.begin(), title.end() } };
 
@@ -228,7 +227,7 @@ namespace glfw_cpp
         // window deletion
         for (auto handle : std::exchange(m_windowDeleteQueue, {})) {
             if (std::erase_if(m_windows, [handle](auto& e) { return e.get() == handle; }) != 0) {
-                Context::logI("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
+                Instance::logI("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
             }
         }
 
@@ -237,7 +236,7 @@ namespace glfw_cpp
             if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
                 task();
             } else {
-                Context::logW(
+                Instance::logW(
                     "(WindowManager) Task for window ({:#x}) failed: window has destroyed",
                     (std::size_t)handle
                 );

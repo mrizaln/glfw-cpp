@@ -1,4 +1,4 @@
-#include "glfw_cpp/context.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window_manager.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -12,52 +12,54 @@
 
 namespace glfw_cpp
 {
-    Context::~Context()
+    Instance::~Instance()
     {
         if (m_initialized) {
             glfwTerminate();
         }
     }
 
-    void Context::reset()
+    void Instance::reset()
     {
         glfwTerminate();
         m_initialized = false;
     }
 
-    Context& Context::get()
+    Instance& Instance::get()
     {
-        return Context::s_instance;
+        return Instance::s_instance;
     }
 
-    void Context::log(LogLevel level, std::string msg)
+    void Instance::log(LogLevel level, std::string msg)
     {
-        auto& ctx = Context::get();
-        assert(ctx.m_initialized && "Context not initialized!");
+        auto& instance = Instance::get();
+        assert(instance.m_initialized && "Instance not initialized!");
 
-        if (ctx.m_loggger) {
-            ctx.m_loggger(level, std::move(msg));
+        if (instance.m_loggger) {
+            instance.m_loggger(level, std::move(msg));
         }
     }
 
-    Context::Handle init(Api::Variant&& api, Context::LogFun&& logger)
+    Instance::Handle init(Api::Variant&& api, Instance::LogFun&& logger)
     {
-        auto& ctx = Context::get();
+        auto& instance = Instance::get();
 
-        if (ctx.m_initialized) {
-            throw std::runtime_error{ "Context already initialized!" };
+        if (instance.m_initialized) {
+            throw std::runtime_error{ "Instance already initialized!" };
         }
 
-        ctx.m_api         = std::move(api);
-        ctx.m_loggger     = std::move(logger);
-        ctx.m_initialized = true;
+        instance.m_api         = std::move(api);
+        instance.m_loggger     = std::move(logger);
+        instance.m_initialized = true;
 
         if (glfwInit() != GLFW_TRUE) {
             throw std::runtime_error{ "Failed to initialize GLFW!" };
         }
 
         glfwSetErrorCallback([](int err, const char* msg) {
-            Context::log(Context::LogLevel::ERROR, std::format("Internal error ({}) {}", err, msg));
+            Instance::log(
+                Instance::LogLevel::ERROR, std::format("Internal error ({}) {}", err, msg)
+            );
         });
 
         std::visit(
@@ -87,13 +89,13 @@ namespace glfw_cpp
                     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
                 }
             },
-            ctx.m_api
+            instance.m_api
         );
 
-        return { &Context::s_instance, [](Context* instance) { instance->reset(); } };
+        return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
 
-    WindowManager Context::createWindowManager()
+    WindowManager Instance::createWindowManager()
     {
         return WindowManager{ std::this_thread::get_id() };
     }

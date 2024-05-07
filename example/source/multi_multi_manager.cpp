@@ -41,18 +41,18 @@ int main()
 {
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    auto context = glfw_cpp::init(glfw::Api::OpenGL{
+    auto instance = glfw_cpp::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
         .m_profile = glfw::Api::OpenGL::Profile::CORE,
         .m_loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 
-    // WindowManager does not have a restriction like Context. It can be instantiated more than
+    // WindowManager does not have a restriction like Instance. It can be instantiated more than
     // once, but most WindowManager operations still must be called from main thread. You can think
     // of WindowManager as an orchestrator of multiple Windows created by itself.
-    auto wm1 = context->createWindowManager();
-    auto wm2 = context->createWindowManager();
+    auto wm1 = instance->createWindowManager();
+    auto wm2 = instance->createWindowManager();
 
     auto window11 = wm1.createWindow({}, "Learn glfw-cpp 11", 800, 600, false);
     auto window12 = wm1.createWindow({}, "Learn glfw-cpp 12", 800, 600, false);

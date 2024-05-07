@@ -63,10 +63,11 @@ namespace glfw = glfw_cpp;
 
 int main()
 {
-    // Context here refers to global state that glfw initializes not OpenGL context.
-    // This class can only have one valid instance and throws when instantiated again.
-    // The init function returns a RAII handle that automatically deinit the Context on destruction.
-    glfw::Context::Handle context = glfw_cpp::init(glfw::Api::OpenGL{
+    // Instance here refers to global state that glfw_cpp initializes in order to communicate with
+    // the internals of GLFW. This class can only have one valid instance and throws when
+    // instantiated again. The init function returns a RAII handle that automatically deinit the
+    // Instance on destruction.
+    glfw::Instance::Handle instance = glfw_cpp::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
         .m_profile = glfw::Api::OpenGL::Profile::CORE,
@@ -79,7 +80,7 @@ int main()
             },
     });
 
-    glfw::WindowManager wm     = context->createWindowManager();
+    glfw::WindowManager wm     = instance->createWindowManager();
     glfw::WindowHint    hint   = {};    // use default hint
     glfw::Window        window = wm.createWindow(hint, "Learn glfw-cpp", 800, 600);
 
@@ -110,6 +111,6 @@ int main()
 
 No manual cleanup necessary, the classes defined already using RAII pattern.
 
-One caveat is that you need to make sure that `glfw_cpp::Context::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
+One caveat is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
 The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/multi.cpp) or [here](./example/source/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).

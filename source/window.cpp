@@ -1,5 +1,5 @@
 #include "glfw_cpp/window.hpp"
-#include "glfw_cpp/context.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window_manager.hpp"
 #include "glfw_cpp/event.hpp"
 
@@ -108,7 +108,7 @@ namespace glfw_cpp
         }
 
         if (button > GLFW_MOUSE_BUTTON_LAST) {
-            Context::logW("(Window) Invalid mouse button: {}", button);
+            Instance::logW("(Window) Invalid mouse button: {}", button);
             return;
         }
 
@@ -240,9 +240,9 @@ namespace glfw_cpp
     {
         bind();
 
-        if (auto* api = std::get_if<Api::OpenGL>(&Context::get().m_api)) {
+        if (auto* api = std::get_if<Api::OpenGL>(&Instance::get().m_api)) {
             api->m_loader(handle, glfwGetProcAddress);
-        } else if (auto* api = std::get_if<Api::OpenGLES>(&Context::get().m_api)) {
+        } else if (auto* api = std::get_if<Api::OpenGLES>(&Instance::get().m_api)) {
             api->m_loader(handle, glfwGetProcAddress);
         } else {
             // don't need to do anything for NoApi
@@ -335,9 +335,9 @@ namespace glfw_cpp
             // no thread attached, attach to this thread
 
             m_attachedThreadId = std::this_thread::get_id();
-            Context::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
+            Instance::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
-            if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
+            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
             }
 
@@ -348,7 +348,7 @@ namespace glfw_cpp
         } else {
             // different thread, cannot attach
 
-            Context::logC(
+            Instance::logC(
                 "(Window) Context ({:#x}) already attached to another thread [{:#x}], cannot "
                 "attach "
                 "to this thread [{:#x}].",
@@ -364,12 +364,12 @@ namespace glfw_cpp
 
     void Window::unbind()
     {
-        if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
+        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
             glfwMakeContextCurrent(nullptr);
         }
 
         if (m_attachedThreadId != std::thread::id{}) {
-            Context::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
+            Instance::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
             m_attachedThreadId = std::thread::id{};
         }
     }
@@ -417,7 +417,7 @@ namespace glfw_cpp
 
             func(std::move(events));
 
-            if (!std::holds_alternative<Api::NoApi>(Context::get().m_api)) {
+            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwSwapBuffers(m_handle);
             }
         }
@@ -432,7 +432,7 @@ namespace glfw_cpp
     void Window::requestClose()
     {
         glfwSetWindowShouldClose(m_handle, 1);
-        Context::logI("(Window) Window ({:#x}) requested to close", (std::size_t)m_handle);
+        Instance::logI("(Window) Window ({:#x}) requested to close", (std::size_t)m_handle);
     }
 
     double Window::deltaTime() const
