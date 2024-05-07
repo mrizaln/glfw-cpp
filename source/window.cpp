@@ -4,6 +4,8 @@
 #include "glfw_cpp/event.hpp"
 
 #include "util.hpp"
+#include <filesystem>
+#include <vector>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -182,6 +184,48 @@ namespace glfw_cpp
         });
     }
 
+    void Window::file_drop_callback(GLFWwindow* window, int count, const char** paths)
+    {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
+        std::vector<std::filesystem::path> pathsVec(static_cast<std::size_t>(count));
+        for (std::size_t i = 0; i < pathsVec.size(); ++i) {
+            pathsVec[i] = std::filesystem::path{ paths[i] };
+        }
+
+        w->pushEvent(Event::FileDropped{
+            .m_files = std::move(pathsVec),
+        });
+    }
+
+    void Window::window_maximize_callback(GLFWwindow* window, int maximized)
+    {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
+        w->pushEvent(Event::WindowMaximized{
+            .m_maximized = maximized == GLFW_TRUE,
+        });
+    }
+
+    void Window::window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+    {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
+        w->pushEvent(Event::WindowScaleChanged{
+            .m_xScale = xscale,
+            .m_yScale = yscale,
+        });
+    }
+
     // this constructor must be called only from main thread (WindowManager run in main thread)
     Window::Window(
         WindowManager& manager,
@@ -217,6 +261,9 @@ namespace glfw_cpp
         glfwSetScrollCallback(m_handle, scroll_callback);
         glfwSetKeyCallback(m_handle, key_callback);
         glfwSetCharCallback(m_handle, char_callback);
+        glfwSetDropCallback(m_handle, file_drop_callback);
+        glfwSetWindowMaximizeCallback(m_handle, window_maximize_callback);
+        glfwSetWindowContentScaleCallback(m_handle, window_content_scale_callback);
 
         setVsync(m_vsync);
         glfwSetWindowUserPointer(m_handle, this);

@@ -9,7 +9,7 @@
 #include <mutex>
 #include <optional>
 #include <deque>
-#include <string>
+#include <string_view>
 #include <thread>
 
 struct GLFWwindow;

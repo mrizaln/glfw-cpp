@@ -6,5 +6,6 @@
 #include "event.hpp"
 #include "window_manager.hpp"
 #include "window.hpp"
+#include "monitor.hpp"
 
 #endif /* end of include guard: GLFW_CPP_HPP_23OERFAF7EW */

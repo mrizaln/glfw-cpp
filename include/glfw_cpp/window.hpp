@@ -103,8 +103,17 @@ namespace glfw_cpp
         static void scroll_callback(GLFWwindow* window, double x, double y);
         static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
         static void char_callback(GLFWwindow* window, unsigned int codepoint);
+        static void file_drop_callback(GLFWwindow* window, int count, const char** paths);
+        static void window_maximize_callback(GLFWwindow* window, int maximized);
+        static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
 
-        // TODO; implement more callbacks
+        // NOTE: These two callbacks are beyond Window control alone, maybe setting it in the
+        //       glfw_cpp::Context makes more sense. But then, there's the problem of how to
+        //       'broadcast' the event to all opened windows...
+        /*
+            static void monitor_callback(GLFWmonitor* monitor, int action);
+            static void joystick_callback(int jid, int action);
+        */
 
         void pushEvent(Event&& event);
         void processQueuedTasks();

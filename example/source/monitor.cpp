@@ -43,7 +43,7 @@ int main()
         bool isCurrent = false;
         for (auto& mode : videoModes) {
             fmt::print("\t\t{}x{} \tat {}Hz", mode.width, mode.height, mode.refreshRate);
-            if (isCurrent = mode == currentMode; isCurrent) {
+            if (isCurrent = (mode == currentMode); isCurrent) {
                 fmt::println("\t(current)");
             } else {
                 fmt::println("");

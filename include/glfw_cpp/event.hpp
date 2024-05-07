@@ -2,8 +2,10 @@
 #define EVENT_HPP_Q439GUKLHFWE
 
 #include "glfw_cpp/input.hpp"
+#include "glfw_cpp/monitor.hpp"
 #include "glfw_cpp/detail/helper.hpp"
 
+#include <filesystem>
 #include <type_traits>
 #include <variant>
 
@@ -89,7 +91,33 @@ namespace glfw_cpp
             unsigned int m_codepoint;
         };
 
-        // TODO: Implement the rest of the events
+        struct MonitorConnected
+        {
+            Monitor m_monitor;
+            bool    m_connected;
+        };
+
+        struct FileDropped
+        {
+            std::vector<std::filesystem::path> m_files;
+        };
+
+        struct JoystickConnected
+        {
+            int  m_joystickId;    // No dedicated wrapper class for joystick for now
+            bool m_connected;
+        };
+
+        struct WindowMaximized
+        {
+            bool m_maximized;
+        };
+
+        struct WindowScaleChanged
+        {
+            float m_xScale;
+            float m_yScale;
+        };
 
         // Normally I don't want to use macro, but this is a last resort (I hate repeating things)
         // clang-format off
@@ -107,7 +135,12 @@ namespace glfw_cpp
         CursorEntered       , \
         Scrolled            , \
         KeyPressed          , \
-        CharInput
+        CharInput           , \
+        MonitorConnected    , \
+        FileDropped         , \
+        WindowMaximized     , \
+        WindowScaleChanged
+
         // clang-format on
 
         using Variant = std::variant<GLFW_CPP_EVENT_TYPE_LIST>;
