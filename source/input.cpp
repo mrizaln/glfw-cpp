@@ -145,7 +145,7 @@ namespace glfw_cpp
         const auto bytePos = pos / ElementBitCount;
         const auto bitPos  = pos % ElementBitCount;
 
-        const Element mask = Element{ 1 } << bitPos;
+        const Element mask = 1ul << bitPos;
         m_state[bytePos]   = value ? m_state[bytePos] | mask : m_state[bytePos] & ~mask;
     }
 
@@ -157,7 +157,7 @@ namespace glfw_cpp
         const auto bytePos = pos / ElementBitCount;
         const auto bitPos  = pos % ElementBitCount;
 
-        const Element mask = Element{ 1 } << bitPos;
+        const Element mask = 1ul << bitPos;
         return (m_state[bytePos] & mask) != 0;
     }
 
@@ -195,5 +195,50 @@ namespace glfw_cpp
             }
         }
         return keys;
+    }
+}
+
+namespace glfw_cpp
+{
+    std::size_t MouseButtonStateRecord::bitPos(MouseButton button) const
+    {
+        assert(static_cast<std::size_t>(MouseButton::MAXVALUE) < CHAR_BIT * sizeof(State));
+        return static_cast<std::size_t>(button);
+    }
+
+    void MouseButtonStateRecord::setBit(std::size_t pos, bool value)
+    {
+        assert(pos < CHAR_BIT * sizeof(State));
+        const State mask = static_cast<State>(1u << pos);
+        m_state          = value ? m_state | mask : m_state & ~mask;
+    }
+
+    bool MouseButtonStateRecord::getBit(std::size_t pos) const
+    {
+        assert(pos < CHAR_BIT * sizeof(State));
+        const State mask = static_cast<State>(1u << pos);
+        return (m_state & mask) != 0;
+    }
+
+    std::vector<MouseButton> MouseButtonStateRecord::pressedButtons() const
+    {
+        std::vector<MouseButton> buttons;
+        for (int b = 0; b < static_cast<int>(MouseButton::MAXVALUE); ++b) {
+            if (isPressed(static_cast<MouseButton>(b))) {
+                buttons.push_back(static_cast<MouseButton>(b));
+            }
+        }
+        return buttons;
+    }
+
+    std::vector<MouseButton> MouseButtonStateRecord::releasedButtons() const
+    {
+        std::vector<MouseButton> buttons;
+        for (int b = 0; b < static_cast<int>(MouseButton::MAXVALUE); ++b) {
+            if (!isPressed(static_cast<MouseButton>(b))) {
+                buttons.push_back(static_cast<MouseButton>(b));
+            }
+        }
+        return buttons;
     }
 }

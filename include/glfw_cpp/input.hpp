@@ -302,6 +302,46 @@ namespace glfw_cpp
 
         State m_state = {};
     };
+
+    class MouseButtonStateRecord
+    {
+    public:
+        friend Window;
+        bool isPressed(MouseButton button) const { return getBit(bitPos(button)); }
+
+        bool allPressed(std::initializer_list<MouseButton> buttons) const
+        {
+            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) {
+                return isPressed(k);
+            });
+        }
+
+        bool anyPressed(std::initializer_list<MouseButton> buttons) const
+        {
+            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) {
+                return isPressed(k);
+            });
+        }
+
+        std::vector<MouseButton> pressedButtons() const;
+        std::vector<MouseButton> releasedButtons() const;
+
+    private:
+        using State = std::uint8_t;
+
+        // for friends
+        void setValue(MouseButton button, bool value) { setBit(bitPos(button), value); }
+        void set(MouseButton button) { setValue(button, true); }
+        void unset(MouseButton button) { setValue(button, false); }
+        void clear() { m_state = 0; };
+
+        // impl detail
+        std::size_t bitPos(MouseButton button) const;
+        void        setBit(std::size_t pos, bool value);
+        bool        getBit(std::size_t pos) const;
+
+        State m_state = {};
+    };
 }
 
 #endif /* end of include guard: INPUT_HPP_354TKEJR8H */

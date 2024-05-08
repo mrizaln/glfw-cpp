@@ -471,6 +471,10 @@ namespace glfw_cpp
             m_properties.m_cursor.m_inside = e->m_entered;
         } else if (auto e = event.getIf<Event::KeyPressed>()) {
             m_properties.m_keyState.setValue(e->m_key, e->m_state != KeyState::RELEASE);
+        } else if (auto e = event.getIf<Event::ButtonPressed>()) {
+            m_properties.m_mouseButtonState.setValue(
+                e->m_button, e->m_state == MouseButtonState::PRESS
+            );
         }
 
         m_eventQueue.push_back(std::move(event));

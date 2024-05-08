@@ -44,7 +44,8 @@ namespace glfw_cpp
                 bool   m_inside;
             } m_cursor;
 
-            KeyStateRecord m_keyState;
+            KeyStateRecord         m_keyState;
+            MouseButtonStateRecord m_mouseButtonState;
         };
 
         template <typename Sig>
