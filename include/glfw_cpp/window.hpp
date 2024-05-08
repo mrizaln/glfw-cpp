@@ -2,6 +2,7 @@
 #define WINDOW_HPP_IROQWEOX
 
 #include "glfw_cpp/event.hpp"
+#include "glfw_cpp/input.hpp"
 
 #include <deque>
 #include <functional>
@@ -42,6 +43,8 @@ namespace glfw_cpp
                 double m_y;
                 bool   m_inside;
             } m_cursor;
+
+            KeyStateRecord m_keyState;
         };
 
         template <typename Sig>

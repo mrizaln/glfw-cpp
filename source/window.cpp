@@ -469,6 +469,8 @@ namespace glfw_cpp
             m_properties.m_cursor.m_y = e->m_yPos;
         } else if (auto e = event.getIf<Event::CursorEntered>()) {
             m_properties.m_cursor.m_inside = e->m_entered;
+        } else if (auto e = event.getIf<Event::KeyPressed>()) {
+            m_properties.m_keyState.setValue(e->m_key, e->m_state != KeyState::RELEASE);
         }
 
         m_eventQueue.push_back(std::move(event));

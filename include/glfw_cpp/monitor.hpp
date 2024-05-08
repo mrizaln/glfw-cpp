@@ -14,6 +14,8 @@ namespace glfw_cpp
     using VideoMode = GLFWvidmode;
     using GammaRamp = GLFWgammaramp;
 
+    // Monitor is not a RAII class as it's not managing any resource. It's a simple wrapper of the
+    // underlying GLFWmonitor.
     class Monitor
     {
     public:

@@ -4,8 +4,12 @@
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
-#include <concepts>
+#include <algorithm>
+#include <array>
+#include <cstdint>
+#include <initializer_list>
 #include <utility>
+#include <vector>
 
 namespace glfw_cpp
 {
@@ -251,6 +255,52 @@ namespace glfw_cpp
 
     private:
         Base m_mods = 0;
+    };
+
+    class Window;
+
+    class KeyStateRecord
+    {
+    public:
+        friend Window;
+
+        KeyStateRecord() = default;
+
+        bool isPressed(KeyCode keyCode) const { return getBit(bitPos(keyCode)); }
+
+        bool allPressed(std::initializer_list<KeyCode> keyCodes) const
+        {
+            return std::all_of(keyCodes.begin(), keyCodes.end(), [this](auto k) {
+                return isPressed(k);
+            });
+        }
+
+        bool anyPressed(std::initializer_list<KeyCode> keyCodes) const
+        {
+            return std::any_of(keyCodes.begin(), keyCodes.end(), [this](auto k) {
+                return isPressed(k);
+            });
+        }
+
+        std::vector<KeyCode> pressedKeys() const;
+        std::vector<KeyCode> releasedKeys() const;
+
+    private:
+        using Element = std::uint64_t;
+        using State   = std::array<Element, 2>;
+
+        // for friends
+        void setValue(KeyCode keyCode, bool value) { setBit(bitPos(keyCode), value); }
+        void set(KeyCode keyCode) { setValue(keyCode, true); }
+        void unset(KeyCode keyCode) { setValue(keyCode, false); }
+        void clear() { m_state.fill(0); };
+
+        // impl detail
+        std::size_t bitPos(KeyCode keyCode) const;
+        void        setBit(std::size_t pos, bool value);
+        bool        getBit(std::size_t pos) const;
+
+        State m_state = {};
     };
 }
 
