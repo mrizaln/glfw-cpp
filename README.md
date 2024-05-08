@@ -9,7 +9,8 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 ## TODO
 
 - [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
-- [ ] Use better error types instead of just using `std::runtime_error`
+- [ ] Add the ability to handle window events in separate thread from Window and WindowManager
+- [ ] Handle GLFW internal error
 
 ## Dependencies
 
@@ -57,34 +58,33 @@ Using this library is as simple as
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
+#include <iostream>
 #include <cmath>
 
 namespace glfw = glfw_cpp;
 
 int main()
 {
-    // Instance here refers to global state that glfw_cpp initializes in order to communicate with
-    // the internals of GLFW. This class can only have one valid instance and throws when
-    // instantiated again. The init function returns a RAII handle that automatically deinit the
-    // Instance on destruction.
-    glfw::Instance::Handle instance = glfw_cpp::init(glfw::Api::OpenGL{
+    // init() calls glfwInit() internally and Instance::Handle will call glfwTerminate() on dtor.
+    // Note that the graphics API can't be changed later, this is a design choice.
+    glfw::Instance::Handle instance = glfw::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
         .m_profile = glfw::Api::OpenGL::Profile::CORE,
-        .m_loader =
-            [](glfw::Api::GlContext /* handle */, glfw::Api::GlGetProc proc) {
-                // why two arguments?
-                // Some GL loader libraries need a handle to load the proc.
-                // Case on point: glbinding (though it is not required, but reocommended)
-                gladLoadGLLoader((GLADloadproc)proc);
-            },
+        .m_loader  = [](glfw::Api::GlContext /* handle */,
+                       glfw::Api::GlGetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 
-    glfw::WindowManager wm     = instance->createWindowManager();
-    glfw::WindowHint    hint   = {};    // use default hint
-    glfw::Window        window = wm.createWindow(hint, "Learn glfw-cpp", 800, 600);
+    // WindowManager is responsible for managing windows (think of window group)
+    glfw::WindowManager wm = instance->createWindowManager();
+
+    // graphics API hints are omitted from the WindowHint, only other relevant hints are included.
+    glfw::WindowHint hint = {};    // use default hint
+
+    glfw::Window window = wm.createWindow(hint, "Learn glfw-cpp", 800, 600);
 
     window.run([&, elapsed = 0.0F](std::deque<glfw::Event>&& events) mutable {
+        // events
         for (const glfw::Event& event : events) {
             if (auto* e = event.getIf<glfw::Event::KeyPressed>()) {
                 if (e->m_key == glfw::KeyCode::Q) {
@@ -94,6 +94,23 @@ int main()
                 glViewport(0, 0, e->m_width, e->m_height);
             }
         }
+
+        // continuous key input (for movement for example)
+        {
+            using K          = glfw::KeyCode;
+            const auto& keys = window.properties().m_keyState;
+
+            if (keys.allPressed({ K::H, K::J, K::L, K::K })) {
+                std::cout << "HJKL key pressed all at once";
+            }
+
+            if (keys.isPressed(K::LEFT_SHIFT) && keys.anyPressed({ K::W, K::A, K::S, K::D })) {
+                std::cout << "WASD key pressed with shift key being held";
+            } else if (keys.anyPressed({ K::W, K::A, K::S, K::D })) {
+                std::cout << "WASD key pressed";
+            }
+        }
+
         elapsed += static_cast<float>(window.deltaTime());
 
         // funny color cycle
