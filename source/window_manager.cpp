@@ -188,7 +188,9 @@ namespace glfw_cpp
     bool WindowManager::hasWindowOpened()
     {
         validateAccess(false);
-        return !m_windows.empty();
+        using Ptr                 = decltype(m_windows)::value_type;
+        const auto shouldNotClose = [](Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
+        return std::ranges::any_of(m_windows, shouldNotClose, &Ptr::get);
     }
 
     void WindowManager::enqueueWindowTask(Handle handle, Fun<void()>&& task)
