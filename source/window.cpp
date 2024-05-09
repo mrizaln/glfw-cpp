@@ -4,17 +4,17 @@
 #include "glfw_cpp/event.hpp"
 
 #include "util.hpp"
-#include <filesystem>
-#include <vector>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <cassert>
+#include <filesystem>
 #include <functional>
 #include <mutex>
 #include <thread>
 #include <utility>
+#include <vector>
 
 namespace glfw_cpp
 {
@@ -335,7 +335,7 @@ namespace glfw_cpp
             // no thread attached, attach to this thread
 
             m_attachedThreadId = std::this_thread::get_id();
-            Instance::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
+            // Instance::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
             if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
@@ -369,7 +369,7 @@ namespace glfw_cpp
         }
 
         if (m_attachedThreadId != std::thread::id{}) {
-            Instance::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
+            // Instance::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
             m_attachedThreadId = std::thread::id{};
         }
     }
@@ -404,23 +404,25 @@ namespace glfw_cpp
         });
     }
 
-    void Window::run(Fun<void(std::deque<Event>&&)>&& func)
+    bool Window::shouldClose() const
     {
-        while (glfwWindowShouldClose(m_handle) == GLFW_FALSE) {
-            updateDeltaTime();
-            processQueuedTasks();
+        return glfwWindowShouldClose(m_handle) == GLFW_TRUE;
+    }
 
-            auto events = [&] {
-                std::scoped_lock lock{ m_queueMutex };
-                return std::exchange(m_eventQueue, {});
-            }();
+    std::deque<Event> Window::poll()
+    {
+        processQueuedTasks();
+        std::scoped_lock lock{ m_queueMutex };
+        return std::exchange(m_eventQueue, {});
+    }
 
-            func(std::move(events));
-
-            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
-                glfwSwapBuffers(m_handle);
-            }
+    double Window::display()
+    {
+        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+            glfwSwapBuffers(m_handle);
         }
+        updateDeltaTime();
+        return m_deltaTime;
     }
 
     void Window::enqueueTask(Fun<void()>&& func)

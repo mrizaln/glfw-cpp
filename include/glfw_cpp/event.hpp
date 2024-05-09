@@ -211,7 +211,7 @@ namespace glfw_cpp
 
         template <typename T>
             requires(not std::is_pointer_v<T> && IsEventType_v<T>)
-        bool holds() noexcept
+        bool holds() const noexcept
         {
             return std::holds_alternative<T>(m_event);
         }

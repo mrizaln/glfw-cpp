@@ -7,6 +7,7 @@
 #include <deque>
 #include <functional>
 #include <mutex>
+#include <optional>
 #include <string>
 #include <thread>
 
@@ -66,8 +67,51 @@ namespace glfw_cpp
         void setWindowSize(int width, int height);
         void updateTitle(const std::string& title);
 
-        // main rendering loop
-        void run(Fun<void(std::deque<Event>&&)>&& func);
+        // check if the Window should close it's window
+        bool shouldClose() const;
+
+        // poll just returns events polled by WindowManager and process any queued tasks if exists
+        std::deque<Event> poll();
+
+        // swap glfw window buffer, do nothing if Api::NoApi.
+        // returns deltaTime/frameTime (the retuned time is the time taken between display() calls).
+        double display();
+
+        // use window (check shouldClose(), poll(), and display() at the same time).
+        // returns deltaTime/frameTime if window is not closed else std::nullopt.
+        // the deltaTime returned is the time taken between display() calls.
+        // will bind() as long as the function runs and unbind() at the end.
+        std::optional<double> use(std::invocable<std::deque<Event>&&> auto&& func)
+        {
+            if (shouldClose()) {
+                return std::nullopt;
+            }
+
+            bind();
+
+            auto events = poll();
+            func(std::move(events));
+            auto delta = display();
+
+            unbind();
+
+            return delta;
+        }
+
+        // like use() but it loops until shouldClose() returns true.
+        // the Window will be bind() at the entirety of the loop.
+        void run(std::invocable<std::deque<Event>&&> auto&& func)
+        {
+            bind();
+
+            while (!shouldClose()) {
+                auto events = poll();
+                func(std::move(events));
+                display();
+            }
+
+            unbind();
+        }
 
         void    enqueueTask(Fun<void()>&& func);
         void    requestClose();
