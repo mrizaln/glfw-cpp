@@ -10,6 +10,8 @@ class Recipe(ConanFile):
         "glad/0.1.36",
         "glbinding/3.3.0",
         "glm/0.9.9.8",
+        "vulkan-headers/1.3.268.0",
+        "vulkan-loader/1.3.268.0",
     ]
 
     def layout(self):

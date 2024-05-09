@@ -113,9 +113,12 @@ namespace glfw_cpp
             unbind();
         }
 
-        void    enqueueTask(Fun<void()>&& func);
-        void    requestClose();
+        void enqueueTask(Fun<void()>&& func);
+        void requestClose();
+
+        // will do nothing when Api::NoApi is set as the instance API
         Window& setVsync(bool value);
+
         Window& setCaptureMouse(bool value);
 
         // The function added will be called from the window thread.

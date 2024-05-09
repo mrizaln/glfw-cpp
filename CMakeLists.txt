@@ -21,6 +21,7 @@ set_target_properties(glfw-cpp PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(glfw-cpp PUBLIC glfw)
 
 if(GLFW_CPP_VULKAN_SUPPORT)
+  message(STATUS "glfw-cpp: GLFW_CPP_VULKAN_SUPPORT option set - vulkan support enabled.")
   find_package(Vulkan REQUIRED)
 
   target_sources(glfw-cpp PRIVATE source/vulkan.cpp)

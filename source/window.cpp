@@ -378,8 +378,10 @@ namespace glfw_cpp
     {
         m_vsync = value;
 
-        // 0 = immediate updates, 1 = update synchronized with vertical retrace
-        glfwSwapInterval(static_cast<int>(value));
+        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+            // 0 = immediate updates, 1 = update synchronized with vertical retrace
+            glfwSwapInterval(static_cast<int>(value));
+        }
 
         return *this;
     }
