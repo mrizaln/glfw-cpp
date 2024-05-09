@@ -9,8 +9,9 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 ## TODO
 
 - [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
-- [ ] Add the ability to handle window events in separate thread from Window and WindowManager
 - [ ] Handle GLFW internal error
+- [ ] Add the ability to handle window events in separate thread from Window and WindowManager
+- [ ] Eliminate `glfw_cpp::WindowManager` move limitation
 
 ## Dependencies
 
@@ -128,6 +129,10 @@ int main()
 
 No manual cleanup necessary, the classes defined already using RAII pattern.
 
-One caveat is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
+One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
 The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/multi.cpp) or [here](./example/source/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).
+
+## Limitation
+
+Other limitation is that `glfw_cpp::WindowManager` should not be moved after it created `glfw_cpp::Window`s since each window created from it has a pointer to the `glfw_cpp::WindowManager`. If you are doing that it may leads to undefined behavior (dereferencing a pointer to a destroyed `glfw_cpp::WindowManager` for example). If the `glfw_cpp::WindowManager` hasn't created any `glfw_cpp::Window`s (or they are already destroyed) it is okay to move it.
