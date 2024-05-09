@@ -2,14 +2,14 @@ cmake_minimum_required(VERSION 3.12)
 
 project(
   glfw-cpp
-  VERSION 0.2.0
+  VERSION 0.4.0
   LANGUAGES CXX
   DESCRIPTION "C++ GLFW wrapper with multi-window and multithreading in mind")
 
 # Enable Vulkan support (requires Vulkan SDK)
 option(GLFW_CPP_VULKAN_SUPPORT "Enable Vulkan support" OFF)
 
-find_package(glfw3 3.4 REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
 
 set(glfw-cpp_SOURCES source/window.cpp source/window_manager.cpp
                      source/instance.cpp source/monitor.cpp source/input.cpp)
