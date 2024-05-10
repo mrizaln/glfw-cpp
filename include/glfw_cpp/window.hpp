@@ -57,6 +57,7 @@ namespace glfw_cpp
         Window& operator=(Window&&) noexcept;
         ~Window();
 
+        Window()                        = default;
         Window(const Window&)           = delete;
         Window operator=(const Window&) = delete;
 
@@ -132,8 +133,6 @@ namespace glfw_cpp
         std::thread::id attachedThreadId() const { return m_attachedThreadId; };
 
     private:
-        Window() = default;
-
         Window(
             WindowManager& manager,
             Handle         handle,
@@ -172,16 +171,16 @@ namespace glfw_cpp
 
         void swap(Window& other) noexcept;
 
-        WindowManager* m_manager;
-        Handle         m_handle;
+        WindowManager* m_manager = nullptr;
+        Handle         m_handle  = nullptr;
 
         // window stuff
-        std::thread::id m_attachedThreadId;
-        Properties      m_properties;
-        double          m_lastFrameTime = 0.0;
-        double          m_deltaTime     = 0.0;
-        bool            m_vsync         = true;
-        bool            m_captureMouse  = false;
+        std::thread::id m_attachedThreadId = {};
+        Properties      m_properties       = {};
+        double          m_lastFrameTime    = 0.0;
+        double          m_deltaTime        = 0.0;
+        bool            m_vsync            = true;
+        bool            m_captureMouse     = false;
 
         // queues
         std::deque<Fun<void()>> m_taskQueue;
