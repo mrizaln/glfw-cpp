@@ -77,7 +77,7 @@ namespace glfw_cpp
             case KeyCode::HOME            : return 63;
             case KeyCode::END             : return 64;
             case KeyCode::CAPS_LOCK       : return 65;
-            case KeyCode::SCROL_LLOCK     : return 66;
+            case KeyCode::SCROLL_LOCK     : return 66;
             case KeyCode::NUM_LOCK        : return 67;
             case KeyCode::PRINT_SCREEN    : return 68;
             case KeyCode::PAUSE           : return 69;
