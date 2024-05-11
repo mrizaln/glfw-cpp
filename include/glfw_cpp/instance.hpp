@@ -133,8 +133,6 @@ namespace glfw_cpp
 
     // Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction
     Instance::Handle init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
-
-    WindowManager createWindowManager();
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */
