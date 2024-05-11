@@ -26,27 +26,39 @@ namespace glfw_cpp
         {
             std::string m_title;
 
-            struct
+            struct Position
             {
                 int m_x;
                 int m_y;
             } m_pos;
 
-            struct
+            struct Dimension
             {
                 int m_width;
                 int m_height;
             } m_dimension;
 
-            struct
+            struct CursorPos
             {
                 double m_x;
                 double m_y;
-                bool   m_inside;
             } m_cursor;
 
-            KeyStateRecord         m_keyState;
-            MouseButtonStateRecord m_mouseButtonState;
+            struct Atrribute
+            {
+                int m_iconified   : 1 = 0;
+                int m_maximized   : 1 = 0;
+                int m_focused     : 1 = 0;
+                int m_visible     : 1 = 0;
+                int m_hovered     : 1 = 0;
+                int m_resizable   : 1 = 0;
+                int m_floating    : 1 = 0;
+                int m_autoIconify : 1 = 0;
+                int m_focusOnShow : 1 = 0;
+            } m_attribute;
+
+            KeyStateRecord         m_keyState         = {};
+            MouseButtonStateRecord m_mouseButtonState = {};
         };
 
         template <typename Sig>
@@ -64,6 +76,13 @@ namespace glfw_cpp
         // use the context on current thread;
         void bind();
         void unbind();
+
+        void iconify();
+        void restore();
+        void maximize();
+        void show();
+        void hide();
+        void focus();
 
         void setWindowSize(int width, int height);
         void updateTitle(const std::string& title);

@@ -248,23 +248,6 @@ namespace glfw_cpp
             // don't need to do anything for NoApi
         }
 
-        glfwSetWindowPosCallback(m_handle, window_pos_callback);
-        glfwSetWindowSizeCallback(m_handle, window_size_callback);
-        glfwSetWindowCloseCallback(m_handle, window_close_callback);
-        glfwSetWindowRefreshCallback(m_handle, window_refresh_callback);
-        glfwSetWindowFocusCallback(m_handle, window_focus_callback);
-        glfwSetWindowIconifyCallback(m_handle, window_iconify_callback);
-        glfwSetFramebufferSizeCallback(m_handle, framebuffer_size_callback);
-        glfwSetMouseButtonCallback(m_handle, mouse_button_callback);
-        glfwSetCursorPosCallback(m_handle, cursor_pos_callback);
-        glfwSetCursorEnterCallback(m_handle, cursor_enter_callback);
-        glfwSetScrollCallback(m_handle, scroll_callback);
-        glfwSetKeyCallback(m_handle, key_callback);
-        glfwSetCharCallback(m_handle, char_callback);
-        glfwSetDropCallback(m_handle, file_drop_callback);
-        glfwSetWindowMaximizeCallback(m_handle, window_maximize_callback);
-        glfwSetWindowContentScaleCallback(m_handle, window_content_scale_callback);
-
         setVsync(m_vsync);
         glfwSetWindowUserPointer(m_handle, this);
 
@@ -374,6 +357,36 @@ namespace glfw_cpp
         }
     }
 
+    void Window::iconify()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwIconifyWindow(m_handle); });
+    }
+
+    void Window::restore()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwRestoreWindow(m_handle); });
+    }
+
+    void Window::maximize()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwMaximizeWindow(m_handle); });
+    }
+
+    void Window::show()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwShowWindow(m_handle); });
+    }
+
+    void Window::hide()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwHideWindow(m_handle); });
+    }
+
+    void Window::focus()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] { glfwFocusWindow(m_handle); });
+    }
+
     Window& Window::setVsync(bool value)
     {
         m_vsync = value;
@@ -449,7 +462,7 @@ namespace glfw_cpp
         m_captureMouse = value;
         m_manager->enqueueTask([this] {
             if (m_captureMouse) {
-                auto [x, y, _] = m_properties.m_cursor;
+                auto [x, y] = m_properties.m_cursor;
                 glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
@@ -472,7 +485,7 @@ namespace glfw_cpp
             m_properties.m_cursor.m_x = e->m_xPos;
             m_properties.m_cursor.m_y = e->m_yPos;
         } else if (auto e = event.getIf<Event::CursorEntered>()) {
-            m_properties.m_cursor.m_inside = e->m_entered;
+            m_properties.m_attribute.m_hovered = e->m_entered;
         } else if (auto e = event.getIf<Event::KeyPressed>()) {
             m_properties.m_keyState.setValue(e->m_key, e->m_state != KeyState::RELEASE);
         } else if (auto e = event.getIf<Event::ButtonPressed>()) {

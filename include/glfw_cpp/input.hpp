@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <string_view>
 #include <utility>
 #include <vector>
 
@@ -351,6 +352,15 @@ namespace glfw_cpp
 
         State m_state = {};
     };
+
+    // string must be null-terminated
+    void setClipboardString(const char* string);
+
+    std::string_view getClipboardString();
+    double           getTime();
+    void             setTime(double time);
+    uint64_t         getTimerValue();
+    uint64_t         getTimerFrequency();
 }
 
 #endif /* end of include guard: INPUT_HPP_354TKEJR8H */

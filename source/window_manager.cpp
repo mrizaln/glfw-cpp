@@ -115,7 +115,6 @@ namespace glfw_cpp
     )
     {
         validateAccess(true);
-
         configureHints(hint);
 
         const auto handle = glfwCreateWindow(
@@ -133,13 +132,46 @@ namespace glfw_cpp
 
         Instance::logI("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
 
-        Window::Properties prop{ .m_title = { title.begin(), title.end() } };
+        glfwSetWindowPosCallback(handle, Window::window_pos_callback);
+        glfwSetWindowSizeCallback(handle, Window::window_size_callback);
+        glfwSetWindowCloseCallback(handle, Window::window_close_callback);
+        glfwSetWindowRefreshCallback(handle, Window::window_refresh_callback);
+        glfwSetWindowFocusCallback(handle, Window::window_focus_callback);
+        glfwSetWindowIconifyCallback(handle, Window::window_iconify_callback);
+        glfwSetFramebufferSizeCallback(handle, Window::framebuffer_size_callback);
+        glfwSetMouseButtonCallback(handle, Window::mouse_button_callback);
+        glfwSetCursorPosCallback(handle, Window::cursor_pos_callback);
+        glfwSetCursorEnterCallback(handle, Window::cursor_enter_callback);
+        glfwSetScrollCallback(handle, Window::scroll_callback);
+        glfwSetKeyCallback(handle, Window::key_callback);
+        glfwSetCharCallback(handle, Window::char_callback);
+        glfwSetDropCallback(handle, Window::file_drop_callback);
+        glfwSetWindowMaximizeCallback(handle, Window::window_maximize_callback);
+        glfwSetWindowContentScaleCallback(handle, Window::window_content_scale_callback);
 
-        glfwGetWindowPos(handle, &prop.m_pos.m_x, &prop.m_pos.m_y);
-        glfwGetWindowSize(handle, &prop.m_dimension.m_width, &prop.m_dimension.m_height);
-        glfwGetCursorPos(handle, &prop.m_cursor.m_x, &prop.m_cursor.m_y);
+        int    xPos, yPos, realWidth, realHeight;
+        double xCursor, yCursor;
+        glfwGetWindowPos(handle, &xPos, &yPos);
+        glfwGetWindowSize(handle, &realWidth, &realHeight);
+        glfwGetCursorPos(handle, &xCursor, &yCursor);
 
-        return Window{ *this, handle, std::move(prop), bindImmediately };
+        return Window{ *this, handle, Window::Properties{
+            .m_title     = { title.begin(), title.end() },
+            .m_pos       = { xPos, yPos },
+            .m_dimension = { realWidth, realHeight },
+            .m_cursor    = { xCursor, yCursor },
+            .m_attribute = {
+                .m_iconified   = 0,
+                .m_maximized   = (hint.m_flags & WindowHint::MAXIMIZED) != 0,
+                .m_focused     = (hint.m_flags & WindowHint::FOCUSED) != 0,
+                .m_visible     = (hint.m_flags & WindowHint::VISIBLE) != 0,
+                .m_hovered     = glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .m_resizable   = (hint.m_flags & WindowHint::RESIZABLE) != 0,
+                .m_floating    = (hint.m_flags & WindowHint::FLOATING) != 0,
+                .m_autoIconify = (hint.m_flags & WindowHint::AUTO_ICONIFY) != 0,
+                .m_focusOnShow = (hint.m_flags & WindowHint::FOCUS_ON_SHOW) != 0,
+            },
+        }, bindImmediately };
     }
 
     void WindowManager::requestDeleteWindow(WindowManager::Handle handle)

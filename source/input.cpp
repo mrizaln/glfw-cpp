@@ -1,5 +1,8 @@
 #include "glfw_cpp/input.hpp"
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include <cassert>
 #include <climits>
 #include <vector>
@@ -240,5 +243,38 @@ namespace glfw_cpp
             }
         }
         return buttons;
+    }
+}
+
+namespace glfw_cpp
+{
+    void setClipboardString(const char* string)
+    {
+        glfwSetClipboardString(nullptr, string);
+    }
+
+    std::string_view getClipboardString()
+    {
+        return glfwGetClipboardString(nullptr);
+    }
+
+    double getTime()
+    {
+        return glfwGetTime();
+    }
+
+    void setTime(double time)
+    {
+        glfwSetTime(time);
+    }
+
+    uint64_t getTimerValue()
+    {
+        return glfwGetTimerValue();
+    }
+
+    uint64_t getTimerFrequency()
+    {
+        return glfwGetTimerFrequency();
     }
 }
