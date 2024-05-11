@@ -19,15 +19,6 @@ namespace glfw_cpp::vk
     std::vector<const char*> getRequiredInstanceExtensions();
 
 #if defined(VK_VERSION_1_0)
-    using VkLoaderFun = glfw_cpp::vk::VkProc (*)(VkInstance instance, const char* pName);
-
-    /* Sets the Vulkan loader function that GLFW use for all vulkan related entry point queries.
-     * Normally, you don't need to call this function, GLFW will try to load the Vulkan loader
-     * automatically. But if you want to use a custom loader, you can call this function before
-     * creating the first Vulkan instance.
-     */
-    void initVulkanLoader(VkLoaderFun loader);
-
     VkProc getInstanceProcAddress(VkInstance instance, const char* procName);
 
     bool getPhysicalDevicePresentationSupport(
