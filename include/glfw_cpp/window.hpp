@@ -85,6 +85,13 @@ namespace glfw_cpp
         void focus();
 
         void setWindowSize(int width, int height);
+
+        // lock the aspect ratio of the window, the ratio is width/height.
+        // the current width will be preserved while the height will be adjusted accordingly.
+        void lockAspectRatio(float ratio);
+        void lockCurrentAspectRatio();
+        void unlockAspectRatio();
+
         void updateTitle(const std::string& title);
 
         // check if the Window should close it's window

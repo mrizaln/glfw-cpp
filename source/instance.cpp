@@ -76,6 +76,10 @@ namespace glfw_cpp
                         }
                     }();
 
+                    if (api.m_loader == nullptr) {
+                        throw std::runtime_error{ "OpengGL loader can't be empty" };
+                    }
+
                     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
                     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);

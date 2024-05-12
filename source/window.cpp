@@ -318,7 +318,7 @@ namespace glfw_cpp
             // no thread attached, attach to this thread
 
             m_attachedThreadId = std::this_thread::get_id();
-            // Instance::logI("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
+            Instance::logD("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
             if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
@@ -352,7 +352,7 @@ namespace glfw_cpp
         }
 
         if (m_attachedThreadId != std::thread::id{}) {
-            // Instance::logI("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
+            Instance::logD("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
             m_attachedThreadId = std::thread::id{};
         }
     }
@@ -408,6 +408,35 @@ namespace glfw_cpp
 
         m_manager->enqueueWindowTask(m_handle, [this, width, height] {
             glfwSetWindowSize(m_handle, width, height);
+        });
+    }
+
+    void Window::lockAspectRatio(float ratio)
+    {
+        if (ratio <= 0.0f) {
+            Instance::logW("(Window) Invalid aspect ratio: {}", ratio);
+            return;
+        }
+
+        m_manager->enqueueWindowTask(m_handle, [=, this] {
+            auto width  = m_properties.m_dimension.m_width;
+            auto height = int((float)width / ratio);
+            glfwSetWindowAspectRatio(m_handle, width, height);
+        });
+    }
+
+    void Window::lockCurrentAspectRatio()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] {
+            auto [width, height] = m_properties.m_dimension;
+            glfwSetWindowAspectRatio(m_handle, width, height);
+        });
+    }
+
+    void Window::unlockAspectRatio()
+    {
+        m_manager->enqueueWindowTask(m_handle, [this] {
+            glfwSetWindowAspectRatio(m_handle, GLFW_DONT_CARE, GLFW_DONT_CARE);
         });
     }
 
@@ -476,23 +505,26 @@ namespace glfw_cpp
     {
         std::scoped_lock lock{ m_queueMutex };
 
-        // update properties from event before pushing it to the queue
-        if (auto e = event.getIf<Event::WindowMoved>()) {
-            m_properties.m_pos = { e->m_xPos, e->m_yPos };
-        } else if (auto e = event.getIf<Event::WindowResized>()) {
-            m_properties.m_dimension = { e->m_width, e->m_height };
-        } else if (auto e = event.getIf<Event::CursorMoved>()) {
-            m_properties.m_cursor.m_x = e->m_xPos;
-            m_properties.m_cursor.m_y = e->m_yPos;
-        } else if (auto e = event.getIf<Event::CursorEntered>()) {
-            m_properties.m_attribute.m_hovered = e->m_entered;
-        } else if (auto e = event.getIf<Event::KeyPressed>()) {
-            m_properties.m_keyState.setValue(e->m_key, e->m_state != KeyState::RELEASE);
-        } else if (auto e = event.getIf<Event::ButtonPressed>()) {
-            m_properties.m_mouseButtonState.setValue(
-                e->m_button, e->m_state == MouseButtonState::PRESS
-            );
-        }
+        // intercept some events to update properties before pushing them to the queue
+        using KS = KeyState;
+        using MS = MouseButtonState;
+        using EV = Event;
+
+        auto& [_, pos, dim, cursor, attr, keys, btns] = m_properties;
+        event.visit(util::VisitOverloaded{
+            // clang-format off
+            [&](EV::WindowResized&   e) { dim    = { .m_width = e.m_width, .m_height = e.m_height }; },
+            [&](EV::WindowMoved&     e) { pos    = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::CursorMoved&     e) { cursor = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::CursorEntered&   e) { attr.m_hovered   = e.m_entered;   },
+            [&](EV::WindowFocused&   e) { attr.m_focused   = e.m_focused;   },
+            [&](EV::WindowIconified& e) { attr.m_iconified = e.m_iconified; },
+            [&](EV::WindowMaximized& e) { attr.m_maximized = e.m_maximized; },
+            [&](EV::KeyPressed&      e) { keys.setValue(e.m_key,    e.m_state != KS::RELEASE); },
+            [&](EV::ButtonPressed&   e) { btns.setValue(e.m_button, e.m_state != MS::RELEASE); },
+            [&] /* else */ (auto&)      { /* do nothing */ }
+            // clang-format on
+        });
 
         m_eventQueue.push_back(std::move(event));
     }

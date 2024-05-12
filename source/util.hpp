@@ -11,6 +11,12 @@ namespace util
         auto hash{ std::hash<std::thread::id>{} };
         return hash(threadId);
     }
+
+    template <typename... Fs>
+    struct VisitOverloaded : Fs...
+    {
+        using Fs::operator()...;
+    };
 }
 
 #endif /* end of include guard: UTIL_HPP_SE5RTFRYHW6U */
