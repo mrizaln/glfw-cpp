@@ -37,9 +37,10 @@ namespace glfw_cpp
                 ANY,
             };
 
-            int         m_major   = 3;
-            int         m_minor   = 3;
-            Profile     m_profile = Profile::CORE;
+            int         m_major         = 1;
+            int         m_minor         = 0;
+            Profile     m_profile       = Profile::CORE;    // only makes sense for OpenGL 3.2 above
+            bool        m_forwardCompat = true;             // only makes sense for OpenGL 3.0 above
             GlLoaderFun m_loader;
         };
 
@@ -60,11 +61,11 @@ namespace glfw_cpp
         enum class LogLevel
         {
             NONE,
-            CRITICAL,
-            ERROR,
-            WARNING,
-            INFO,
             DEBUG,
+            INFO,
+            WARNING,
+            ERROR,
+            CRITICAL,
         };
 
         using LogFun = std::function<void(LogLevel level, std::string msg)>;

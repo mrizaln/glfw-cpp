@@ -1,6 +1,8 @@
 #include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window_manager.hpp"
 
+#include "util.hpp"
+
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
@@ -62,39 +64,51 @@ namespace glfw_cpp
             );
         });
 
-        std::visit(
-            [](auto& api) {
-                using A = std::decay_t<decltype(api)>;
-                if constexpr (std::same_as<A, Api::OpenGL>) {
-                    auto glProfile = [&] {
-                        using P = glfw_cpp::Api::OpenGL::Profile;
-                        switch (api.m_profile) {
-                        case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
-                        case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
-                        case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
-                        default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
-                        }
-                    }();
+        const auto&& configureApi = util::VisitOverloaded{
+            [](Api::OpenGL& api) {
+                if (api.m_major < 0 || api.m_minor < 0) {
+                    throw std::runtime_error{ std::format(
+                        "OpenGL version can't be negative: major={}, minor={}",
+                        api.m_major,
+                        api.m_minor
+                    ) };
+                }
 
-                    if (api.m_loader == nullptr) {
-                        throw std::runtime_error{ "OpengGL loader can't be empty" };
+                if (api.m_loader == nullptr) {
+                    throw std::runtime_error{ "OpengGL loader can't be empty" };
+                }
+
+                auto glProfile = [&] {
+                    using P = glfw_cpp::Api::OpenGL::Profile;
+                    switch (api.m_profile) {
+                    case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
+                    case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
+                    case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
+                    default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
                     }
+                }();
 
-                    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
-                    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+
+                if (api.m_major >= 3 && api.m_minor >= 0) {
+                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.m_forwardCompat);
+                }
+
+                if (api.m_major >= 3 && api.m_minor >= 2) {
                     glfwWindowHint(GLFW_OPENGL_PROFILE, glProfile);
-                } else if constexpr (std::same_as<A, Api::OpenGLES>) {
-                    glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-                    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
-                    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
-                    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-                } else {
-                    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
                 }
             },
-            instance.m_api
-        );
+            [](Api::OpenGLES& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.m_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+            },
+            [](Api::NoApi&) { glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); },
+        };
+        std::visit(configureApi, instance.m_api);
 
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
