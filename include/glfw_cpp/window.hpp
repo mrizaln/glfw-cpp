@@ -38,6 +38,12 @@ namespace glfw_cpp
                 int m_height;
             } m_dimension;
 
+            struct FramebufferSize
+            {
+                int m_width;
+                int m_height;
+            } m_framebufferSize;
+
             struct CursorPos
             {
                 double m_x;
@@ -46,19 +52,19 @@ namespace glfw_cpp
 
             struct Atrribute
             {
-                int m_iconified   : 1 = 0;
-                int m_maximized   : 1 = 0;
-                int m_focused     : 1 = 0;
-                int m_visible     : 1 = 0;
-                int m_hovered     : 1 = 0;
-                int m_resizable   : 1 = 0;
-                int m_floating    : 1 = 0;
-                int m_autoIconify : 1 = 0;
-                int m_focusOnShow : 1 = 0;
+                unsigned int m_iconified   : 1 = 0;
+                unsigned int m_maximized   : 1 = 0;
+                unsigned int m_focused     : 1 = 0;
+                unsigned int m_visible     : 1 = 0;
+                unsigned int m_hovered     : 1 = 0;
+                unsigned int m_resizable   : 1 = 0;
+                unsigned int m_floating    : 1 = 0;
+                unsigned int m_autoIconify : 1 = 0;
+                unsigned int m_focusOnShow : 1 = 0;
             } m_attribute;
 
-            KeyStateRecord         m_keyState         = {};
             MouseButtonStateRecord m_mouseButtonState = {};
+            KeyStateRecord         m_keyState         = {};
         };
 
         template <typename Sig>
@@ -85,6 +91,7 @@ namespace glfw_cpp
         void focus();
 
         void setWindowSize(int width, int height);
+        void setWindowPos(int x, int y);
 
         // lock the aspect ratio of the window, the ratio is width/height.
         // the current width will be preserved while the height will be adjusted accordingly.

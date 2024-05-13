@@ -411,6 +411,16 @@ namespace glfw_cpp
         });
     }
 
+    void Window::setWindowPos(int x, int y)
+    {
+        m_properties.m_pos = {
+            .m_x = x,
+            .m_y = y,
+        };
+
+        m_manager->enqueueWindowTask(m_handle, [this, x, y] { glfwSetWindowPos(m_handle, x, y); });
+    }
+
     void Window::lockAspectRatio(float ratio)
     {
         if (ratio <= 0.0f) {
@@ -510,19 +520,20 @@ namespace glfw_cpp
         using MS = MouseButtonState;
         using EV = Event;
 
-        auto& [_, pos, dim, cursor, attr, keys, btns] = m_properties;
+        auto& [_, pos, dim, frame, cursor, attr, btns, keys] = m_properties;
         event.visit(util::VisitOverloaded{
             // clang-format off
-            [&](EV::WindowResized&   e) { dim    = { .m_width = e.m_width, .m_height = e.m_height }; },
-            [&](EV::WindowMoved&     e) { pos    = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
-            [&](EV::CursorMoved&     e) { cursor = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
-            [&](EV::CursorEntered&   e) { attr.m_hovered   = e.m_entered;   },
-            [&](EV::WindowFocused&   e) { attr.m_focused   = e.m_focused;   },
-            [&](EV::WindowIconified& e) { attr.m_iconified = e.m_iconified; },
-            [&](EV::WindowMaximized& e) { attr.m_maximized = e.m_maximized; },
-            [&](EV::KeyPressed&      e) { keys.setValue(e.m_key,    e.m_state != KS::RELEASE); },
-            [&](EV::ButtonPressed&   e) { btns.setValue(e.m_button, e.m_state != MS::RELEASE); },
-            [&] /* else */ (auto&)      { /* do nothing */ }
+            [&](EV::WindowMoved&        e) { pos    = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::WindowResized&      e) { dim    = { .m_width = e.m_width, .m_height = e.m_height }; },
+            [&](EV::FramebufferResized& e) { frame  = { .m_width = e.m_width, .m_height = e.m_height }; },
+            [&](EV::CursorMoved&        e) { cursor = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::CursorEntered&      e) { attr.m_hovered   = e.m_entered;   },
+            [&](EV::WindowFocused&      e) { attr.m_focused   = e.m_focused;   },
+            [&](EV::WindowIconified&    e) { attr.m_iconified = e.m_iconified; },
+            [&](EV::WindowMaximized&    e) { attr.m_maximized = e.m_maximized; },
+            [&](EV::KeyPressed&         e) { keys.setValue(e.m_key,    e.m_state != KS::RELEASE); },
+            [&](EV::ButtonPressed&      e) { btns.setValue(e.m_button, e.m_state != MS::RELEASE); },
+            [&] /* else */ (auto&)         { /* do nothing */ }
             // clang-format on
         });
 

@@ -54,15 +54,14 @@ namespace glfw_cpp
         instance.m_loggger     = std::move(logger);
         instance.m_initialized = true;
 
+        glfwSetErrorCallback([](int err, const char* msg) {
+            Instance::logE("(Internal error [{}]) {}", err, msg);
+        });
+
         if (glfwInit() != GLFW_TRUE) {
+            instance.reset();
             throw std::runtime_error{ "Failed to initialize GLFW!" };
         }
-
-        glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::log(
-                Instance::LogLevel::ERROR, std::format("Internal error ({}) {}", err, msg)
-            );
-        });
 
         const auto&& configureApi = util::VisitOverloaded{
             [](Api::OpenGL& api) {
