@@ -23,5 +23,5 @@ Make sure you have conan installed and properly configured
 - Run the executable
 
   ```
-  ./build/debug/example
+  ./build/debug/<example>
   ```
