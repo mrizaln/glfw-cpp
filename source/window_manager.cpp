@@ -165,7 +165,7 @@ namespace glfw_cpp
                 .m_maximized   = (hint.m_flags & WindowHint::MAXIMIZED) != 0,
                 .m_focused     = (hint.m_flags & WindowHint::FOCUSED) != 0,
                 .m_visible     = (hint.m_flags & WindowHint::VISIBLE) != 0,
-                .m_hovered     = glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .m_hovered     = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
                 .m_resizable   = (hint.m_flags & WindowHint::RESIZABLE) != 0,
                 .m_floating    = (hint.m_flags & WindowHint::FLOATING) != 0,
                 .m_autoIconify = (hint.m_flags & WindowHint::AUTO_ICONIFY) != 0,

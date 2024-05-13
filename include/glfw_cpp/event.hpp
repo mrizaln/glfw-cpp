@@ -14,6 +14,13 @@ namespace glfw_cpp
     class Event
     {
     public:
+        // visit helper using overloaded lambda
+        template <typename... Ts>
+        struct Overloaded : Ts...
+        {
+            using Ts::operator()...;
+        };
+
         struct Empty
         {
         };
