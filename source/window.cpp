@@ -127,8 +127,10 @@ namespace glfw_cpp
         }
 
         w->pushEvent(Event::CursorMoved{
-            .m_xPos = x,
-            .m_yPos = y,
+            .m_xPos   = x,
+            .m_yPos   = y,
+            .m_xDelta = x - w->properties().m_cursor.m_x,
+            .m_yDelta = y - w->properties().m_cursor.m_y,
         });
     }
 
@@ -227,12 +229,7 @@ namespace glfw_cpp
     }
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(
-        WindowManager& manager,
-        Handle         handle,
-        Properties&&   properties,
-        bool           bindImmediately
-    )
+    Window::Window(WindowManager& manager, Handle handle, Properties&& properties, bool bindImmediately)
         : m_manager{ &manager }
         , m_handle{ handle }
         , m_attachedThreadId{}

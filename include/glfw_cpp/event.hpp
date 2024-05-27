@@ -72,6 +72,8 @@ namespace glfw_cpp
         {
             double m_xPos;
             double m_yPos;
+            double m_xDelta;    // delta of current to previous x
+            double m_yDelta;    // delta of current to previous y
         };
 
         struct CursorEntered
