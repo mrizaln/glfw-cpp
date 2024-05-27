@@ -4,7 +4,7 @@
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/input.hpp"
 
-#include <deque>
+#include <vector>
 #include <functional>
 #include <mutex>
 #include <optional>
@@ -105,7 +105,7 @@ namespace glfw_cpp
         bool shouldClose() const;
 
         // poll just returns events polled by WindowManager and process any queued tasks if exists
-        std::deque<Event> poll();
+        std::vector<Event> poll();
 
         // swap glfw window buffer, do nothing if Api::NoApi.
         // returns deltaTime/frameTime (the retuned time is the time taken between display() calls).
@@ -115,7 +115,7 @@ namespace glfw_cpp
         // returns deltaTime/frameTime if window is not closed else std::nullopt.
         // the deltaTime returned is the time taken between display() calls.
         // will bind() as long as the function runs and unbind() at the end.
-        std::optional<double> use(std::invocable<std::deque<Event>&&> auto&& func)
+        std::optional<double> use(std::invocable<std::vector<Event>&&> auto&& func)
         {
             if (shouldClose()) {
                 return std::nullopt;
@@ -134,7 +134,7 @@ namespace glfw_cpp
 
         // like use() but it loops until shouldClose() returns true.
         // the Window will be bind() at the entirety of the loop.
-        void run(std::invocable<std::deque<Event>&&> auto&& func)
+        void run(std::invocable<std::vector<Event>&&> auto&& func)
         {
             bind();
 
@@ -166,12 +166,7 @@ namespace glfw_cpp
         std::thread::id attachedThreadId() const { return m_attachedThreadId; };
 
     private:
-        Window(
-            WindowManager& manager,
-            Handle         handle,
-            Properties&&   properties,
-            bool           bindImmediately
-        );
+        Window(WindowManager& manager, Handle handle, Properties&& properties, bool bindImmediately);
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
@@ -216,9 +211,9 @@ namespace glfw_cpp
         bool            m_captureMouse     = false;
 
         // queues
-        std::deque<Fun<void()>> m_taskQueue;
-        std::deque<Event>       m_eventQueue;
-        mutable std::mutex      m_queueMutex;
+        std::vector<Fun<void()>> m_taskQueue;
+        std::vector<Event>       m_eventQueue;
+        mutable std::mutex       m_queueMutex;
     };
 }
 

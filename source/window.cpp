@@ -460,7 +460,7 @@ namespace glfw_cpp
         return glfwWindowShouldClose(m_handle) == GLFW_TRUE;
     }
 
-    std::deque<Event> Window::poll()
+    std::vector<Event> Window::poll()
     {
         processQueuedTasks();
         std::scoped_lock lock{ m_queueMutex };

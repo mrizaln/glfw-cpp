@@ -8,7 +8,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
-#include <deque>
+#include <vector>
 #include <string_view>
 #include <thread>
 
@@ -134,9 +134,9 @@ namespace glfw_cpp
         std::thread::id    m_attachedThreadId;
 
         std::vector<UniqueGLFWwindow> m_windows;
-        std::deque<Handle>            m_windowDeleteQueue;
-        std::deque<WindowTask>        m_windowTaskQueue;    // window task (checked)
-        std::deque<Fun<void()>>       m_taskQueue;          // general task
+        std::vector<Handle>           m_windowDeleteQueue;
+        std::vector<WindowTask>       m_windowTaskQueue;    // window task (checked)
+        std::vector<Fun<void()>>      m_taskQueue;          // general task
 
         WindowManager(std::thread::id threadId);
         void validateAccess(bool checkThread) const;
