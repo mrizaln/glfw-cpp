@@ -259,14 +259,14 @@ namespace glfw_cpp
     void WindowManager::checkTasks()
     {
         // window deletion
-        for (auto handle : std::exchange(m_windowDeleteQueue, {})) {
+        for (auto handle : util::lockExchange(m_mutex, m_windowDeleteQueue, {})) {
             if (std::erase_if(m_windows, [handle](auto& e) { return e.get() == handle; }) != 0) {
                 Instance::logI("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
             }
         }
 
         // window task requests
-        for (auto&& [handle, task] : std::exchange(m_windowTaskQueue, {})) {
+        for (auto&& [handle, task] : util::lockExchange(m_mutex, m_windowTaskQueue, {})) {
             if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
                 task();
             } else {

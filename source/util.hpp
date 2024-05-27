@@ -2,6 +2,7 @@
 #define UTIL_HPP_SE5RTFRYHW6U
 
 #include <cstddef>
+#include <mutex>
 #include <thread>
 
 namespace util
@@ -17,6 +18,20 @@ namespace util
     {
         using Fs::operator()...;
     };
+
+    template <typename T, typename M>
+        requires requires(M m) {
+            m.lock();
+            m.unlock();
+        }
+    T lockExchange(M& mutex, T& value, T&& newValue)
+    {
+        std::scoped_lock lock{ mutex };
+
+        T oldValue = std::move(value);
+        value      = std::forward<T>(newValue);
+        return oldValue;
+    }
 }
 
 #endif /* end of include guard: UTIL_HPP_SE5RTFRYHW6U */
