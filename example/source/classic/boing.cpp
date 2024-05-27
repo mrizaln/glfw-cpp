@@ -289,7 +289,7 @@ void handleMouseButtonEvent(glfw_cpp::Event::ButtonPressed& event)
 
 void handleCursorEvent(glfw_cpp::Event::CursorMoved& event)
 {
-    auto& [x, y] = event;
+    auto& [x, y, dx, dy] = event;
 
     cursor_x = (float)x;
     cursor_y = (float)y;
@@ -620,9 +620,7 @@ int main(void)
                 // default OpenGL
                 .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
             },
-            [](auto level, auto msg) {
-                std::cout << std::format("glfw-cpp [{}]: {}\n", (int)level, msg);
-            }
+            [](auto level, auto msg) { std::cout << std::format("glfw-cpp [{}]: {}\n", (int)level, msg); }
         );
 
         auto wm     = glfw->createWindowManager();

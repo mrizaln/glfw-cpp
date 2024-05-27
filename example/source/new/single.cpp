@@ -26,7 +26,7 @@ int main()
 
     glfw::Window window = wm.createWindow(hint, "Learn glfw-cpp", 800, 600);
 
-    window.run([&, elapsed = 0.0F](std::deque<glfw::Event>&& events) mutable {
+    window.run([&, elapsed = 0.0F](std::vector<glfw::Event>&& events) mutable {
         // events
         for (const glfw::Event& event : events) {
             if (auto* e = event.getIf<glfw::Event::KeyPressed>()) {

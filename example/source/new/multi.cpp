@@ -28,7 +28,7 @@ void logCallback(glfw::Instance::LogLevel level, std::string message)
     fmt::println(stderr, "[GLFW] [{}] {}", levelStr(), message);
 }
 
-void handleEvents(glfw::Window& window, std::deque<glfw::Event>&& events)
+void handleEvents(glfw::Window& window, std::vector<glfw::Event>&& events)
 {
     for (const glfw::Event& event : events) {
         // Event is a std::variant, use visit to see its content. Internally it is using std::visit.

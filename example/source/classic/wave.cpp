@@ -300,7 +300,7 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::Butt
 
 void cursor_position_callback(glfw_cpp::Window& window, const glfw_cpp::Event::CursorMoved& event)
 {
-    auto [x, y] = event;
+    auto [x, y, dx, dy] = event;
 
     if (window.isMouseCaptured()) {
         alpha += (GLfloat)(x - cursorX) / 10.f;

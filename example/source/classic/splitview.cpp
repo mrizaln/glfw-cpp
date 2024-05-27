@@ -391,7 +391,7 @@ static void windowRefreshFun(glfw_cpp::Window& window)
 
 static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::Event::CursorMoved& event)
 {
-    auto [x, y]                  = event;
+    auto [x, y, dx, dy]          = event;
     auto [wnd_width, wnd_height] = window.properties().m_dimension;
     auto [fb_width, fb_height]   = window.properties().m_framebufferSize;
 
