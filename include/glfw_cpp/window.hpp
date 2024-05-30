@@ -68,8 +68,9 @@ namespace glfw_cpp
         };
 
         template <typename Sig>
-        using Fun    = std::function<Sig>;    // use std::move_only_function in the future
-        using Handle = GLFWwindow*;
+        using Fun        = std::function<Sig>;    // use std::move_only_function in the future
+        using Handle     = GLFWwindow*;
+        using EventQueue = std::vector<Event>;
 
         Window(Window&&) noexcept;
         Window& operator=(Window&&) noexcept;
@@ -82,6 +83,10 @@ namespace glfw_cpp
         // use the context on current thread;
         void bind();
         void unbind();
+
+        // destroy the underlying window resource and reset the instance to default-initialized state.
+        // basically doing `*this = {}`
+        void destroy();
 
         void iconify();
         void restore();
@@ -105,7 +110,7 @@ namespace glfw_cpp
         bool shouldClose() const;
 
         // poll just returns events polled by WindowManager and process any queued tasks if exists
-        std::vector<Event> poll();
+        EventQueue poll();
 
         // swap glfw window buffer, do nothing if Api::NoApi.
         // returns deltaTime/frameTime (the retuned time is the time taken between display() calls).
@@ -115,7 +120,7 @@ namespace glfw_cpp
         // returns deltaTime/frameTime if window is not closed else std::nullopt.
         // the deltaTime returned is the time taken between display() calls.
         // will bind() as long as the function runs and unbind() at the end.
-        std::optional<double> use(std::invocable<std::vector<Event>&&> auto&& func)
+        std::optional<double> use(std::invocable<EventQueue&&> auto&& func)
         {
             if (shouldClose()) {
                 return std::nullopt;
@@ -134,7 +139,7 @@ namespace glfw_cpp
 
         // like use() but it loops until shouldClose() returns true.
         // the Window will be bind() at the entirety of the loop.
-        void run(std::invocable<std::vector<Event>&&> auto&& func)
+        void run(std::invocable<EventQueue&&> auto&& func)
         {
             bind();
 
@@ -212,7 +217,7 @@ namespace glfw_cpp
 
         // queues
         std::vector<Fun<void()>> m_taskQueue;
-        std::vector<Event>       m_eventQueue;
+        EventQueue               m_eventQueue;
         mutable std::mutex       m_queueMutex;
     };
 }

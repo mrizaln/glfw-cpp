@@ -293,7 +293,9 @@ namespace glfw_cpp
         m_taskQueue        = std::move(other.m_taskQueue);
         m_eventQueue       = std::move(other.m_eventQueue);
 
-        glfwSetWindowUserPointer(m_handle, this);
+        if (m_handle != nullptr) {
+            glfwSetWindowUserPointer(m_handle, this);
+        }
 
         return *this;
     }
@@ -329,9 +331,8 @@ namespace glfw_cpp
             // different thread, cannot attach
 
             Instance::logC(
-                "(Window) Context ({:#x}) already attached to another thread [{:#x}], cannot "
-                "attach "
-                "to this thread [{:#x}].",
+                "(Window) Context ({:#x}) already attached to another thread [{:#x}], cannot attach to this "
+                "thread [{:#x}].",
                 (std::size_t)m_handle,
                 util::getThreadNum(m_attachedThreadId),
                 util::getThreadNum(std::this_thread::get_id())
@@ -352,6 +353,11 @@ namespace glfw_cpp
             Instance::logD("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
             m_attachedThreadId = std::thread::id{};
         }
+    }
+
+    void Window::destroy()
+    {
+        *this = {};
     }
 
     void Window::iconify()
@@ -460,7 +466,7 @@ namespace glfw_cpp
         return glfwWindowShouldClose(m_handle) == GLFW_TRUE;
     }
 
-    std::vector<Event> Window::poll()
+    Window::EventQueue Window::poll()
     {
         processQueuedTasks();
         std::scoped_lock lock{ m_queueMutex };

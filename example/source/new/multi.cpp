@@ -28,7 +28,7 @@ void logCallback(glfw::Instance::LogLevel level, std::string message)
     fmt::println(stderr, "[GLFW] [{}] {}", levelStr(), message);
 }
 
-void handleEvents(glfw::Window& window, std::vector<glfw::Event>&& events)
+void handleEvents(glfw::Window& window, glfw::Window::EventQueue&& events)
 {
     for (const glfw::Event& event : events) {
         // Event is a std::variant, use visit to see its content. Internally it is using std::visit.
@@ -100,9 +100,7 @@ int main()
 
     using F      = glfw::WindowHint::FlagBit;
     auto hint    = glfw::WindowHint{ .m_flags = F::DEFAULT ^ F::RESIZABLE };
-    auto window2 = windowManager.createWindow(
-        hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false
-    );
+    auto window2 = windowManager.createWindow(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
 
     auto thread1 = std::jthread{ threadFun, std::move(window1), 1.0F, 1 };
     auto thread2 = std::jthread{ threadFun, std::move(window2), -1.0F, 2 };
