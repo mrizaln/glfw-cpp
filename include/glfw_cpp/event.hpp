@@ -5,7 +5,10 @@
 #include "glfw_cpp/monitor.hpp"
 #include "glfw_cpp/detail/helper.hpp"
 
+#include <cstddef>
 #include <filesystem>
+#include <memory>
+#include <optional>
 #include <type_traits>
 #include <variant>
 
@@ -228,6 +231,141 @@ namespace glfw_cpp
     private:
         Variant m_event;
     };
+
+    class EventQueue
+    {
+    public:
+        template <bool isConst = false>
+        class Iterator;
+
+        friend class Iterator<false>;
+        friend class Iterator<true>;
+
+        enum class ResizePolicy
+        {
+            DISCARD_OLD,
+            DISCARD_NEW,
+        };
+
+        static constexpr std::size_t npos = std::numeric_limits<std::size_t>::max();
+
+        explicit EventQueue(std::size_t capacity) noexcept;
+
+        EventQueue(EventQueue&&) noexcept              = default;
+        EventQueue& operator=(EventQueue&&) noexcept   = default;
+        EventQueue(const EventQueue& other)            = delete;
+        EventQueue& operator=(const EventQueue& other) = delete;
+
+        std::span<const Event> buf() const { return { m_buffer.get(), capacity() }; }
+
+        std::size_t capacity() const noexcept;
+        std::size_t size() const noexcept;
+
+        void swap(EventQueue& other) noexcept;
+        void reset() noexcept;
+        void clear() noexcept;
+
+        Iterator<>           push(Event&& event) noexcept;
+        std::optional<Event> pop() noexcept;
+
+        void resize(std::size_t newCapacity, ResizePolicy policy = ResizePolicy::DISCARD_OLD) noexcept;
+
+        Iterator<>     begin() noexcept;
+        Iterator<>     end() noexcept;
+        Iterator<true> begin() const noexcept;
+        Iterator<true> end() const noexcept;
+        Iterator<true> cbegin() const noexcept;
+        Iterator<true> cend() const noexcept;
+
+    private:
+        std::unique_ptr<Event[]> m_buffer   = nullptr;
+        std::size_t              m_capacity = 0;
+        std::size_t              m_begin    = 0;
+        std::size_t              m_end      = 0;
+    };
+
+    template <bool IsConst>
+    class EventQueue::Iterator
+    {
+    public:
+        // STL compliance
+        using iterator_category = std::forward_iterator_tag;
+        using value_type        = Event;
+        using difference_type   = std::ptrdiff_t;
+        using pointer           = Event*;
+        using const_pointer     = const Event*;
+        using reference         = Event&;
+        using const_reference   = const Event&;
+
+        // internal use
+        using Buffer = std::conditional_t<IsConst, const EventQueue, EventQueue>;
+        using Value  = std::conditional_t<IsConst, const Event, Event>;
+
+        Iterator(Buffer* bufferPtr, std::size_t index)
+            : m_bufferPtr{ bufferPtr }
+            , m_index{ index }
+        {
+        }
+
+        // special constructor for const iterator from non-const iterator
+        Iterator(Iterator<false>& other)
+            requires IsConst
+            : m_bufferPtr{ other.m_bufferPtr }
+            , m_index{ other.m_index }
+        {
+        }
+
+        Iterator() noexcept                      = default;
+        Iterator(const Iterator&)                = default;
+        Iterator& operator=(const Iterator&)     = default;
+        Iterator(Iterator&&) noexcept            = default;
+        Iterator& operator=(Iterator&&) noexcept = default;
+
+        Iterator& operator++()
+        {
+            if (m_index == Buffer::npos) {
+                return *this;
+            }
+
+            if (++m_index == m_bufferPtr->capacity()) {
+                m_index = 0;
+            }
+
+            if (m_index == m_index_original) {
+                m_index = Buffer::npos;
+            }
+
+            return *this;
+        }
+
+        Iterator operator++(int)
+        {
+            Iterator tmp = *this;
+            ++(*this);
+            return tmp;
+        }
+
+        Value& operator*() const { return m_bufferPtr->m_buffer[m_index]; };
+        Value* operator->() const { return &m_bufferPtr->m_buffer[m_index]; };
+
+        template <bool IsConst2>
+        bool operator==(const Iterator<IsConst2>& other) const
+        {
+            return m_bufferPtr == other.m_bufferPtr && m_index == other.m_index;
+        }
+
+        operator std::size_t() { return m_index; };
+
+    private:
+        Buffer*     m_bufferPtr = nullptr;
+        std::size_t m_index     = npos;
+
+        // workaround for when m_bufferPtr->m_begin == m_bufferPtr->m_end && size() == capacity()
+        std::size_t m_index_original = m_index;
+    };
+
+    static_assert(std::forward_iterator<EventQueue::Iterator<false>>);
+    static_assert(std::forward_iterator<EventQueue::Iterator<true>>);
 }
 
 #endif /* end of include guard: EVENT_HPP_Q439GUKLHFWE */

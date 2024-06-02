@@ -263,8 +263,9 @@ namespace glfw_cpp
         , m_deltaTime        { other.m_deltaTime }
         , m_vsync            { other.m_vsync }
         , m_captureMouse     { other.m_captureMouse }
+        , m_eventQueueFront  { std::move(other.m_eventQueueFront) }
+        , m_eventQueueBack   { std::move(other.m_eventQueueBack) }
         , m_taskQueue        { std::move(other.m_taskQueue) }
-        , m_eventQueue       { std::move(other.m_eventQueue) }
     // clang-format on
     {
         glfwSetWindowUserPointer(m_handle, this);
@@ -290,8 +291,9 @@ namespace glfw_cpp
         m_deltaTime        = other.m_deltaTime;
         m_vsync            = other.m_vsync;
         m_captureMouse     = other.m_captureMouse;
+        m_eventQueueFront  = std::move(other.m_eventQueueFront);
+        m_eventQueueBack   = std::move(other.m_eventQueueBack);
         m_taskQueue        = std::move(other.m_taskQueue);
-        m_eventQueue       = std::move(other.m_eventQueue);
 
         if (m_handle != nullptr) {
             glfwSetWindowUserPointer(m_handle, this);
@@ -390,7 +392,7 @@ namespace glfw_cpp
         m_manager->enqueueWindowTask(m_handle, [this] { glfwFocusWindow(m_handle); });
     }
 
-    Window& Window::setVsync(bool value)
+    void Window::setVsync(bool value)
     {
         m_vsync = value;
 
@@ -398,8 +400,6 @@ namespace glfw_cpp
             // 0 = immediate updates, 1 = update synchronized with vertical retrace
             glfwSwapInterval(static_cast<int>(value));
         }
-
-        return *this;
     }
 
     void Window::setWindowSize(int width, int height)
@@ -466,11 +466,15 @@ namespace glfw_cpp
         return glfwWindowShouldClose(m_handle) == GLFW_TRUE;
     }
 
-    Window::EventQueue Window::poll()
+    // TODO: confirm if there is not data race on m_eventQueueFront since it returned freely here despite the
+    // m_eventQueueBack locked on pushEvent() function
+    const EventQueue& Window::poll()
     {
         processQueuedTasks();
         std::scoped_lock lock{ m_queueMutex };
-        return std::exchange(m_eventQueue, {});
+        m_eventQueueFront.swap(m_eventQueueBack);
+        m_eventQueueBack.reset();
+        return m_eventQueueFront;
     }
 
     double Window::display()
@@ -499,7 +503,7 @@ namespace glfw_cpp
         return m_deltaTime;
     }
 
-    Window& Window::setCaptureMouse(bool value)
+    void Window::setCaptureMouse(bool value)
     {
         m_captureMouse = value;
         m_manager->enqueueTask([this] {
@@ -511,7 +515,13 @@ namespace glfw_cpp
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
         });
-        return *this;
+    }
+
+    void Window::resizeEventQueue(std::size_t newSize)
+    {
+        std::scoped_lock lock{ m_queueMutex };
+        m_eventQueueFront.resize(newSize, EventQueue::ResizePolicy::DISCARD_OLD);
+        m_eventQueueBack.resize(newSize, EventQueue::ResizePolicy::DISCARD_OLD);
     }
 
     void Window::pushEvent(Event&& event)
@@ -540,7 +550,7 @@ namespace glfw_cpp
             // clang-format on
         });
 
-        m_eventQueue.push_back(std::move(event));
+        m_eventQueueBack.push(std::move(event));
     }
 
     void Window::processQueuedTasks()

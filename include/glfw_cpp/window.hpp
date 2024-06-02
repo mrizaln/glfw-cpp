@@ -67,10 +67,11 @@ namespace glfw_cpp
             KeyStateRecord         m_keyState         = {};
         };
 
+        static constexpr std::size_t s_defaultEventQueueSize = 128;
+
         template <typename Sig>
-        using Fun        = std::function<Sig>;    // use std::move_only_function in the future
-        using Handle     = GLFWwindow*;
-        using EventQueue = std::vector<Event>;
+        using Fun    = std::function<Sig>;    // use std::move_only_function in the future
+        using Handle = GLFWwindow*;
 
         Window(Window&&) noexcept;
         Window& operator=(Window&&) noexcept;
@@ -110,7 +111,7 @@ namespace glfw_cpp
         bool shouldClose() const;
 
         // poll just returns events polled by WindowManager and process any queued tasks if exists
-        EventQueue poll();
+        const EventQueue& poll();
 
         // swap glfw window buffer, do nothing if Api::NoApi.
         // returns deltaTime/frameTime (the retuned time is the time taken between display() calls).
@@ -120,7 +121,7 @@ namespace glfw_cpp
         // returns deltaTime/frameTime if window is not closed else std::nullopt.
         // the deltaTime returned is the time taken between display() calls.
         // will bind() as long as the function runs and unbind() at the end.
-        std::optional<double> use(std::invocable<EventQueue&&> auto&& func)
+        std::optional<double> use(std::invocable<const EventQueue&> auto&& func)
         {
             if (shouldClose()) {
                 return std::nullopt;
@@ -128,8 +129,8 @@ namespace glfw_cpp
 
             bind();
 
-            auto events = poll();
-            func(std::move(events));
+            const auto& events = poll();
+            func(events);
             auto delta = display();
 
             unbind();
@@ -139,13 +140,13 @@ namespace glfw_cpp
 
         // like use() but it loops until shouldClose() returns true.
         // the Window will be bind() at the entirety of the loop.
-        void run(std::invocable<EventQueue&&> auto&& func)
+        void run(std::invocable<const EventQueue&> auto&& func)
         {
             bind();
 
             while (!shouldClose()) {
-                auto events = poll();
-                func(std::move(events));
+                const auto& events = poll();
+                func(events);
                 display();
             }
 
@@ -156,9 +157,9 @@ namespace glfw_cpp
         void requestClose();
 
         // will do nothing when Api::NoApi is set as the instance API
-        Window& setVsync(bool value);
-
-        Window& setCaptureMouse(bool value);
+        void setVsync(bool value);
+        void setCaptureMouse(bool value);
+        void resizeEventQueue(std::size_t newSize);
 
         // The function added will be called from the window thread.
         bool              isVsyncEnabled() const { return m_vsync; }
@@ -216,8 +217,9 @@ namespace glfw_cpp
         bool            m_captureMouse     = false;
 
         // queues
+        EventQueue               m_eventQueueFront{ s_defaultEventQueueSize };
+        EventQueue               m_eventQueueBack{ s_defaultEventQueueSize };
         std::vector<Fun<void()>> m_taskQueue;
-        EventQueue               m_eventQueue;
         mutable std::mutex       m_queueMutex;
     };
 }
