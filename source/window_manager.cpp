@@ -149,18 +149,20 @@ namespace glfw_cpp
         glfwSetWindowMaximizeCallback(handle, Window::window_maximize_callback);
         glfwSetWindowContentScaleCallback(handle, Window::window_content_scale_callback);
 
-        int    xPos, yPos, realWidth, realHeight;
+        int    xPos, yPos, realWidth, realHeight, fbWidth, fbHeight;
         double xCursor, yCursor;
         glfwGetWindowPos(handle, &xPos, &yPos);
         glfwGetWindowSize(handle, &realWidth, &realHeight);
         glfwGetCursorPos(handle, &xCursor, &yCursor);
+        glfwGetFramebufferSize(handle, &fbWidth, &fbHeight);
 
         return Window{ *this, handle, Window::Properties{
-            .m_title     = { title.begin(), title.end() },
-            .m_pos       = { xPos, yPos },
-            .m_dimension = { realWidth, realHeight },
-            .m_cursor    = { xCursor, yCursor },
-            .m_attribute = {
+            .m_title           = { title.begin(), title.end() },
+            .m_pos             = { xPos, yPos },
+            .m_dimension       = { realWidth, realHeight },
+            .m_framebufferSize = { fbWidth, fbHeight },
+            .m_cursor          = { xCursor, yCursor },
+            .m_attribute       = {
                 .m_iconified   = 0,
                 .m_maximized   = (hint.m_flags & WindowHint::MAXIMIZED) != 0,
                 .m_focused     = (hint.m_flags & WindowHint::FOCUSED) != 0,
