@@ -17,8 +17,8 @@ int main()
         .m_major   = 3,
         .m_minor   = 3,
         .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
-        .m_loader  = [](auto handle, auto proc
-                    ) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
+        .m_loader  = [](auto handle,
+                       auto proc) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
     });
 
     auto wm = glfw->createWindowManager();
@@ -30,8 +30,8 @@ int main()
 
     while (wm.hasWindowOpened()) {
         for (auto& win : windows) {
-            auto delta = win.use([&](auto&& events) {
-                std::ranges::for_each(events, [&](glfw_cpp::Event& ev) {
+            auto delta = win.use([&](const auto& events) {
+                std::ranges::for_each(events, [&](const glfw_cpp::Event& ev) {
                     if (auto* e = ev.getIf<glfw_cpp::Event::KeyPressed>()) {
                         if (e->m_key == glfw_cpp::KeyCode::Q) {
                             win.requestClose();
@@ -40,7 +40,7 @@ int main()
                 });
 
                 auto epoch = std::chrono::steady_clock::now().time_since_epoch();
-                auto time = std::chrono::duration_cast<std::chrono::duration<float>>(epoch).count();
+                auto time  = std::chrono::duration_cast<std::chrono::duration<float>>(epoch).count();
 
                 // funny color cycle
                 const float r = (std::sin(23.0F / 8.0F * time) + 1.0F) * 0.1F + 0.4F;

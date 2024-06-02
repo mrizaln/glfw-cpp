@@ -233,7 +233,7 @@ void reshape(int w, int h)
     glLoadMatrixf((const GLfloat*)view);
 }
 
-void handleKeyEvent(glfw_cpp::Window& window, glfw_cpp::Event::KeyPressed& event)
+void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
 {
     using K = glfw_cpp::KeyCode;
     using M = glfw_cpp::ModifierKey;
@@ -268,7 +268,7 @@ static void setBallPos(GLfloat x, GLfloat y)
     ball_y = y - (height / 2);
 }
 
-void handleMouseButtonEvent(glfw_cpp::Event::ButtonPressed& event)
+void handleMouseButtonEvent(const glfw_cpp::Event::ButtonPressed& event)
 {
     using B = glfw_cpp::MouseButton;
     using S = glfw_cpp::MouseButtonState;
@@ -287,7 +287,7 @@ void handleMouseButtonEvent(glfw_cpp::Event::ButtonPressed& event)
     }
 }
 
-void handleCursorEvent(glfw_cpp::Event::CursorMoved& event)
+void handleCursorEvent(const glfw_cpp::Event::CursorMoved& event)
 {
     auto& [x, y, dx, dy] = event;
 
@@ -631,22 +631,20 @@ int main(void)
         reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
         init();
 
-        window.run([&](auto&& events) {
+        window.run([&](const glfw_cpp::EventQueue& events) {
             t     = glfw_cpp::getTime();
             dt    = t - t_old;
             t_old = t;
 
             using EV = glfw_cpp::Event;
-            for (EV& event : events) {
-                if (auto* e = event.getIf<EV::FramebufferResized>()) {
-                    reshape(e->m_width, e->m_height);
-                } else if (auto* e = event.getIf<EV::KeyPressed>()) {
-                    handleKeyEvent(window, *e);
-                } else if (auto* e = event.getIf<EV::CursorMoved>()) {
-                    handleCursorEvent(*e);
-                } else if (auto* e = event.getIf<EV::ButtonPressed>()) {
-                    handleMouseButtonEvent(*e);
-                }
+            for (const EV& event : events) {
+                event.visit(EV::Overloaded{
+                    [&](const EV::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
+                    [&](const EV::KeyPressed& e) { handleKeyEvent(window, e); },
+                    [&](const EV::CursorMoved& e) { handleCursorEvent(e); },
+                    [&](const EV::ButtonPressed& e) { handleMouseButtonEvent(e); },
+                    [](auto&) {},
+                });
             }
 
             display();

@@ -109,9 +109,7 @@ int main()
             }
         }
 
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, GL_LUMINANCE, 16, 16, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels
-        );
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 16, 16, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -182,7 +180,7 @@ int main()
         for (std::size_t i = 0; i < 2; i++) {
             windows[i].bind();
 
-            for (auto& event : windows[i].poll()) {
+            for (const auto& event : windows[i].poll()) {
                 using EV = glfw_cpp::Event;
                 using KC = glfw_cpp::KeyCode;
                 using KS = glfw_cpp::KeyState;
@@ -193,9 +191,6 @@ int main()
                         windows[0].requestClose();
                         windows[1].requestClose();
                     }
-                } else {
-                    static int c = 0;
-                    fprintf(stderr, "other event going on: %d\n", c++);
                 }
             }
 

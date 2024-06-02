@@ -319,8 +319,7 @@ static void update_particle(PARTICLE* p, float dt)
     // Simple collision detection + response
     if (p->vz < 0.f) {
         // Particles should bounce on the fountain (with friction)
-        if ((p->x * p->x + p->y * p->y) < FOUNTAIN_R2
-            && p->z < (FOUNTAIN_HEIGHT + PARTICLE_SIZE / 2)) {
+        if ((p->x * p->x + p->y * p->y) < FOUNTAIN_R2 && p->z < (FOUNTAIN_HEIGHT + PARTICLE_SIZE / 2)) {
             p->vz = -FRICTION * p->vz;
             p->z  = FOUNTAIN_HEIGHT + PARTICLE_SIZE / 2
                  + FRICTION * (FOUNTAIN_HEIGHT + PARTICLE_SIZE / 2 - p->z);
@@ -377,7 +376,7 @@ static void particle_engine(double t, float dt)
 // arrays for this in order to accelerate the drawing.
 //========================================================================
 
-#define BATCH_PARTICLES                                                                            \
+#define BATCH_PARTICLES                                                                                      \
     70                      // Number of particles to draw in each batch
                             // (70 corresponds to 7.5 KB = will not blow
                             // the L1 data cache on most CPUs)
@@ -566,10 +565,10 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
 #define FOUNTAIN_SIDE_POINTS 14
 #define FOUNTAIN_SWEEP_STEPS 32
 
-static const float fountain_side[FOUNTAIN_SIDE_POINTS * 2] = {
-    1.2f, 0.f,  1.f,  0.2f, 0.41f, 0.3f,  0.4f, 0.35f, 0.4f, 1.95f, 0.41f, 2.f, 0.8f, 2.2f,
-    1.2f, 2.4f, 1.5f, 2.7f, 1.55f, 2.95f, 1.6f, 3.f,   1.f,  3.f,   0.5f,  3.f, 0.f,  3.f
-};
+static const float fountain_side[FOUNTAIN_SIDE_POINTS * 2] = { 1.2f,  0.f,  1.f,   0.2f,  0.41f, 0.3f,  0.4f,
+                                                               0.35f, 0.4f, 1.95f, 0.41f, 2.f,   0.8f,  2.2f,
+                                                               1.2f,  2.4f, 1.5f,  2.7f,  1.55f, 2.95f, 1.6f,
+                                                               3.f,   1.f,  3.f,   0.5f,  3.f,   0.f,   3.f };
 
 static const float fountain_normal[FOUNTAIN_SIDE_POINTS * 2] = {
     1.0000f, 0.0000f,  0.6428f, 0.7660f,  0.3420f, 0.9397f,  1.0000f, 0.0000f,  1.0000f, 0.0000f,
@@ -607,23 +606,15 @@ static void draw_fountain()
 
                 // Draw triangle strip
                 glNormal3f(
-                    x * fountain_normal[n * 2 + 2],
-                    y * fountain_normal[n * 2 + 2],
-                    fountain_normal[n * 2 + 3]
+                    x * fountain_normal[n * 2 + 2], y * fountain_normal[n * 2 + 2], fountain_normal[n * 2 + 3]
                 );
                 glVertex3f(
-                    x * fountain_side[n * 2 + 2],
-                    y * fountain_side[n * 2 + 2],
-                    fountain_side[n * 2 + 3]
+                    x * fountain_side[n * 2 + 2], y * fountain_side[n * 2 + 2], fountain_side[n * 2 + 3]
                 );
                 glNormal3f(
-                    x * fountain_normal[n * 2],
-                    y * fountain_normal[n * 2],
-                    fountain_normal[n * 2 + 1]
+                    x * fountain_normal[n * 2], y * fountain_normal[n * 2], fountain_normal[n * 2 + 1]
                 );
-                glVertex3f(
-                    x * fountain_side[n * 2], y * fountain_side[n * 2], fountain_side[n * 2 + 1]
-                );
+                glVertex3f(x * fountain_side[n * 2], y * fountain_side[n * 2], fountain_side[n * 2 + 1]);
             }
 
             glEnd();
@@ -1015,7 +1006,7 @@ int main(int argc, char** argv)
         wm.pollEvents();
 
         // this poll returns the events from the queue
-        for (auto& event : window.poll()) {
+        for (const auto& event : window.poll()) {
             using EV = glfw_cpp::Event;
             using KC = glfw_cpp::KeyCode;
             using KS = glfw_cpp::KeyState;

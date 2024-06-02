@@ -1193,8 +1193,8 @@ int main()
 
     Vulkan vulkan{ window, "vulkan program" };
 
-    window.run([&](auto&& events) {
-        for (glfw_cpp::Event& event : events) {
+    window.run([&](const auto& events) {
+        for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.getIf<glfw_cpp::Event::KeyPressed>()) {
                 if (e->m_key == glfw_cpp::KeyCode::Q) {
                     window.requestClose();

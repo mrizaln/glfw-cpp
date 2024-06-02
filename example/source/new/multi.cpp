@@ -28,7 +28,7 @@ void logCallback(glfw::Instance::LogLevel level, std::string message)
     fmt::println(stderr, "[GLFW] [{}] {}", levelStr(), message);
 }
 
-void handleEvents(glfw::Window& window, glfw::Window::EventQueue&& events)
+void handleEvents(glfw::Window& window, const glfw::EventQueue& events)
 {
     for (const glfw::Event& event : events) {
         // Event is a std::variant, use visit to see its content. Internally it is using std::visit.
@@ -69,7 +69,7 @@ void threadFun(glfw::Window&& window, float side, float color)
     auto shader = Shader{ "asset/shader/shader.vert", "asset/shader/shader.frag" };
     auto plane  = Plane{ side };
 
-    window.run([&](auto&& eventQueue) {
+    window.run([&](const glfw::EventQueue& eventQueue) {
         handleEvents(window, std::move(eventQueue));
 
         gl::glClearColor(0.1F * color, 0.1F * color, 0.11F * color, 1.0F);    // NOLINT

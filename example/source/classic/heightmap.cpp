@@ -47,8 +47,7 @@
 #define MAP_SIZE               (10.0f)
 #define MAP_NUM_VERTICES       (80)
 #define MAP_NUM_TOTAL_VERTICES (MAP_NUM_VERTICES * MAP_NUM_VERTICES)
-#define MAP_NUM_LINES                                                                              \
-    (3 * (MAP_NUM_VERTICES - 1) * (MAP_NUM_VERTICES - 1) + 2 * (MAP_NUM_VERTICES - 1))
+#define MAP_NUM_LINES          (3 * (MAP_NUM_VERTICES - 1) * (MAP_NUM_VERTICES - 1) + 2 * (MAP_NUM_VERTICES - 1))
 
 /**********************************************************************
  * Default shader programs
@@ -219,13 +218,7 @@ static void init_map()
     }
 #if DEBUG_ENABLED
     for (i = 0; i < MAP_NUM_TOTAL_VERTICES; ++i) {
-        printf(
-            "Vertice %d (%f, %f, %f)\n",
-            i,
-            map_vertices[0][i],
-            map_vertices[1][i],
-            map_vertices[2][i]
-        );
+        printf("Vertice %d (%f, %f, %f)\n", i, map_vertices[0][i], map_vertices[1][i], map_vertices[2][i]);
     }
 #endif
     /* create indices */
@@ -284,12 +277,7 @@ static void init_map()
 #endif
 }
 
-static void generate_heightmap__circle(
-    float* center_x,
-    float* center_y,
-    float* size,
-    float* displacement
-)
+static void generate_heightmap__circle(float* center_x, float* center_y, float* size, float* displacement)
 {
     float sign;
     /* random value for element in between [0-1.0] */
@@ -347,20 +335,14 @@ static void make_mesh(GLuint program)
     /* Prepare the data for drawing through a buffer inidices */
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh_vbo[3]);
     glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,
-        sizeof(GLuint) * MAP_NUM_LINES * 2,
-        map_line_indices,
-        GL_STATIC_DRAW
+        GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * MAP_NUM_LINES * 2, map_line_indices, GL_STATIC_DRAW
     );
 
     /* Prepare the attributes for rendering */
     attrloc = glGetAttribLocation(program, "x");
     glBindBuffer(GL_ARRAY_BUFFER, mesh_vbo[0]);
     glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES,
-        &map_vertices[0][0],
-        GL_STATIC_DRAW
+        GL_ARRAY_BUFFER, sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES, &map_vertices[0][0], GL_STATIC_DRAW
     );
     glEnableVertexAttribArray(attrloc);
     glVertexAttribPointer(attrloc, 1, GL_FLOAT, GL_FALSE, 0, 0);
@@ -368,10 +350,7 @@ static void make_mesh(GLuint program)
     attrloc = glGetAttribLocation(program, "z");
     glBindBuffer(GL_ARRAY_BUFFER, mesh_vbo[2]);
     glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES,
-        &map_vertices[2][0],
-        GL_STATIC_DRAW
+        GL_ARRAY_BUFFER, sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES, &map_vertices[2][0], GL_STATIC_DRAW
     );
     glEnableVertexAttribArray(attrloc);
     glVertexAttribPointer(attrloc, 1, GL_FLOAT, GL_FALSE, 0, 0);
@@ -379,10 +358,7 @@ static void make_mesh(GLuint program)
     attrloc = glGetAttribLocation(program, "y");
     glBindBuffer(GL_ARRAY_BUFFER, mesh_vbo[1]);
     glBufferData(
-        GL_ARRAY_BUFFER,
-        sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES,
-        &map_vertices[1][0],
-        GL_DYNAMIC_DRAW
+        GL_ARRAY_BUFFER, sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES, &map_vertices[1][0], GL_DYNAMIC_DRAW
     );
     glEnableVertexAttribArray(attrloc);
     glVertexAttribPointer(attrloc, 1, GL_FLOAT, GL_FALSE, 0, 0);
@@ -392,9 +368,7 @@ static void make_mesh(GLuint program)
  */
 static void update_mesh()
 {
-    glBufferSubData(
-        GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES, &map_vertices[1][0]
-    );
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(GLfloat) * MAP_NUM_TOTAL_VERTICES, &map_vertices[1][0]);
 }
 
 int main()
@@ -456,7 +430,6 @@ int main()
         /* setup the scene ready for rendering */
         auto [width, height] = window.properties().m_framebufferSize;
         glViewport(0, 0, width, height);
-
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         /* main loop */
@@ -464,18 +437,27 @@ int main()
         int    iter             = 0;
         double last_update_time = glfw_cpp::getTime();
 
-        window.run([&](auto&& events) {
+        while (!window.shouldClose()) {
             using EV = glfw_cpp::Event;
             using KC = glfw_cpp::KeyCode;
             using KS = glfw_cpp::KeyState;
 
-            for (EV& event : events) {
+            for (const EV& event : window.poll()) {
                 if (auto* e = event.getIf<EV::KeyPressed>()) {
                     if (e->m_key == KC::ESCAPE && e->m_state == KS::PRESS) {
                         window.requestClose();
                     }
                 }
             }
+
+            ++frame;
+
+            /* render the next frame */
+            glClear(GL_COLOR_BUFFER_BIT);
+            glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
+
+            window.display();
+            wm.pollEvents();
 
             /* Check the frame rate and update the heightmap if needed */
             double dt = glfw_cpp::getTime();
@@ -489,16 +471,7 @@ int main()
                 last_update_time = dt;
                 frame            = 0;
             }
-
-            ++frame;
-            /* render the next frame */
-            glClear(GL_COLOR_BUFFER_BIT);
-            glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
-
-            wm.pollEvents();
-
-            // glfwSwapBuffer is done after this lambda called
-        });
+        };
     } catch (std::exception& e) {
         fprintf(stderr, "Exception occurred: %s\n", e.what());
         return 1;

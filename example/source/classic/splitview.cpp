@@ -471,13 +471,14 @@ static void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPre
 // main
 //========================================================================
 
+// TODO: fix glEnd error
 int main()
 {
     auto glfw = glfw_cpp::init(
         glfw_cpp::Api::OpenGL{
             .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
-        nullptr
+        [](auto lvl, auto msg) { fprintf(stderr, "GLFW [%d]: %s\n", (int)lvl, msg.c_str()); }
     );
 
     auto hint   = glfw_cpp::WindowHint{ .m_samples = 4 };
@@ -486,27 +487,28 @@ int main()
 
     glEnable(GL_MULTISAMPLE);
 
-    width  = window.properties().m_dimension.m_width;
-    height = window.properties().m_dimension.m_height;
+    width  = window.properties().m_framebufferSize.m_width;
+    height = window.properties().m_framebufferSize.m_height;
 
     framebufferSizeFun(width, height);
 
     while (wm.hasWindowOpened()) {
-        for (auto& event : window.poll()) {
+        for (const auto& event : window.poll()) {
             using EV = glfw_cpp::Event;
             event.visit(EV::Overloaded{
                 // clang-format off
-                [&](EV::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
-                [&](EV::WindowRefreshed&      ) { windowRefreshFun(window); },
-                [&](EV::CursorMoved&        ev) { cursorPosFun(window, ev); },
-                [&](EV::ButtonPressed&      ev) { mouseButtonFun(ev); },
-                [&](EV::KeyPressed&         ev) { key_callback(window, ev); },
-                [](auto) { /* ignore */ },
+                [&](const EV::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
+                [&](const EV::WindowRefreshed&      ) { windowRefreshFun(window); },
+                [&](const EV::CursorMoved&        ev) { cursorPosFun(window, ev); },
+                [&](const EV::ButtonPressed&      ev) { mouseButtonFun(ev); },
+                [&](const EV::KeyPressed&         ev) { key_callback(window, ev); },
+                [](auto&) { /* ignore */ },
                 // clang-format on
             });
         }
 
         if (do_redraw) {
+            printf("aksjfh\n");
             windowRefreshFun(window);
         }
 

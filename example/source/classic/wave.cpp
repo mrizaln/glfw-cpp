@@ -384,17 +384,17 @@ int main()
     double t_old    = glfw_cpp::getTime() - 0.01;
     double dt_total = 0.0;
 
-    window.run([&](auto&& events) {
+    window.run([&](const auto& events) {
         using EV = glfw_cpp::Event;
 
-        for (EV& event : events) {
+        for (const EV& event : events) {
             event.visit(EV::Overloaded{
                 // clang-format off
-                [&](EV::KeyPressed&         e) { key_callback(window, e); },
-                [&](EV::FramebufferResized& e) { framebuffer_size_callback(e); },
-                [&](EV::ButtonPressed&      e) { mouse_button_callback(window, e); },
-                [&](EV::CursorMoved&        e) { cursor_position_callback(window, e); },
-                [&](EV::Scrolled&           e) { scroll_callback(e); },
+                [&](const EV::KeyPressed&         e) { key_callback(window, e); },
+                [&](const EV::FramebufferResized& e) { framebuffer_size_callback(e); },
+                [&](const EV::ButtonPressed&      e) { mouse_button_callback(window, e); },
+                [&](const EV::CursorMoved&        e) { cursor_position_callback(window, e); },
+                [&](const EV::Scrolled&           e) { scroll_callback(e); },
                 [](auto) { /* Do nothing */ },
                 // clang-format on
             });

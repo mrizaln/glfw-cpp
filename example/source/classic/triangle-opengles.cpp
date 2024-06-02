@@ -128,19 +128,15 @@ int main()
 
     glEnableVertexAttribArray(vpos_location);
     glEnableVertexAttribArray(vcol_location);
-    glVertexAttribPointer(
-        vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos)
-    );
-    glVertexAttribPointer(
-        vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col)
-    );
+    glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
 
-    window.run([&](auto&& events) {
+    window.run([&](const auto& events) {
         using EV = glfw_cpp::Event;
         using KC = glfw_cpp::KeyCode;
         using KS = glfw_cpp::KeyState;
 
-        for (EV& event : events) {
+        for (const EV& event : events) {
             if (auto* e = event.getIf<EV::KeyPressed>()) {
                 if (e->m_key == KC::ESCAPE && e->m_state == KS::PRESS) {
                     window.requestClose();

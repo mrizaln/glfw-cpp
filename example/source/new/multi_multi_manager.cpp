@@ -15,7 +15,7 @@ void windowThread(glfw::Window&& window)
 
     auto mul = 1.0F / static_cast<float>(std::rand() % 10 + 1);
 
-    window.run([&, elapsed = 0.0F](auto&& events) mutable {
+    window.run([&, elapsed = 0.0F](const auto& events) mutable {
         for (const glfw::Event& event : events) {
             if (auto e = event.getIf<glfw::Event::KeyPressed>()) {
                 if (e->m_key == glfw::KeyCode::Q) {

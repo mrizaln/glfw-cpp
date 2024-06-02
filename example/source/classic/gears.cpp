@@ -43,13 +43,7 @@
 
  **/
 
-static void gear(
-    GLfloat inner_radius,
-    GLfloat outer_radius,
-    GLfloat width,
-    GLint   teeth,
-    GLfloat tooth_depth
-)
+static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLint teeth, GLfloat tooth_depth)
 {
     GLint   i;
     GLfloat r0, r1, r2;
@@ -74,9 +68,7 @@ static void gear(
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), width * 0.5f);
         if (i < teeth) {
             glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), width * 0.5f);
-            glVertex3f(
-                r1 * (float)cos(angle + 3 * da), r1 * (float)sin(angle + 3 * da), width * 0.5f
-            );
+            glVertex3f(r1 * (float)cos(angle + 3 * da), r1 * (float)sin(angle + 3 * da), width * 0.5f);
         }
     }
     glEnd();
@@ -103,9 +95,7 @@ static void gear(
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), -width * 0.5f);
         glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), -width * 0.5f);
         if (i < teeth) {
-            glVertex3f(
-                r1 * (float)cos(angle + 3 * da), r1 * (float)sin(angle + 3 * da), -width * 0.5f
-            );
+            glVertex3f(r1 * (float)cos(angle + 3 * da), r1 * (float)sin(angle + 3 * da), -width * 0.5f);
             glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), -width * 0.5f);
         }
     }
@@ -211,7 +201,7 @@ static void animate()
 }
 
 /* change view angle, exit upon ESC */
-void key(glfw_cpp::Window& window, glfw_cpp::Event::KeyPressed& event)
+void key(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
 {
     using K = glfw_cpp::KeyCode;
     using M = glfw_cpp::ModifierKey;
@@ -304,9 +294,7 @@ int main()
                 // default OpenGL
                 .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
             },
-            [](auto level, auto msg) {
-                std::cerr << std::format("glfw-cpp [{}]: {}\n", (int)level, msg);
-            }
+            [](auto level, auto msg) { std::cerr << std::format("glfw-cpp [{}]: {}\n", (int)level, msg); }
         );
 
         using H = glfw_cpp::WindowHint;
@@ -320,7 +308,7 @@ int main()
 
         window.run([&](auto&& events) {
             using EV = glfw_cpp::Event;
-            for (EV& event : events) {
+            for (const EV& event : events) {
                 if (auto* e = event.getIf<EV::FramebufferResized>()) {
                     reshape(e->m_width, e->m_height);
                 } else if (auto* e = event.getIf<EV::KeyPressed>()) {
