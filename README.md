@@ -9,7 +9,11 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 ## TODO
 
 - [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
-- [ ] Handle GLFW internal error
+- [ ] ~~Handle GLFW internal error~~
+  > - GLFW internal errors are mainly occurs from invalid enumeration passed into a function, invalid value for an enum passed into a function, and failure in maintaining invariants (like GLFW is initialized or not).
+  > - This library is a C++ library so errors from passing invalid enumeration and/or invalid value for an enum is avoided by using the stricter type-system of C++.
+  > - This library also is trying it's best in maintaining the invariants so hopefully the errors that surface from these are also avoided.
+  > - That leaves out platform-related errors which I can report easily as exceptions.
 - [ ] Add the ability to handle window events in separate thread from Window and WindowManager
 - [ ] Eliminate `glfw_cpp::WindowManager` move limitation
 
@@ -135,4 +139,4 @@ The above example is a single-threaded, one window example. For a multi-window a
 
 ## Limitation
 
-Other limitation is that `glfw_cpp::WindowManager` should not be moved after it created `glfw_cpp::Window`s since each window created from it has a pointer to the `glfw_cpp::WindowManager`. If you are doing that it may leads to undefined behavior (dereferencing a pointer to a destroyed `glfw_cpp::WindowManager` for example). If the `glfw_cpp::WindowManager` hasn't created any `glfw_cpp::Window`s (or they are already destroyed) it is okay to move it.
+One limitation is that `glfw_cpp::WindowManager` should not be moved after it created `glfw_cpp::Window`s since each window created from it has a pointer to the `glfw_cpp::WindowManager`. If you are doing that it may leads to undefined behavior (dereferencing a pointer to a destroyed `glfw_cpp::WindowManager` for example). If the `glfw_cpp::WindowManager` hasn't created any `glfw_cpp::Window`s (or they are already destroyed) it is okay to move it.
