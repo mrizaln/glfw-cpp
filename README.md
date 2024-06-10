@@ -57,7 +57,7 @@ This library supports Vulkan, just set `GLFW_CPP_VULKAN_SUPPORT` before adding t
 
 Using this library is as simple as
 
-> [single.cpp](./example/source/single.cpp)
+> [single.cpp](./example/source/new/single.cpp)
 
 ```cpp
 #include <glad/glad.h>
@@ -135,7 +135,7 @@ No manual cleanup necessary, the classes defined already using RAII pattern.
 
 One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
-The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/multi.cpp) or [here](./example/source/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).
+The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/new/multi.cpp) or [here](./example/source/new/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).
 
 ## Limitation
 
