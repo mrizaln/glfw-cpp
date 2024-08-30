@@ -3,6 +3,7 @@
 
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/input.hpp"
+#include "glfw_cpp/monitor.hpp"
 
 #include <vector>
 #include <functional>
@@ -65,6 +66,7 @@ namespace glfw_cpp
 
             MouseButtonStateRecord m_mouseButtonState = {};
             KeyStateRecord         m_keyState         = {};
+            Monitor                m_monitor          = {};
         };
 
         static constexpr std::size_t s_defaultEventQueueSize = 128;

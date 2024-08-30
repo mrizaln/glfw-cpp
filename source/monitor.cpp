@@ -39,9 +39,7 @@ namespace glfw_cpp
     Monitor::WorkArea Monitor::workArea() const
     {
         WorkArea workArea;
-        glfwGetMonitorWorkarea(
-            m_handle, &workArea.m_x, &workArea.m_y, &workArea.m_width, &workArea.m_height
-        );
+        glfwGetMonitorWorkarea(m_handle, &workArea.m_x, &workArea.m_y, &workArea.m_width, &workArea.m_height);
         return workArea;
     }
 

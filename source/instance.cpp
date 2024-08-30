@@ -17,6 +17,7 @@ namespace
     {
 #define CASE_ENTRY(Val)                                                                                      \
     case Val: return #Val
+
         switch (glfwErrc) {
             CASE_ENTRY(GLFW_NOT_INITIALIZED);
             CASE_ENTRY(GLFW_NO_CURRENT_CONTEXT);

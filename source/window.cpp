@@ -533,7 +533,7 @@ namespace glfw_cpp
         using MS = MouseButtonState;
         using EV = Event;
 
-        auto& [_, pos, dim, frame, cursor, attr, btns, keys] = m_properties;
+        auto& [_, pos, dim, frame, cursor, attr, btns, keys, __] = m_properties;
         event.visit(util::VisitOverloaded{
             // clang-format off
             [&](EV::WindowMoved&        e) { pos    = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
