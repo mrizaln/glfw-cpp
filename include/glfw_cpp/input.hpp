@@ -1,6 +1,10 @@
 #ifndef INPUT_HPP_354TKEJR8H
 #define INPUT_HPP_354TKEJR8H
 
+#if defined(_WIN32)
+#    undef DELETE;
+#endif
+
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -280,16 +284,12 @@ namespace glfw_cpp
 
         bool allPressed(std::initializer_list<KeyCode> keyCodes) const
         {
-            return std::all_of(keyCodes.begin(), keyCodes.end(), [this](auto k) {
-                return isPressed(k);
-            });
+            return std::all_of(keyCodes.begin(), keyCodes.end(), [this](auto k) { return isPressed(k); });
         }
 
         bool anyPressed(std::initializer_list<KeyCode> keyCodes) const
         {
-            return std::any_of(keyCodes.begin(), keyCodes.end(), [this](auto k) {
-                return isPressed(k);
-            });
+            return std::any_of(keyCodes.begin(), keyCodes.end(), [this](auto k) { return isPressed(k); });
         }
 
         std::vector<KeyCode> pressedKeys() const;
@@ -321,16 +321,12 @@ namespace glfw_cpp
 
         bool allPressed(std::initializer_list<MouseButton> buttons) const
         {
-            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) {
-                return isPressed(k);
-            });
+            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) { return isPressed(k); });
         }
 
         bool anyPressed(std::initializer_list<MouseButton> buttons) const
         {
-            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) {
-                return isPressed(k);
-            });
+            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) { return isPressed(k); });
         }
 
         std::vector<MouseButton> pressedButtons() const;

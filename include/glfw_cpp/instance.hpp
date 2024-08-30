@@ -1,6 +1,10 @@
 #ifndef INSTANCE_HPP_AO39EW8FOEW
 #define INSTANCE_HPP_AO39EW8FOEW
 
+#if defined(_WIN32)
+#    undef ERROR
+#endif
+
 #include <format>
 #include <functional>
 #include <memory>
