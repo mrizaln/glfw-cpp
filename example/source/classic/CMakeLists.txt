@@ -2,8 +2,14 @@ function(create_an_executable NAME)
   add_executable(${NAME} ${NAME}.cpp)
   target_compile_options(${NAME} PRIVATE -Wall -Wextra -Wconversion)
   target_link_libraries(
-    ${NAME} PRIVATE glad::glad linmath.h::linmath.h glfw-cpp stb::stb
-                    tinycthread::tinycthread getopt)
+    ${NAME}
+    PRIVATE glad::glad
+            linmath.h::linmath.h
+            glfw-cpp
+            stb::stb
+            tinycthread::tinycthread
+            getopt
+            khrplatform::khrplatform)
   set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
                                            ${CMAKE_BINARY_DIR})
 endfunction()

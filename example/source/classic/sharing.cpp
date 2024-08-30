@@ -158,7 +158,7 @@ int main()
         // int left, right;
         // glfwGetWindowFrameSize(windows[0].handle(), &left, NULL, &right, NULL);
 
-        auto& [_1, pos, dim, _2, _3, _4, _5, _6] = windows[0].properties();
+        auto& [_1, pos, dim, _2, _3, _4, _5, _6, _7] = windows[0].properties();
         windows[1].setWindowPos(pos.m_x + dim.m_width, pos.m_y);
     }
 

@@ -27,6 +27,7 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <chrono>
 #if defined(_MSC_VER)
 // Make MS math.h define M_PI
 #    define _USE_MATH_DEFINES
@@ -444,8 +445,12 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
     // Wait for particle physics thread to be done
     mtx_lock(&thread_sync.particles_lock);
     while (!window.shouldClose() && thread_sync.p_frame <= thread_sync.d_frame) {
-        struct timespec ts;
-        clock_gettime(CLOCK_REALTIME, &ts);
+        auto     time = std::chrono::system_clock::now().time_since_epoch().count();
+        timespec ts   = {
+              .tv_sec  = 0,
+              .tv_nsec = time,
+        };
+
         ts.tv_nsec += 100 * 1000 * 1000;
         ts.tv_sec  += ts.tv_nsec / (1000 * 1000 * 1000);
         ts.tv_nsec %= 1000 * 1000 * 1000;
@@ -851,8 +856,12 @@ static int physics_thread_main(void* arg)
 
         // Wait for particle drawing to be done
         while (!window->shouldClose() && thread_sync.p_frame > thread_sync.d_frame) {
-            struct timespec ts;
-            clock_gettime(CLOCK_REALTIME, &ts);
+            auto     time = std::chrono::system_clock::now().time_since_epoch().count();
+            timespec ts   = {
+                  .tv_sec  = 0,
+                  .tv_nsec = time,
+            };
+
             ts.tv_nsec += 100 * 1000 * 1000;
             ts.tv_sec  += ts.tv_nsec / (1000 * 1000 * 1000);
             ts.tv_nsec %= 1000 * 1000 * 1000;
