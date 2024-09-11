@@ -20,103 +20,76 @@ namespace glfw_cpp
 {
     void Window::window_pos_callback(GLFWwindow* window, int x, int y)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowMoved{
-            .m_xPos = x,
-            .m_yPos = y,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowMoved{
+                .m_xPos = x,
+                .m_yPos = y,
+            }
+        );
     }
     void Window::window_size_callback(GLFWwindow* window, int width, int height)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowResized{
-            .m_width  = width,
-            .m_height = height,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowResized{
+                .m_width  = width,
+                .m_height = height,
+            }
+        );
     }
 
     void Window::window_close_callback(GLFWwindow* window)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowClosed{});
+        windowCallbackHelper(window, Event::WindowClosed{});
     }
 
     void Window::window_refresh_callback(GLFWwindow* window)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowRefreshed{});
+        windowCallbackHelper(window, Event::WindowRefreshed{});
     }
 
     void Window::window_focus_callback(GLFWwindow* window, int focused)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowFocused{
-            .m_focused = focused == GLFW_TRUE,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowFocused{
+                .m_focused = focused == GLFW_TRUE,
+            }
+        );
     }
 
     void Window::window_iconify_callback(GLFWwindow* window, int iconified)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowIconified{
-            .m_iconified = iconified == GLFW_TRUE,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowIconified{
+                .m_iconified = iconified == GLFW_TRUE,
+            }
+        );
     }
 
     void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::FramebufferResized{
-            .m_width  = width,
-            .m_height = height,
-        });
+        windowCallbackHelper(
+            window,
+            Event::FramebufferResized{
+                .m_width  = width,
+                .m_height = height,
+            }
+        );
     }
 
     void Window::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        if (button > GLFW_MOUSE_BUTTON_LAST) {
-            Instance::logW("(Window) Invalid mouse button: {}", button);
-            return;
-        }
-
-        w->pushEvent(Event::ButtonPressed{
-            .m_button = static_cast<MouseButton>(button),
-            .m_state  = static_cast<MouseButtonState>(action),
-            .m_mods   = static_cast<ModifierKey::Base>(mods),
-        });
+        windowCallbackHelper(
+            window,
+            Event::ButtonPressed{
+                .m_button = static_cast<MouseButton>(button),
+                .m_state  = static_cast<MouseButtonState>(action),
+                .m_mods   = static_cast<ModifierKey::Base>(mods),
+            }
+        );
     }
 
     void Window::cursor_pos_callback(GLFWwindow* window, double x, double y)
@@ -126,106 +99,96 @@ namespace glfw_cpp
             return;
         }
 
-        w->pushEvent(Event::CursorMoved{
-            .m_xPos   = x,
-            .m_yPos   = y,
-            .m_xDelta = x - w->properties().m_cursor.m_x,
-            .m_yDelta = y - w->properties().m_cursor.m_y,
-        });
+        // kinda useless using the helper here, but eh, I like consistency
+        windowCallbackHelper(
+            window,
+            Event::CursorMoved{
+                .m_xPos   = x,
+                .m_yPos   = y,
+                .m_xDelta = x - w->properties().m_cursor.m_x,
+                .m_yDelta = y - w->properties().m_cursor.m_y,
+            }
+        );
     }
 
     void Window::cursor_enter_callback(GLFWwindow* window, int entered)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::CursorEntered{
-            .m_entered = entered == GLFW_TRUE,
-        });
+        windowCallbackHelper(
+            window,
+            Event::CursorEntered{
+                .m_entered = entered == GLFW_TRUE,
+            }
+        );
     }
 
     void Window::scroll_callback(GLFWwindow* window, double x, double y)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::Scrolled{
-            .m_xOffset = x,
-            .m_yOffset = y,
-        });
+        windowCallbackHelper(
+            window,
+            Event::Scrolled{
+                .m_xOffset = x,
+                .m_yOffset = y,
+            }
+        );
     }
 
     void Window::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::KeyPressed{
-            .m_key      = static_cast<KeyCode>(key),
-            .m_scancode = scancode,
-            .m_state    = static_cast<KeyState>(action),
-            .m_mods     = static_cast<ModifierKey::Base>(mods),
-        });
+        windowCallbackHelper(
+            window,
+            Event::KeyPressed{
+                .m_key      = static_cast<KeyCode>(key),
+                .m_scancode = scancode,
+                .m_state    = static_cast<KeyState>(action),
+                .m_mods     = static_cast<ModifierKey::Base>(mods),
+            }
+        );
     }
 
     void Window::char_callback(GLFWwindow* window, unsigned int codepoint)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::CharInput{
-            .m_codepoint = codepoint,
-        });
+        windowCallbackHelper(
+            window,
+            Event::CharInput{
+                .m_codepoint = codepoint,
+            }
+        );
     }
 
     void Window::file_drop_callback(GLFWwindow* window, int count, const char** paths)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
         std::vector<std::filesystem::path> pathsVec(static_cast<std::size_t>(count));
         for (std::size_t i = 0; i < pathsVec.size(); ++i) {
             pathsVec[i] = std::filesystem::path{ paths[i] };
         }
 
-        w->pushEvent(Event::FileDropped{
-            .m_files = std::move(pathsVec),
-        });
+        windowCallbackHelper(
+            window,
+            Event::FileDropped{
+                .m_files = std::move(pathsVec),
+            }
+        );
     }
 
     void Window::window_maximize_callback(GLFWwindow* window, int maximized)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowMaximized{
-            .m_maximized = maximized == GLFW_TRUE,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowMaximized{
+                .m_maximized = maximized == GLFW_TRUE,
+            }
+        );
     }
 
     void Window::window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
     {
-        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
-        if (w == nullptr) {
-            return;
-        }
-
-        w->pushEvent(Event::WindowScaleChanged{
-            .m_xScale = xscale,
-            .m_yScale = yscale,
-        });
+        windowCallbackHelper(
+            window,
+            Event::WindowScaleChanged{
+                .m_xScale = xscale,
+                .m_yScale = yscale,
+            }
+        );
     }
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
@@ -570,5 +533,18 @@ namespace glfw_cpp
         double currentTime{ glfwGetTime() };
         m_deltaTime     = currentTime - m_lastFrameTime;
         m_lastFrameTime = currentTime;
+    }
+
+    void Window::windowCallbackHelper(GLFWwindow* window, Event&& event) noexcept
+    {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
+        auto forward = w->m_manager->sendInterceptEvent(*w, event);
+        if (forward) {
+            w->pushEvent(std::move(event));
+        }
     }
 }

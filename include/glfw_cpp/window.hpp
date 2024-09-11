@@ -201,11 +201,11 @@ namespace glfw_cpp
             static void joystick_callback(int jid, int action);
         */
 
+        static void windowCallbackHelper(GLFWwindow* window, Event&& event) noexcept;
+
         void pushEvent(Event&& event);
         void processQueuedTasks();
         void updateDeltaTime();
-
-        void swap(Window& other) noexcept;
 
         WindowManager* m_manager = nullptr;
         Handle         m_handle  = nullptr;

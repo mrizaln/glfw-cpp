@@ -1,6 +1,7 @@
-#include "glfw_cpp/window_manager.hpp"
+#include "glfw_cpp/event.hpp"
 #include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window.hpp"
+#include "glfw_cpp/window_manager.hpp"
 
 #include "util.hpp"
 #include <algorithm>
@@ -283,5 +284,36 @@ namespace glfw_cpp
         for (auto&& task : std::exchange(m_taskQueue, {})) {
             task();
         }
+    }
+
+    bool WindowManager::sendInterceptEvent(Window& window, Event& event) noexcept
+    {
+        if (!m_eventInterceptor) {
+            return true;
+        }
+
+        auto& intr = *m_eventInterceptor;
+        return event.visit(Event::Overloaded{
+            // clang-format off
+            [&](Event::WindowMoved&        event) { return intr.onWindowMoved       (window, event); },
+            [&](Event::WindowResized&      event) { return intr.onWindowResized     (window, event); },
+            [&](Event::WindowClosed&       event) { return intr.onWindowClosed      (window, event); },
+            [&](Event::WindowRefreshed&    event) { return intr.onWindowRefreshed   (window, event); },
+            [&](Event::WindowFocused&      event) { return intr.onWindowFocused     (window, event); },
+            [&](Event::WindowIconified&    event) { return intr.onWindowIconified   (window, event); },
+            [&](Event::WindowMaximized&    event) { return intr.onWindowMaximized   (window, event); },
+            [&](Event::WindowScaleChanged& event) { return intr.onWindowScaleChanged(window, event); },
+            [&](Event::FramebufferResized& event) { return intr.onFramebufferResized(window, event); },
+            [&](Event::ButtonPressed&      event) { return intr.onButtonPressed     (window, event); },
+            [&](Event::CursorMoved&        event) { return intr.onCursorMoved       (window, event); },
+            [&](Event::CursorEntered&      event) { return intr.onCursorEntered     (window, event); },
+            [&](Event::Scrolled&           event) { return intr.onScrolled          (window, event); },
+            [&](Event::KeyPressed&         event) { return intr.onKeyPressed        (window, event); },
+            [&](Event::CharInput&          event) { return intr.onCharInput         (window, event); },
+            [&](Event::FileDropped&        event) { return intr.onFileDropped       (window, event); },
+            [&](Event::MonitorConnected&        ) { return true; /* unimplemented                 */ },
+            [&](Event::Empty&                   ) { return true; /* always true                   */ },
+            // clang-format on
+        });
     }
 }

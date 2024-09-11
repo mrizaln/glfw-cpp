@@ -8,6 +8,7 @@
 #include <functional>
 #include <mutex>
 #include <optional>
+#include <utility>
 #include <vector>
 #include <string_view>
 #include <thread>
@@ -26,6 +27,8 @@ namespace glfw_cpp
 
     class Instance;
     class Window;
+    struct IEventInterceptor;
+    struct Event;
 
     struct WindowHint
     {
@@ -67,6 +70,7 @@ namespace glfw_cpp
     {
     public:
         friend Instance;
+        friend Window;
 
         template <typename Sig>
         using Fun    = std::function<Sig>;
@@ -90,6 +94,13 @@ namespace glfw_cpp
             int               height,
             bool              bindImmediately = true
         );
+
+        // set an event interceptor for windows events that managed by this instance.
+        // returns old IEventInterceptor (nullptr means no eventInterceptor set before).
+        IEventInterceptor* setEventInterceptor(IEventInterceptor* eventInterceptor)
+        {
+            return std::exchange(m_eventInterceptor, eventInterceptor);
+        }
 
         // this function poll events for all windows and then sleep for specified time. won't sleep
         // after polling events if `msPollRate` is `std::nullopt`.
@@ -130,6 +141,15 @@ namespace glfw_cpp
             Fun<void()> m_task;
         };
 
+        WindowManager(std::thread::id threadId);
+
+        // send event to interceptor, returns the value the interceptor returns. but if there is not
+        // interceptor, the returned value will always be true.
+        bool sendInterceptEvent(Window& window, Event& event) noexcept;
+
+        void validateAccess(bool checkThread) const;
+        void checkTasks();
+
         mutable std::mutex m_mutex;    // protects current instance
         std::thread::id    m_attachedThreadId;
 
@@ -138,10 +158,7 @@ namespace glfw_cpp
         std::vector<WindowTask>       m_windowTaskQueue;    // window task (checked)
         std::vector<Fun<void()>>      m_taskQueue;          // general task
 
-        WindowManager(std::thread::id threadId);
-        void validateAccess(bool checkThread) const;
-
-        void checkTasks();
+        IEventInterceptor* m_eventInterceptor = nullptr;
     };
 }
 

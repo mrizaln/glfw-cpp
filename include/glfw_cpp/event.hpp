@@ -232,6 +232,58 @@ namespace glfw_cpp
         Variant m_event;
     };
 
+    // EventInterceptor is a class that can intercept events before they are inserted into each Window
+    // EventQueue, and before any Window::Properties is updated. The return value of each function determines
+    // whether the event should be forwarded to the Window
+    struct IEventInterceptor
+    {
+    public:
+        // clang-format off
+        virtual bool onWindowMoved       (Window& window, Event::WindowMoved&        event) noexcept = 0;
+        virtual bool onWindowResized     (Window& window, Event::WindowResized&      event) noexcept = 0;
+        virtual bool onWindowClosed      (Window& window, Event::WindowClosed&       event) noexcept = 0;
+        virtual bool onWindowRefreshed   (Window& window, Event::WindowRefreshed&    event) noexcept = 0;
+        virtual bool onWindowFocused     (Window& window, Event::WindowFocused&      event) noexcept = 0;
+        virtual bool onWindowIconified   (Window& window, Event::WindowIconified&    event) noexcept = 0;
+        virtual bool onWindowMaximized   (Window& window, Event::WindowMaximized&    event) noexcept = 0;
+        virtual bool onWindowScaleChanged(Window& window, Event::WindowScaleChanged& event) noexcept = 0;
+        virtual bool onFramebufferResized(Window& window, Event::FramebufferResized& event) noexcept = 0;
+        virtual bool onButtonPressed     (Window& window, Event::ButtonPressed&      event) noexcept = 0;
+        virtual bool onCursorMoved       (Window& window, Event::CursorMoved&        event) noexcept = 0;
+        virtual bool onCursorEntered     (Window& window, Event::CursorEntered&      event) noexcept = 0;
+        virtual bool onScrolled          (Window& window, Event::Scrolled&           event) noexcept = 0;
+        virtual bool onKeyPressed        (Window& window, Event::KeyPressed&         event) noexcept = 0;
+        virtual bool onCharInput         (Window& window, Event::CharInput&          event) noexcept = 0;
+        virtual bool onFileDropped       (Window& window, Event::FileDropped&        event) noexcept = 0;
+        // clang-format on
+
+    protected:
+        // destructor is protected to prevent deletion through this interface
+        ~IEventInterceptor() = default;
+    };
+
+    struct DefaultEventInterceptor : public IEventInterceptor
+    {
+        // clang-format off
+        virtual bool onWindowMoved       (Window&, Event::WindowMoved&)        noexcept { return true; }
+        virtual bool onWindowResized     (Window&, Event::WindowResized&)      noexcept { return true; }
+        virtual bool onWindowClosed      (Window&, Event::WindowClosed&)       noexcept { return true; }
+        virtual bool onWindowRefreshed   (Window&, Event::WindowRefreshed&)    noexcept { return true; }
+        virtual bool onWindowFocused     (Window&, Event::WindowFocused&)      noexcept { return true; }
+        virtual bool onWindowIconified   (Window&, Event::WindowIconified&)    noexcept { return true; }
+        virtual bool onWindowMaximized   (Window&, Event::WindowMaximized&)    noexcept { return true; }
+        virtual bool onWindowScaleChanged(Window&, Event::WindowScaleChanged&) noexcept { return true; }
+        virtual bool onFramebufferResized(Window&, Event::FramebufferResized&) noexcept { return true; }
+        virtual bool onButtonPressed     (Window&, Event::ButtonPressed&)      noexcept { return true; }
+        virtual bool onCursorMoved       (Window&, Event::CursorMoved&)        noexcept { return true; }
+        virtual bool onCursorEntered     (Window&, Event::CursorEntered&)      noexcept { return true; }
+        virtual bool onScrolled          (Window&, Event::Scrolled&)           noexcept { return true; }
+        virtual bool onKeyPressed        (Window&, Event::KeyPressed&)         noexcept { return true; }
+        virtual bool onCharInput         (Window&, Event::CharInput&)          noexcept { return true; }
+        virtual bool onFileDropped       (Window&, Event::FileDropped&)        noexcept { return true; }
+        // clang-format on
+    };
+
     class EventQueue
     {
     public:
