@@ -267,7 +267,7 @@ namespace glfw_cpp
             return *this;
         }
 
-        explicit operator int() { return static_cast<Base>(m_mods); }
+        explicit operator int() const { return static_cast<Base>(m_mods); }
 
     private:
         Base m_mods = 0;
