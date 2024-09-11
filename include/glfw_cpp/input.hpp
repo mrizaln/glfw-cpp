@@ -147,7 +147,7 @@ namespace glfw_cpp
 
     // enum definitions replacing macros, reference from here:
     // https://www.glfw.org/docs/latest/group__input.html
-    enum class KeyState
+    enum class KeyState : int
     {
         RELEASE = 0,
         PRESS   = 1,
@@ -156,7 +156,7 @@ namespace glfw_cpp
 
     // enum definitions replacing macros, reference from here:
     // https://www.glfw.org/docs/latest/group__buttons.html
-    enum class MouseButton
+    enum class MouseButton : int
     {
         // clang-format off
         ONE         = 0,
@@ -174,7 +174,7 @@ namespace glfw_cpp
         // clang-format on
     };
 
-    enum class MouseButtonState
+    enum class MouseButtonState : int
     {
         RELEASE = 0,
         PRESS   = 1,
@@ -185,7 +185,7 @@ namespace glfw_cpp
     class ModifierKey
     {
     public:
-        using Base = unsigned char;
+        using Base = int;
 
         enum Bit : Base
         {
@@ -266,6 +266,8 @@ namespace glfw_cpp
             m_mods = NONE;
             return *this;
         }
+
+        operator int() { return static_cast<Base>(m_mods); }
 
     private:
         Base m_mods = 0;
@@ -348,6 +350,18 @@ namespace glfw_cpp
 
         State m_state = {};
     };
+
+    template <typename T>
+        requires std::same_as<T, KeyCode>             //
+              or std::same_as<T, KeyState>            //
+              or std::same_as<T, MouseButton>         //
+              or std::same_as<T, MouseButtonState>    //
+              or std::same_as<T, ModifierKey>         //
+              or std::same_as<T, ModifierKey::Bit>
+    int underlying(const T& value)
+    {
+        return static_cast<int>(value);
+    }
 
     // string must be null-terminated
     void setClipboardString(const char* string);
