@@ -10,7 +10,7 @@
 namespace glfw_cpp
 {
     // NOTE: every time KeyCode is updated, this function must be updated as well
-    std::size_t KeyStateRecord::bitPos(KeyCode keyCode) const
+    std::size_t KeyStateRecord::bitPos(KeyCode keyCode) const noexcept
     {
         switch (keyCode) {
             // clang-format off
@@ -140,7 +140,7 @@ namespace glfw_cpp
         }
     }
 
-    void KeyStateRecord::setBit(std::size_t pos, bool value)
+    void KeyStateRecord::setBit(std::size_t pos, bool value) noexcept
     {
         constexpr auto ElementBitCount = sizeof(State::value_type) * CHAR_BIT;
         assert(pos < ElementBitCount * State{}.size());
@@ -152,7 +152,7 @@ namespace glfw_cpp
         m_state[bytePos]   = value ? m_state[bytePos] | mask : m_state[bytePos] & ~mask;
     }
 
-    bool KeyStateRecord::getBit(std::size_t pos) const
+    bool KeyStateRecord::getBit(std::size_t pos) const noexcept
     {
         constexpr auto ElementBitCount = sizeof(State::value_type) * CHAR_BIT;
         assert(pos < ElementBitCount * State{}.size());
@@ -203,20 +203,20 @@ namespace glfw_cpp
 
 namespace glfw_cpp
 {
-    std::size_t MouseButtonStateRecord::bitPos(MouseButton button) const
+    std::size_t MouseButtonStateRecord::bitPos(MouseButton button) const noexcept
     {
         assert(static_cast<std::size_t>(MouseButton::MAXVALUE) < CHAR_BIT * sizeof(State));
         return static_cast<std::size_t>(button);
     }
 
-    void MouseButtonStateRecord::setBit(std::size_t pos, bool value)
+    void MouseButtonStateRecord::setBit(std::size_t pos, bool value) noexcept
     {
         assert(pos < CHAR_BIT * sizeof(State));
         const State mask = static_cast<State>(1u << pos);
         m_state          = value ? m_state | mask : m_state & ~mask;
     }
 
-    bool MouseButtonStateRecord::getBit(std::size_t pos) const
+    bool MouseButtonStateRecord::getBit(std::size_t pos) const noexcept
     {
         assert(pos < CHAR_BIT * sizeof(State));
         const State mask = static_cast<State>(1u << pos);

@@ -14,56 +14,113 @@
 
 namespace glfw_cpp
 {
+    /**
+     * @class Event
+     * @brief Window events wrapper (a variant).
+     *
+     * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
+     * each Window.
+     */
     class Event
     {
     public:
-        // visit helper using overloaded lambda
+        /**
+         * @struct Template struct for overloading operator() for multiple event types, can be used with to
+         * visit `Event` throught its `Event::visit` method
+         *
+         * @tparam Ts List of types or lambdas that have `operator()` defined for each event variant in
+         * `Event::Variant`
+         */
         template <typename... Ts>
         struct Overloaded : Ts...
         {
             using Ts::operator()...;
         };
 
+        /**
+         * @struct Empty
+         * @brief Empty event, currently unused
+         */
         struct Empty
         {
         };
 
+        /**
+         * @struct WindowMoved
+         * @brief Window move event, corresponds to event handled by callback sets by
+         * `glfwSetWindowPosCallback`
+         */
         struct WindowMoved
         {
             int m_xPos;
             int m_yPos;
         };
 
+        /**
+         * @struct WindowResized
+         * @brief Window resize event, corresponds to event handled by callback sets by
+         * `glfwSetWindowSizeCallback`
+         */
         struct WindowResized
         {
             int m_width;
             int m_height;
         };
 
+        /**
+         * @struct WindowClosed
+         * @brief Window close event, corresponds to event handled by callback sets by
+         * `glfwSetWindowCloseCallback`
+         */
         struct WindowClosed
         {
         };
 
+        /**
+         * @struct WindowRefreshed
+         * @brief Window refresh event, corresponds to event handled by callback sets by
+         * `glfwSetWindowRefreshCallback`
+         */
         struct WindowRefreshed
         {
         };
 
+        /**
+         * @struct WindowFocused
+         * @brief Window focus event, corresponds to event handled by callback sets by
+         * `glfwSetWindowFocusCallback`
+         */
         struct WindowFocused
         {
             bool m_focused;
         };
 
+        /**
+         * @struct WindowIconified
+         * @brief Window iconify event, corresponds to event handled by callback sets by
+         * `glfwSetWindowIconifyCallback`
+         */
         struct WindowIconified
         {
             bool m_iconified;
         };
 
+        /**
+         * @struct FramebufferResized
+         * @brief Framebuffer resize event, corresponds to event handled by callback sets by
+         * `glfwSetFramebufferSizeCallback`
+         */
         struct FramebufferResized
         {
             int m_width;
             int m_height;
         };
 
+        /**
+         * @struct ButtonPressed
+         * @brief Mouse button press event, corresponds to event handled by callback sets by
+         * `glfwSetMouseButtonCallback`
+         */
         struct ButtonPressed
         {
             MouseButton      m_button;
@@ -71,6 +128,11 @@ namespace glfw_cpp
             ModifierKey      m_mods;
         };
 
+        /**
+         * @struct CursorMoved
+         * @brief Mouse cursor move event, corresponds to event handled by callback sets by
+         * `glfwSetCursorPosCallback`
+         */
         struct CursorMoved
         {
             double m_xPos;
@@ -79,17 +141,32 @@ namespace glfw_cpp
             double m_yDelta;    // delta of current to previous y
         };
 
+        /**
+         * @struct CursorEntered
+         * @brief Mouse cursor enter event, corresponds to event handled by callback sets by
+         * `glfwSetCursorEnterCallback`
+         */
         struct CursorEntered
         {
             bool m_entered;
         };
 
+        /**
+         * @struct Scrolled
+         * @brief Mouse scroll event, corresponds to event handled by callback sets by
+         * `glfwSetScrollCallback`
+         */
         struct Scrolled
         {
             double m_xOffset;
             double m_yOffset;
         };
 
+        /**
+         * @struct KeyPressed
+         * @brief Keyboard key press event, corresponds to event handled by callback sets by
+         * `glfwSetKeyCallback`
+         */
         struct KeyPressed
         {
             KeyCode     m_key;
@@ -98,37 +175,66 @@ namespace glfw_cpp
             ModifierKey m_mods;
         };
 
+        /**
+         * @struct CharInput
+         * @brief Character input event, corresponds to event handled by callback sets by
+         * `glfwSetCharCallback`
+         */
         struct CharInput
         {
             unsigned int m_codepoint;
         };
 
+        /**
+         * @struct FileDropped
+         * @brief File drop event, corresponds to event handled by callback sets by `glfwSetDropCallback`
+         */
+        struct FileDropped
+        {
+            std::vector<std::filesystem::path> m_files;
+        };
+
+        /**
+         * @struct WindowMaximized
+         * @brief Window maximize event, corresponds to event handled by callback sets by
+         * `glfwSetWindowMaximizeCallback`
+         */
+        struct WindowMaximized
+        {
+            bool m_maximized;
+        };
+
+        /**
+         * @struct WindowScaleChanged
+         * @brief Window scale change event, corresponds to event handled by callback sets by
+         * `glfwSetWindowContentScaleCallback`
+         */
+        struct WindowScaleChanged
+        {
+            float m_xScale;
+            float m_yScale;
+        };
+
+        /**
+         * @struct MonitorConnected
+         * @brief Monitor connect event, corresponds to event handled by callback sets by
+         * `glfwSetMonitorCallback` (not implemented yet)
+         */
         struct MonitorConnected
         {
             Monitor m_monitor;
             bool    m_connected;
         };
 
-        struct FileDropped
-        {
-            std::vector<std::filesystem::path> m_files;
-        };
-
+        /**
+         * @struct JoystickConnected
+         * @brief Joystick connect event, corresponds to event handled by callback sets by
+         * `glfwSetJoystickCallback` (not implemented yet)
+         */
         struct JoystickConnected
         {
             int  m_joystickId;    // No dedicated wrapper class for joystick for now
             bool m_connected;
-        };
-
-        struct WindowMaximized
-        {
-            bool m_maximized;
-        };
-
-        struct WindowScaleChanged
-        {
-            float m_xScale;
-            float m_yScale;
         };
 
         // Normally I don't want to use macro, but this is a last resort (I hate repeating things)
@@ -148,7 +254,6 @@ namespace glfw_cpp
         Scrolled            , \
         KeyPressed          , \
         CharInput           , \
-        MonitorConnected    , \
         FileDropped         , \
         WindowMaximized     , \
         WindowScaleChanged
@@ -162,67 +267,123 @@ namespace glfw_cpp
 
 #undef GLFW_CPP_EVENT_TYPE_LIST
 
-        Event()
+        Event() noexcept
             : m_event{ Empty{} }
         {
         }
 
         template <typename E>
             requires IsEventType_v<E>
-        Event(E&& event)
+        Event(E&& event) noexcept
             : m_event{ std::move(event) }
         {
         }
 
-        // Unbounded visitor, I'm too tired trying to get the bound right...
+        /**
+         * @brief Visit the event with the given visitor
+         *
+         * @param visitor Visitor to visit the event with (must comply with `std::visit` requirements)
+         * @return The return value of the visitor
+         *
+         * @throw <exception> If the visitor throws an exception, the exception is propagated
+         */
         decltype(auto) visit(auto&& visitor)
         {
+            // Unbounded visitor, I'm too tired trying to get the bound right...
             return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
         }
 
-        // Unbounded visitor, I'm too tired trying to get the bound right...
+        /**
+         * @brief Visit the event with the given visitor
+         *
+         * @param visitor Visitor to visit the event with (must comply with `std::visit` requirements)
+         * @return The return value of the visitor
+         *
+         * @throw <exception> If the visitor throws an exception, the exception is propagated
+         */
         decltype(auto) visit(auto&& visitor) const
         {
+            // Unbounded visitor, I'm too tired trying to get the bound right...
             return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
         }
 
+        /**
+         * @brief Get the event as the specified type
+         *
+         * @tparam T Type of the event to get
+         * @return Reference to the event
+         *
+         * @throw std::bad_variant_access If the event is not of the specified type
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T>)
-        T& get()
+            requires(not std::is_pointer_v<T>) and IsEventType_v<T>
+        T& get() noexcept(false)
         {
             return std::get<T>(m_event);
         }
 
+        /**
+         * @brief Get the event as the specified type
+         *
+         * @tparam T Type of the event to get
+         * @return Reference to the event
+         *
+         * @throw std::bad_variant_access If the event is not of the specified type
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T> && IsEventType_v<T>)
-        const T& get() const
+            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
+        const T& get() const noexcept(false)
         {
             return std::get<T>(m_event);
         }
 
+        /**
+         * @brief Get the event as the specified type
+         *
+         * @tparam T Type of the event to get
+         * @return Pointer to the event, or nullptr if the event is not of the specified type
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T> && IsEventType_v<T>)
+            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
         T* getIf() noexcept
         {
             return std::get_if<T>(&m_event);
         }
 
+        /**
+         * @brief Get the event as the specified type
+         *
+         * @tparam T Type of the event to get
+         * @return Pointer to the event, or nullptr if the event is not of the specified type
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T> && IsEventType_v<T>)
+            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
         const T* getIf() const noexcept
         {
             return std::get_if<T>(&m_event);
         }
 
+        /**
+         * @brief Set the event to the specified value
+         *
+         * @tparam T Type of the event to set
+         * @param event Event to set
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T> && IsEventType_v<T>)
+            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
         void set(T&& event) noexcept
         {
             m_event = std::forward<T>(event);
         }
 
+        /**
+         * @brief Check if the event holds the specified type
+         *
+         * @tparam T Type to check
+         * @return true If the event holds the specified type
+         */
         template <typename T>
-            requires(not std::is_pointer_v<T> && IsEventType_v<T>)
+            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
         bool holds() const noexcept
         {
             return std::holds_alternative<T>(m_event);
@@ -232,9 +393,14 @@ namespace glfw_cpp
         Variant m_event;
     };
 
-    // EventInterceptor is a class that can intercept events before they are inserted into each Window
-    // EventQueue, and before any Window::Properties is updated. The return value of each function determines
-    // whether the event should be forwarded to the Window
+    /**
+     * @class IEventInterceptor
+     * @brief An abstract class (interface) that is used to create an event interceptor.
+     *
+     * The class is used to intercept events before they are inserted into each `Window`'s `EventQueue`, and
+     * before any `Window::Properties` is updated. The return value of each function determines whether the
+     * event should be forwarded to the `Window` or not.
+     */
     struct IEventInterceptor
     {
     public:
@@ -262,6 +428,13 @@ namespace glfw_cpp
         ~IEventInterceptor() = default;
     };
 
+    /**
+     * @class DefaultEventInterceptor
+     * @brief Default implementation of `IEventInterceptor` that does nothing.
+     *
+     * This class can be used as a base class for custom event interceptors. You can override only the
+     * functions you need to intercept.
+     */
     struct DefaultEventInterceptor : public IEventInterceptor
     {
         // clang-format off
@@ -284,6 +457,11 @@ namespace glfw_cpp
         // clang-format on
     };
 
+    /**
+     * @class EventQueue
+     * @brief A simple event queue that stores events in a circular buffer. The queue is used to store events
+     * in each `Window` instance. The queue has a fixed capacity that can be resized at runtime.
+     */
     class EventQueue
     {
     public:
@@ -308,18 +486,69 @@ namespace glfw_cpp
         EventQueue(const EventQueue& other)            = delete;
         EventQueue& operator=(const EventQueue& other) = delete;
 
-        std::span<const Event> buf() const { return { m_buffer.get(), capacity() }; }
+        /**
+         * @brief Get a view of the underlying buffer as a `std::span`
+         */
+        std::span<const Event> buf() const noexcept { return { m_buffer.get(), capacity() }; }
 
+        /**
+         * @brief Get the capacity of the queue
+         */
         std::size_t capacity() const noexcept;
+
+        /**
+         * @brief Get the size of the queue
+         */
         std::size_t size() const noexcept;
 
+        /**
+         * @brief Check if the queue is empty
+         */
+        bool empty() const noexcept;
+
+        /**
+         * @brief Check if the queue is full
+         */
+        bool full() const noexcept;
+
+        /**
+         * @brief Swap the contents of this queue with another queue
+         *
+         * @param other Queue to swap with
+         */
         void swap(EventQueue& other) noexcept;
+
+        /**
+         * @brief Reset the internal indices of the queue to the initial state without clearing the buffer
+         */
         void reset() noexcept;
+
+        /**
+         * @brief Clear the queue by resetting the internal indices and filling the buffer with empty events
+         */
         void clear() noexcept;
 
-        Iterator<>           push(Event&& event) noexcept;
+        /**
+         * @brief Push an event to the queue
+         *
+         * @param event Event to push
+         * @return Iterator to the pushed event
+         */
+        Iterator<> push(Event&& event) noexcept;
+
+        /**
+         * @brief Pop an event from the queue
+         *
+         * @return The popped event, or std::nullopt if the queue is empty
+         */
         std::optional<Event> pop() noexcept;
 
+        /**
+         * @brief Resize the queue to the specified capacity
+         *
+         * @param newCapacity New capacity of the queue
+         * @param policy Resize policy to use
+         */
         void resize(std::size_t newCapacity, ResizePolicy policy = ResizePolicy::DISCARD_OLD) noexcept;
 
         Iterator<>     begin() noexcept;
@@ -353,14 +582,14 @@ namespace glfw_cpp
         using Buffer = std::conditional_t<IsConst, const EventQueue, EventQueue>;
         using Value  = std::conditional_t<IsConst, const Event, Event>;
 
-        Iterator(Buffer* bufferPtr, std::size_t index)
+        Iterator(Buffer* bufferPtr, std::size_t index) noexcept
             : m_bufferPtr{ bufferPtr }
             , m_index{ index }
         {
         }
 
         // special constructor for const iterator from non-const iterator
-        Iterator(Iterator<false>& other)
+        Iterator(Iterator<false>& other) noexcept
             requires IsConst
             : m_bufferPtr{ other.m_bufferPtr }
             , m_index{ other.m_index }
@@ -373,7 +602,7 @@ namespace glfw_cpp
         Iterator(Iterator&&) noexcept            = default;
         Iterator& operator=(Iterator&&) noexcept = default;
 
-        Iterator& operator++()
+        Iterator& operator++() noexcept
         {
             if (m_index == Buffer::npos) {
                 return *this;
@@ -390,23 +619,23 @@ namespace glfw_cpp
             return *this;
         }
 
-        Iterator operator++(int)
+        Iterator operator++(int) noexcept
         {
             Iterator tmp = *this;
             ++(*this);
             return tmp;
         }
 
-        Value& operator*() const { return m_bufferPtr->m_buffer[m_index]; };
-        Value* operator->() const { return &m_bufferPtr->m_buffer[m_index]; };
+        Value& operator*() const noexcept { return m_bufferPtr->m_buffer[m_index]; };
+        Value* operator->() const noexcept { return &m_bufferPtr->m_buffer[m_index]; };
 
         template <bool IsConst2>
-        bool operator==(const Iterator<IsConst2>& other) const
+        bool operator==(const Iterator<IsConst2>& other) const noexcept
         {
             return m_bufferPtr == other.m_bufferPtr && m_index == other.m_index;
         }
 
-        operator std::size_t() { return m_index; };
+        operator std::size_t() noexcept { return m_index; };
 
     private:
         Buffer*     m_bufferPtr = nullptr;

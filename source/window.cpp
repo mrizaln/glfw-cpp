@@ -197,7 +197,7 @@ namespace glfw_cpp
         Handle                handle,
         Properties&&          properties,
         bool                  bindImmediately
-    )
+    ) noexcept
         : m_manager{ std::move(manager) }
         , m_handle{ handle }
         , m_attachedThreadId{}

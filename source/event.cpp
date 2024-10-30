@@ -18,6 +18,16 @@ namespace glfw_cpp
         return m_end == npos ? capacity() : (m_end + capacity() - m_begin) % capacity();
     }
 
+    bool EventQueue::empty() const noexcept
+    {
+        return size() == 0;
+    }
+
+    bool EventQueue::full() const noexcept
+    {
+        return size() == capacity();
+    }
+
     void EventQueue::swap(EventQueue& other) noexcept
     {
         std::swap(m_buffer, other.m_buffer);
@@ -68,7 +78,7 @@ namespace glfw_cpp
 
     std::optional<Event> EventQueue::pop() noexcept
     {
-        if (size() == 0) {
+        if (empty()) {
             return std::nullopt;
         }
 
@@ -89,7 +99,7 @@ namespace glfw_cpp
             return;
         }
 
-        if (size() == 0) {
+        if (empty()) {
             m_buffer   = std::make_unique<Event[]>(newCapacity);
             m_capacity = newCapacity;
             m_begin    = 0;

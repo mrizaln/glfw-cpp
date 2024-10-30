@@ -288,7 +288,6 @@ namespace glfw_cpp
             [&](Event::KeyPressed&         event) { return intr.onKeyPressed        (window, event); },
             [&](Event::CharInput&          event) { return intr.onCharInput         (window, event); },
             [&](Event::FileDropped&        event) { return intr.onFileDropped       (window, event); },
-            [&](Event::MonitorConnected&        ) { return true; /* unimplemented                 */ },
             [&](Event::Empty&                   ) { return true; /* always true                   */ },
             // clang-format on
         });

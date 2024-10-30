@@ -18,6 +18,10 @@ namespace glfw_cpp
     class Window;
     class WindowManager;
 
+    /**
+     * @struct Api
+     * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no API).
+     */
     struct Api
     {
         using GlProc      = void (*)();
@@ -25,6 +29,10 @@ namespace glfw_cpp
         using GlContext   = ::GLFWwindow*;
         using GlLoaderFun = std::function<void(GlContext handle, GlGetProc proc)>;
 
+        /**
+         * @struct OpenGLES
+         * @brief Describe the OpenGLES version to use.
+         */
         struct OpenGLES
         {
             int         m_major = 2;
@@ -32,8 +40,16 @@ namespace glfw_cpp
             GlLoaderFun m_loader;
         };
 
+        /**
+         * @struct OpenGL
+         * @brief Describe the OpenGL version to use.
+         */
         struct OpenGL
         {
+            /**
+             * @enum Profile
+             * @brief OpenGL profile to use.
+             */
             enum class Profile
             {
                 CORE,
@@ -48,6 +64,10 @@ namespace glfw_cpp
             GlLoaderFun m_loader;
         };
 
+        /**
+         * @struct NoApi
+         * @brief No API is used (for Vulkan applications).
+         */
         struct NoApi
         {
         };
@@ -55,7 +75,10 @@ namespace glfw_cpp
         using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
     };
 
-    // Instance is a singleton that manages the global state required to interface with GLFW
+    /**
+     * @class Instance
+     * @brief Singleton that manages the global state required to interface with GLFW.
+     */
     class Instance
     {
     public:
@@ -75,9 +98,22 @@ namespace glfw_cpp
         using LogFun = std::function<void(LogLevel level, std::string msg)>;
         using Unique = std::unique_ptr<Instance, void (*)(Instance*)>;
 
-        friend Unique init(Api::Variant&&, Instance::LogFun&&);
+        /**
+         * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
+         *
+         * @param api The underlying graphics API to use with GLFW.
+         * @param logger The logger function to use.
+         * @return A RAII handle that will terminate GLFW on destruction.
+         *
+         * @throw std::runtime_error If the initialization failed.
+         */
+        friend Unique init(Api::Variant&&, Instance::LogFun&&) noexcept(false);
 
-        std::shared_ptr<WindowManager> createWindowManager();
+        /**
+         * @brief Create a WindowManager instance.
+         * @return A shared pointer to the WindowManager instance.
+         */
+        std::shared_ptr<WindowManager> createWindowManager() noexcept;
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -94,10 +130,10 @@ namespace glfw_cpp
 
         Instance() = default;
 
-        void setLogger(LogFun&& logger);
-        void reset();
+        void setLogger(LogFun&& logger) noexcept;
+        void reset() noexcept;
 
-        static Instance& get();
+        static Instance& get() noexcept;
 
         // can be called from any thread
         static void log(LogLevel level, std::string msg);
@@ -136,8 +172,13 @@ namespace glfw_cpp
     // Global state required to interface with GLFW
     inline Instance Instance::s_instance = {};
 
-    // Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
+    /**
+     * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
+     * @param api The underlying graphics API to use with GLFW.
+     * @param logger The logger function to use.
+     * @return A RAII handle that will terminate GLFW on destruction.
+     */
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr) noexcept(false);
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */

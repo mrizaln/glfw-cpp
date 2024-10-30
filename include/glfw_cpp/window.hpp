@@ -18,6 +18,17 @@ namespace glfw_cpp
 {
     class WindowManager;
 
+    /**
+     * @class Window
+     * @brief Wrapper class for `GLFWwindow`.
+     *
+     * This `Window` class is a RAII wrapper around `GLFWwindow`. It provides a more C++-like interface to the
+     * `GLFWwindow` API. This class is mostly self-contained. It held a copy of the properties of the windows
+     * so querying them is fast. All the operations to the `Window` should be thread-safe in the sense that it
+     * can be called from any thread (unlike most operations in the GLFW C API which mostly require functions
+     * to be called from the main thread). Because of this, each `Window` instance can be operated on each
+     * separate thread.
+     */
     class Window
     {
     public:
@@ -83,8 +94,17 @@ namespace glfw_cpp
         Window(const Window&)           = delete;
         Window operator=(const Window&) = delete;
 
-        // use the context on current thread;
+        /**
+         * @brief Bind the window context to the current thread (only makes sense for OpenGL and OpenGLES).
+         *
+         * The function has an assertion that failed if the current context is already bound to other thread.
+         */
         void bind();
+
+        /**
+         * @brief Unbind the window context from the current thread (only makes sense for OpenGL and
+         * OpenGLES).
+         */
         void unbind();
 
         // destroy the underlying window resource and reset the instance to default-initialized state.
@@ -179,7 +199,7 @@ namespace glfw_cpp
             Handle                         handle,
             Properties&&                   properties,
             bool                           bindImmediately
-        );
+        ) noexcept;
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);

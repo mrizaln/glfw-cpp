@@ -46,17 +46,26 @@ namespace glfw_cpp
     Instance::~Instance()
     {
         if (m_initialized) {
+            // WARN:this might fail though
             glfwTerminate();
         }
     }
 
-    void Instance::reset()
+    void Instance::setLogger(LogFun&& logger) noexcept
     {
-        glfwTerminate();
+        m_loggger = logger;
+    }
+
+    void Instance::reset() noexcept
+    {
+        if (m_initialized) {
+            // WARN: this might fail though
+            glfwTerminate();
+        }
         m_initialized = false;
     }
 
-    Instance& Instance::get()
+    Instance& Instance::get() noexcept
     {
         return Instance::s_instance;
     }
@@ -71,7 +80,7 @@ namespace glfw_cpp
         }
     }
 
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger)
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger) noexcept(false)
     {
         auto& instance = Instance::get();
 
@@ -158,7 +167,7 @@ namespace glfw_cpp
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
 
-    WindowManager::Shared Instance::createWindowManager()
+    WindowManager::Shared Instance::createWindowManager() noexcept
     {
         // using new here instead of `std::make_shared` since `WindowManager` constructor is private and can
         // only be seen by itself and its friends (`Instance` is one of it, but `std::make_shared` is not).
