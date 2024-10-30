@@ -6,17 +6,6 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 
 - [game-of-life](https://github.com/mrizaln/game-of-life)
 
-## TODO
-
-- [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
-- [ ] ~~Handle GLFW internal error~~
-  > - GLFW internal errors are mainly occurs from invalid enumeration passed into a function, invalid value for an enum passed into a function, and failure in maintaining invariants (like GLFW is initialized or not).
-  > - This library is a C++ library so errors from passing invalid enumeration and/or invalid value for an enum is avoided by using the stricter type-system of C++.
-  > - This library also is trying it's best in maintaining the invariants so hopefully the errors that surface from these are also avoided.
-  > - That leaves out platform-related errors which I can report easily as exceptions.
-- [ ] Add the ability to handle window events in separate thread from Window and WindowManager
-- [ ] Eliminate `glfw_cpp::WindowManager` move limitation
-
 ## Dependencies
 
 - C++20
@@ -66,77 +55,87 @@ Using this library is as simple as
 #include <iostream>
 #include <cmath>
 
-namespace glfw = glfw_cpp;
-
 int main()
 {
-    // init() calls glfwInit() internally and Instance::Handle will call glfwTerminate() on dtor.
-    // Note that the graphics API can't be changed later, this is a design choice.
-    glfw::Instance::Handle instance = glfw::init(glfw::Api::OpenGL{
+    // Graphics API can't be changed. You can recreate the glfw instance (basically resetting glfw)
+    // to use other graphics API. This is a design choice.
+    auto api = glfw_cpp::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw::Api::OpenGL::Profile::CORE,
-        .m_loader  = [](glfw::Api::GlContext /* handle */,
-                       glfw::Api::GlGetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
-    });
+        .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
+        .m_loader  = [](glfw_cpp::Api::GlContext /* context */, glfw_cpp::Api::GlGetProc proc) {
+            // glad does not use the context, but other loader might be
+            gladLoadGLLoader((GLADloadproc)proc);
+        },
+    };
 
-    // WindowManager is responsible for managing windows (think of window group)
-    glfw::WindowManager wm = instance->createWindowManager();
+    // All types are RAII, there's no need to manage them manually
+    auto instance = glfw_cpp::init(api);
+    auto wm       = instance->createWindowManager();
+    auto window   = wm->createWindow({}, "Learn glfw-cpp", 800, 600);
 
-    // graphics API hints are omitted from the WindowHint, only other relevant hints are included.
-    glfw::WindowHint hint = {};    // use default hint
-
-    glfw::Window window = wm.createWindow(hint, "Learn glfw-cpp", 800, 600);
-
-    window.run([&, elapsed = 0.0F](const glfw::EventQueue& events) mutable {
+    // window loop (v-sync enabled by default and polls events from WindowManager automatically)
+    window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
         // events
-        for (const glfw::Event& event : events) {
-            if (auto* e = event.getIf<glfw::Event::KeyPressed>()) {
-                if (e->m_key == glfw::KeyCode::Q) {
-                    window.requestClose();
-                }
-            } else if (auto* e = event.getIf<glfw::Event::FramebufferResized>()) {
-                glViewport(0, 0, e->m_width, e->m_height);
-            }
+        for (const auto& event : events) {
+            using E = glfw_cpp::Event;
+            using K = glfw_cpp::KeyCode;
+
+            // using visitor pattern and overload set to visit each event
+            event.visit(E::Overloaded{
+                [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.requestClose(); },
+                [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);    },
+                [&](const auto&) {},  // catch-all case
+            });
         }
 
         // continuous key input (for movement for example)
         {
-            using K          = glfw::KeyCode;
+            using K          = glfw_cpp::KeyCode;
             const auto& keys = window.properties().m_keyState;
 
             if (keys.allPressed({ K::H, K::J, K::L, K::K })) {
-                std::cout << "HJKL key pressed all at once";
+                std::cout << "HJKL key pressed all at once\n";
             }
 
             if (keys.isPressed(K::LEFT_SHIFT) && keys.anyPressed({ K::W, K::A, K::S, K::D })) {
-                std::cout << "WASD key pressed with shift key being held";
+                std::cout << "WASD key pressed with shift key being held\n";
             } else if (keys.anyPressed({ K::W, K::A, K::S, K::D })) {
-                std::cout << "WASD key pressed";
+                std::cout << "WASD key pressed\n";
             }
         }
 
         elapsed += static_cast<float>(window.deltaTime());
 
         // funny color cycle
-        const float r = (std::sin(23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
-        const float g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
-        const float b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
+        const auto r = (std::sin(23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
+        const auto g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
+        const auto b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
 
         glClearColor(r, g, b, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        wm.pollEvents();
+        // WindowManager still need to poll the events from the OS though
+        wm->pollEvents();
     });
 }
 ```
 
 No manual cleanup necessary, the classes defined already using RAII pattern.
 
-One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::WindowManager` outlive `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
+One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
-The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/new/multi.cpp) or [here](./example/source/new/multi_multi_manager.cpp) directory (I also use a different OpenGL loader library there).
+The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/new/multi.cpp) or [here](./example/source/new/multi_multi_manager.cpp) (I also use a different OpenGL loader library there).
 
-## Limitation
+## TODO
 
-One limitation is that `glfw_cpp::WindowManager` should not be moved after it created `glfw_cpp::Window`s since each window created from it has a pointer to the `glfw_cpp::WindowManager`. If you are doing that it may leads to undefined behavior (dereferencing a pointer to a destroyed `glfw_cpp::WindowManager` for example). If the `glfw_cpp::WindowManager` hasn't created any `glfw_cpp::Window`s (or they are already destroyed) it is okay to move it.
+- [x] Add event queue mechanism ~~in addition to callback~~ on input handling per window ([see](https://github.com/glfw/gleq))
+- [x] ~~Handle GLFW internal error~~
+  > - GLFW internal errors are mainly occurs from invalid enumeration passed into a function, invalid value for an enum passed into a function, and failure in maintaining invariants (like GLFW is initialized or not).
+  > - This library is a C++ library so errors from passing invalid enumeration and/or invalid value for an enum is avoided by using the stricter type-system of C++.
+  > - This library also is trying it's best in maintaining the invariants so hopefully the errors that surface from these are also avoided.
+  > - That leaves out platform-related errors which I can report easily as exceptions.
+- [x] Add the ability to handle window events in separate thread from Window and WindowManager
+  > While the handling itself still in the thread `WindowManager` is, with the introduction of `IEventInterceptor`, user can intercept events polled by `WindowManager`before getting pushed into`EventQueue`inside`WindowManager`(you can control whether to continue forwarding the event to the underlying `Window` or not). The intercepted `Event` then can be sent to other thread for example.
+- [x] Eliminate `glfw_cpp::WindowManager` move limitation
+  > By making `WindowManager` be exclusively `shared_ptr`, this issue is completely eliminated.
