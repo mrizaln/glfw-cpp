@@ -483,7 +483,7 @@ int main()
 
     auto hint   = glfw_cpp::WindowHint{ .m_samples = 4 };
     auto wm     = glfw->createWindowManager();
-    auto window = wm.createWindow(hint, "Split view demo", 500, 500);
+    auto window = wm->createWindow(hint, "Split view demo", 500, 500);
 
     glEnable(GL_MULTISAMPLE);
 
@@ -492,7 +492,7 @@ int main()
 
     framebufferSizeFun(width, height);
 
-    while (wm.hasWindowOpened()) {
+    while (wm->hasWindowOpened()) {
         for (const auto& event : window.poll()) {
             using EV = glfw_cpp::Event;
             event.visit(EV::Overloaded{
@@ -508,10 +508,9 @@ int main()
         }
 
         if (do_redraw) {
-            printf("aksjfh\n");
             windowRefreshFun(window);
         }
 
-        wm.waitEvents();
+        wm->waitEvents();
     }
 }

@@ -192,8 +192,13 @@ namespace glfw_cpp
     }
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(WindowManager& manager, Handle handle, Properties&& properties, bool bindImmediately)
-        : m_manager{ &manager }
+    Window::Window(
+        WindowManager::Shared manager,
+        Handle                handle,
+        Properties&&          properties,
+        bool                  bindImmediately
+    )
+        : m_manager{ std::move(manager) }
         , m_handle{ handle }
         , m_attachedThreadId{}
         , m_properties{ std::move(properties) }

@@ -174,7 +174,12 @@ namespace glfw_cpp
         std::thread::id attachedThreadId() const { return m_attachedThreadId; };
 
     private:
-        Window(WindowManager& manager, Handle handle, Properties&& properties, bool bindImmediately);
+        Window(
+            std::shared_ptr<WindowManager> manager,
+            Handle                         handle,
+            Properties&&                   properties,
+            bool                           bindImmediately
+        );
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
@@ -207,8 +212,8 @@ namespace glfw_cpp
         void processQueuedTasks();
         void updateDeltaTime();
 
-        WindowManager* m_manager = nullptr;
-        Handle         m_handle  = nullptr;
+        std::shared_ptr<WindowManager> m_manager = nullptr;
+        Handle                         m_handle  = nullptr;
 
         // window stuff
         std::thread::id m_attachedThreadId = {};

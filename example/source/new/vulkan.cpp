@@ -116,10 +116,7 @@ private:
         std::optional<uint32_t> m_graphicsFamily;
         std::optional<uint32_t> m_presentFamily;
 
-        bool isComplete() const
-        {
-            return (m_graphicsFamily.has_value() && m_presentFamily.has_value());
-        }
+        bool isComplete() const { return (m_graphicsFamily.has_value() && m_presentFamily.has_value()); }
     };
 };
 
@@ -283,8 +280,7 @@ public:
         m_physicalDevice = pickPhysicalDevice(*m_instance, *m_surface);
 
         fmt::println(
-            "INFO: [Vulkan] Using physical device: {}",
-            m_physicalDevice.getProperties().deviceName.begin()
+            "INFO: [Vulkan] Using physical device: {}", m_physicalDevice.getProperties().deviceName.begin()
         );
 
         // configure vulkan logical device and queues
@@ -302,15 +298,11 @@ public:
         );
 
         m_swapChainImages     = m_device->getSwapchainImagesKHR(*m_swapChain);
-        m_swapChainImageViews = createImageViews(
-            *m_device, m_swapChainImages, m_swapChainImageFormat
-        );
+        m_swapChainImageViews = createImageViews(*m_device, m_swapChainImages, m_swapChainImageFormat);
 
         // create graphics pipeline
-        m_renderPass = createRenderPass(*m_device, m_swapChainImageFormat);
-        std::tie(m_pipelineLayout, m_graphicsPipeline) = createPipelineLayout(
-            *m_device, *m_renderPass
-        );
+        m_renderPass                                   = createRenderPass(*m_device, m_swapChainImageFormat);
+        std::tie(m_pipelineLayout, m_graphicsPipeline) = createPipelineLayout(*m_device, *m_renderPass);
 
         // create framebuffers
         m_swapChainFramebuffers = createFramebuffers(
@@ -380,20 +372,17 @@ public:
         std::array fences{ *m_syncs[m_currentFrameIndex].m_inFlightFence };
         auto       fenceResult = m_device->waitForFences(fences, VK_TRUE, timeoutNano);
         if (fenceResult != vk::Result::eSuccess) {
-            throw std::runtime_error(
-                std::format("Failed to wait for fence: {}", vk::to_string(fenceResult))
-            );
+            throw std::runtime_error(std::format("Failed to wait for fence: {}", vk::to_string(fenceResult)));
         }
 
         // acquire image from swap chain
         uint32_t imageIndex{};
-        switch (auto [acquireResult, imageIndexTmp] = swapchainNextImageWrapper(
-                    *m_device,
-                    *m_swapChain,
-                    timeoutNano,
-                    *m_syncs[m_currentFrameIndex].m_imageAvailableSemaphore
-                );
-                acquireResult) {
+        switch (
+            auto [acquireResult, imageIndexTmp] = swapchainNextImageWrapper(
+                *m_device, *m_swapChain, timeoutNano, *m_syncs[m_currentFrameIndex].m_imageAvailableSemaphore
+            );
+            acquireResult
+        ) {
         case vk::Result::eSuccess: {
             imageIndex = imageIndexTmp;
             break;
@@ -417,12 +406,8 @@ public:
         recordCommandBuffer(m_commandBuffers[m_currentFrameIndex].get(), imageIndex);
 
         // submit command buffer
-        std::array<vk::Semaphore, 1> waitSemaphore{
-            *m_syncs[m_currentFrameIndex].m_imageAvailableSemaphore
-        };
-        std::array<vk::PipelineStageFlags, 1> waitStages{
-            vk::PipelineStageFlagBits::eColorAttachmentOutput
-        };
+        std::array<vk::Semaphore, 1> waitSemaphore{ *m_syncs[m_currentFrameIndex].m_imageAvailableSemaphore };
+        std::array<vk::PipelineStageFlags, 1> waitStages{ vk::PipelineStageFlagBits::eColorAttachmentOutput };
 
         vk::SubmitInfo submitInfo{
             .waitSemaphoreCount   = waitSemaphore.size(),
@@ -453,8 +438,7 @@ public:
             .pResults           = nullptr,
         };
 
-        switch (auto presentResult = queuePresentWrapper(m_presentQueue, presentInfo);
-                presentResult) {
+        switch (auto presentResult = queuePresentWrapper(m_presentQueue, presentInfo); presentResult) {
         case vk::Result::eSuccess: {
             break;
         }
@@ -563,14 +547,15 @@ private:
 
         // enable debug utils extension
         if constexpr (s_enableValidation) {
-            if (!checkValidationLayerSupport()) {
-                throw std::runtime_error("Validation layers requested, but not available");
-            }
-            createInfo.enabledLayerCount   = s_validationLayers.size();
-            createInfo.ppEnabledLayerNames = s_validationLayers.data();
+            if (checkValidationLayerSupport()) {
+                createInfo.enabledLayerCount   = s_validationLayers.size();
+                createInfo.ppEnabledLayerNames = s_validationLayers.data();
 
-            debugCreateInfo  = getDebugMessengerCreateInfo();
-            createInfo.pNext = &debugCreateInfo;
+                debugCreateInfo  = getDebugMessengerCreateInfo();
+                createInfo.pNext = &debugCreateInfo;
+            } else {
+                fmt::println("ERROR: Validation layers requested but not available");
+            }
         }
 
         return vk::createInstanceUnique(createInfo);
@@ -591,10 +576,7 @@ private:
         return false;
     }
 
-    static vk::PhysicalDevice pickPhysicalDevice(
-        const vk::Instance&   instance,
-        const vk::SurfaceKHR& surface
-    )
+    static vk::PhysicalDevice pickPhysicalDevice(const vk::Instance& instance, const vk::SurfaceKHR& surface)
     {
         auto physicalDevices{ instance.enumeratePhysicalDevices() };
         if (physicalDevices.empty()) {
@@ -620,10 +602,7 @@ private:
         return candidates.begin()->second;
     }
 
-    static int rateDeviceSuitability(
-        const vk::PhysicalDevice& device,
-        const vk::SurfaceKHR&     surface
-    )
+    static int rateDeviceSuitability(const vk::PhysicalDevice& device, const vk::SurfaceKHR& surface)
     {
         int         score{ 0 };
         const auto& properties{ device.getProperties() };
@@ -679,12 +658,10 @@ private:
         auto availableExtensions{ device.enumerateDeviceExtensionProperties() };
 
         for (const auto& extension : s_deviceExtensions) {
-            auto found = std::ranges::find_if(
-                availableExtensions,
-                [&extension](const auto& availableExtension) {
-                    return std::strcmp(extension, availableExtension.extensionName) == 0;
-                }
-            );
+            auto found
+                = std::ranges::find_if(availableExtensions, [&extension](const auto& availableExtension) {
+                      return std::strcmp(extension, availableExtension.extensionName) == 0;
+                  });
             if (found == availableExtensions.end()) {
                 return false;
             }
@@ -733,15 +710,11 @@ private:
         return physicalDevice.createDeviceUnique(createInfo);
     }
 
-    static vk::UniqueSurfaceKHR createSurface(
-        glfw_cpp::Window&   window,
-        const vk::Instance& instance
-    )
+    static vk::UniqueSurfaceKHR createSurface(glfw_cpp::Window& window, const vk::Instance& instance)
     {
         auto [result, surface] = glfw_cpp::vk::createSurface(window, instance);
         if (result != vk::Result::eSuccess) {
-            throw std::runtime_error(
-                std::format("Failed to create window surface: {}", vk::to_string(result))
+            throw std::runtime_error(std::format("Failed to create window surface: {}", vk::to_string(result))
             );
         }
         return vk::UniqueSurfaceKHR{ surface, instance };
@@ -1032,9 +1005,7 @@ private:
         };
 
         // NOTE: it seems that this function returns a result while also throwing on failure
-        auto [result, graphicsPipeline] = device.createGraphicsPipelineUnique(
-            nullptr, graphicsPipelineInfo
-        );
+        auto [result, graphicsPipeline] = device.createGraphicsPipelineUnique(nullptr, graphicsPipelineInfo);
         if (result != vk::Result::eSuccess) {
             throw std::runtime_error(
                 std::format("Failed to create graphics pipeline: {}", vk::to_string(result))
@@ -1143,10 +1114,7 @@ private:
     /**
      * @brief vk::Queue::presentKHR without exceptions
      */
-    static vk::Result queuePresentWrapper(
-        const vk::Queue&          queue,
-        const vk::PresentInfoKHR& presentInfo
-    )
+    static vk::Result queuePresentWrapper(const vk::Queue& queue, const vk::PresentInfoKHR& presentInfo)
     {
         auto result = vkQueuePresentKHR(
             static_cast<VkQueue>(queue), reinterpret_cast<const VkPresentInfoKHR*>(&presentInfo)
@@ -1163,16 +1131,12 @@ private:
         m_swapChain.reset();
 
         // recreate swap chain
-        auto queueIndices{
-            QueueFamilyIndices::getCompleteQueueFamilies(m_physicalDevice, *m_surface)
-        };
+        auto queueIndices{ QueueFamilyIndices::getCompleteQueueFamilies(m_physicalDevice, *m_surface) };
         std::tie(m_swapChain, m_swapChainImageFormat, m_swapChainExtent) = createSwapChain(
             m_physicalDevice, *m_device, *m_surface, queueIndices, *m_window
         );
-        m_swapChainImages     = m_device->getSwapchainImagesKHR(*m_swapChain);
-        m_swapChainImageViews = createImageViews(
-            *m_device, m_swapChainImages, m_swapChainImageFormat
-        );
+        m_swapChainImages       = m_device->getSwapchainImagesKHR(*m_swapChain);
+        m_swapChainImageViews   = createImageViews(*m_device, m_swapChainImages, m_swapChainImageFormat);
         m_swapChainFramebuffers = createFramebuffers(
             *m_device, *m_renderPass, m_swapChainImageViews, m_swapChainExtent
         );
@@ -1189,7 +1153,7 @@ int main()
 
     auto glfw   = glfw_cpp::init(glfw_cpp::Api::NoApi{}, glfwLogger);
     auto wm     = glfw->createWindowManager();
-    auto window = wm.createWindow({}, "Learn vulkan", 800, 600);
+    auto window = wm->createWindow({}, "Learn vulkan", 800, 600);
 
     Vulkan vulkan{ window, "vulkan program" };
 
@@ -1203,6 +1167,6 @@ int main()
         }
 
         vulkan.drawFrame();
-        wm.pollEvents();
+        wm->pollEvents();
     });
 }

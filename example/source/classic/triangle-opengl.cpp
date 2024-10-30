@@ -93,7 +93,7 @@ int main()
     );
 
     auto wm     = glfw->createWindowManager();
-    auto window = wm.createWindow({}, "OpenGL Triangle", 640, 480);
+    auto window = wm->createWindow({}, "OpenGL Triangle", 640, 480);
 
     // NOTE: OpenGL error checks have been omitted for brevity
 
@@ -157,6 +157,6 @@ int main()
         glBindVertexArray(vertex_array);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        wm.pollEvents();
+        wm->pollEvents();
     });
 }

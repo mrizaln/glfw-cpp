@@ -73,11 +73,11 @@ namespace glfw_cpp
         };
 
         using LogFun = std::function<void(LogLevel level, std::string msg)>;
-        using Handle = std::unique_ptr<Instance, void (*)(Instance*)>;
+        using Unique = std::unique_ptr<Instance, void (*)(Instance*)>;
 
-        friend Handle init(Api::Variant&&, Instance::LogFun&&);
+        friend Unique init(Api::Variant&&, Instance::LogFun&&);
 
-        WindowManager createWindowManager();
+        std::shared_ptr<WindowManager> createWindowManager();
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -137,7 +137,7 @@ namespace glfw_cpp
     inline Instance Instance::s_instance = {};
 
     // Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction
-    Instance::Handle init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */

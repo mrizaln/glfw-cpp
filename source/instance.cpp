@@ -71,7 +71,7 @@ namespace glfw_cpp
         }
     }
 
-    Instance::Handle init(Api::Variant&& api, Instance::LogFun&& logger)
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger)
     {
         auto& instance = Instance::get();
 
@@ -158,8 +158,10 @@ namespace glfw_cpp
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
 
-    WindowManager Instance::createWindowManager()
+    WindowManager::Shared Instance::createWindowManager()
     {
-        return WindowManager{ std::this_thread::get_id() };
+        // using new here instead of `std::make_shared` since `WindowManager` constructor is private and can
+        // only be seen by itself and its friends (`Instance` is one of it, but `std::make_shared` is not).
+        return WindowManager::Shared{ new WindowManager{ std::this_thread::get_id() } };
     }
 }

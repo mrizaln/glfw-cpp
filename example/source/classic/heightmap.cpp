@@ -392,7 +392,7 @@ int main()
 
         auto glfw   = glfw_cpp::init(api, logger);
         auto wm     = glfw->createWindowManager();
-        auto window = wm.createWindow(hint, "GLFW OpenGL3 Heightmap demo", 800, 600);
+        auto window = wm->createWindow(hint, "GLFW OpenGL3 Heightmap demo", 800, 600);
 
         /* Prepare opengl resources for rendering */
         GLuint shader_program = make_shader_program(vertex_shader_text, fragment_shader_text);
@@ -457,7 +457,7 @@ int main()
             glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
 
             window.display();
-            wm.pollEvents();
+            wm->pollEvents();
 
             /* Check the frame rate and update the heightmap if needed */
             double dt = glfw_cpp::getTime();

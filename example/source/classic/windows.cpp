@@ -72,7 +72,7 @@ int main()
             hint.m_flags &= ~glfw_cpp::WindowHint::FOCUS_ON_SHOW;
         }
 
-        windows[i] = wm.createWindow(hint, "Learn Multi-Window Example", size, size);
+        windows[i] = wm->createWindow(hint, "Learn Multi-Window Example", size, size);
 
         // set window pos will be queued inside WindowManager
         windows[i].setWindowPos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
@@ -81,9 +81,9 @@ int main()
     }
 
     // process queued tasks
-    wm.pollEvents();
+    wm->pollEvents();
 
-    while (wm.hasWindowOpened()) {
+    while (wm->hasWindowOpened()) {
         for (int i = 0; i < 4; i++) {
             windows[i].bind();
 
@@ -97,6 +97,6 @@ int main()
             windows[i].unbind();
         }
 
-        wm.waitEvents();
+        wm->waitEvents();
     }
 }

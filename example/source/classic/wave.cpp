@@ -367,7 +367,7 @@ int main()
     );
 
     auto wm     = glfw->createWindowManager();
-    auto window = wm.createWindow({}, "Wave Simulation", 640, 480);
+    auto window = wm->createWindow({}, "Wave Simulation", 640, 480);
 
     auto [width, height] = window.properties().m_framebufferSize;
     framebuffer_size_callback({ width, height });
@@ -420,6 +420,6 @@ int main()
         // Draw wave grid to OpenGL display
         draw_scene();
 
-        wm.pollEvents();
+        wm->pollEvents();
     });
 }

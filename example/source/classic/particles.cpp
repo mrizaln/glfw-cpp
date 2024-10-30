@@ -931,7 +931,7 @@ int main(int argc, char** argv)
     }
 
     auto wm     = glfw->createWindowManager();
-    auto window = wm.createWindow(hint, "Particle Engine", width, height);
+    auto window = wm->createWindow(hint, "Particle Engine", width, height);
 
     // Set initial aspect ratio
     window.lockCurrentAspectRatio();
@@ -1008,11 +1008,11 @@ int main(int argc, char** argv)
 
     glfwSetTime(0.0);
 
-    while (wm.hasWindowOpened()) {
+    while (wm->hasWindowOpened()) {
         draw_scene(window, glfw_cpp::getTime());
 
         // the real polling done here. WindowManager sends the events to Window's events queue here.
-        wm.pollEvents();
+        wm->pollEvents();
 
         // this poll returns the events from the queue
         for (const auto& event : window.poll()) {

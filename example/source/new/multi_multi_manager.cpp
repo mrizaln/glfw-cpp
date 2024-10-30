@@ -39,6 +39,7 @@ void windowThread(glfw::Window&& window)
 
 int main()
 {
+    // forgive me for using rand and srand, I'm lazy :D
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
     auto instance = glfw_cpp::init(glfw::Api::OpenGL{
@@ -54,19 +55,19 @@ int main()
     auto wm1 = instance->createWindowManager();
     auto wm2 = instance->createWindowManager();
 
-    auto window11 = wm1.createWindow({}, "Learn glfw-cpp 11", 800, 600, false);
-    auto window12 = wm1.createWindow({}, "Learn glfw-cpp 12", 800, 600, false);
-    auto window21 = wm2.createWindow({}, "Learn glfw-cpp 21", 800, 600, false);
-    auto window22 = wm2.createWindow({}, "Learn glfw-cpp 22", 800, 600, false);
+    auto window11 = wm1->createWindow({}, "Learn glfw-cpp 11", 800, 600, false);
+    auto window12 = wm1->createWindow({}, "Learn glfw-cpp 12", 800, 600, false);
+    auto window21 = wm2->createWindow({}, "Learn glfw-cpp 21", 800, 600, false);
+    auto window22 = wm2->createWindow({}, "Learn glfw-cpp 22", 800, 600, false);
 
     auto thread11 = std::jthread{ windowThread, std::move(window11) };
     auto thread12 = std::jthread{ windowThread, std::move(window12) };
     auto thread21 = std::jthread{ windowThread, std::move(window21) };
     auto thread22 = std::jthread{ windowThread, std::move(window22) };
 
-    while (wm1.hasWindowOpened() || wm2.hasWindowOpened()) {
-        wm1.pollEvents();
-        wm2.pollEvents();
+    while (wm1->hasWindowOpened() || wm2->hasWindowOpened()) {
+        wm1->pollEvents();
+        wm2->pollEvents();
 
         using glfw::operator""_fps;
         std::this_thread::sleep_for(120_fps);

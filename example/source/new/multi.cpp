@@ -12,18 +12,19 @@
 
 void logCallback(glfw_cpp::Instance::LogLevel level, std::string message)
 {
-    auto levelStr = [&] {
+    using L  = glfw_cpp::Instance::LogLevel;
+    auto str = [&] {
         switch (level) {
-        case glfw_cpp::Instance::LogLevel::NONE: return "NONE";
-        case glfw_cpp::Instance::LogLevel::DEBUG: return "DEBUG";
-        case glfw_cpp::Instance::LogLevel::INFO: return "INFO";
-        case glfw_cpp::Instance::LogLevel::WARNING: return "WARNING";
-        case glfw_cpp::Instance::LogLevel::ERROR: return "ERROR";
-        case glfw_cpp::Instance::LogLevel::CRITICAL: return "CRITICAL";
+        case L::NONE: return "NONE";
+        case L::DEBUG: return "DEBUG";
+        case L::INFO: return "INFO";
+        case L::WARNING: return "WARNING";
+        case L::ERROR: return "ERROR";
+        case L::CRITICAL: return "CRITICAL";
         default: [[unlikely]] return "UNKNOWN";
         }
-    };
-    fmt::println(stderr, "[GLFW] [{}] {}", levelStr(), message);
+    }();
+    fmt::println(stderr, "[GLFW] [{}] {}", str, message);
 }
 
 void handleEvents(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
@@ -68,7 +69,7 @@ void threadFun(glfw_cpp::Window&& window, float side, float color)
     auto plane  = Plane{ side };
 
     window.run([&](const glfw_cpp::EventQueue& eventQueue) {
-        handleEvents(window, std::move(eventQueue));
+        handleEvents(window, eventQueue);
 
         gl::glClearColor(0.1F * color, 0.1F * color, 0.11F * color, 1.0F);    // NOLINT
         gl::glClear(gl::GL_COLOR_BUFFER_BIT);
@@ -80,7 +81,7 @@ void threadFun(glfw_cpp::Window&& window, float side, float color)
 
 int main()
 {
-    // Hey, different loader from single.cpp. It's not GLAD anymore
+    // different loader from single.cpp. It's not GLAD anymore
     auto loader = [](auto handle, auto proc) {
         glbinding::initialize((glbinding::ContextHandle)handle, proc);
     };
@@ -94,17 +95,17 @@ int main()
     auto glfw          = glfw_cpp::init(api, logCallback);
     auto windowManager = glfw->createWindowManager();
 
-    auto window1 = windowManager.createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
+    auto window1 = windowManager->createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
 
     using F      = glfw_cpp::WindowHint::FlagBit;
     auto hint    = glfw_cpp::WindowHint{ .m_flags = F::DEFAULT ^ F::RESIZABLE };
-    auto window2 = windowManager.createWindow(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
+    auto window2 = windowManager->createWindow(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
 
     auto thread1 = std::jthread{ threadFun, std::move(window1), 1.0F, 1 };
     auto thread2 = std::jthread{ threadFun, std::move(window2), -1.0F, 2 };
 
-    while (windowManager.hasWindowOpened()) {
+    while (windowManager->hasWindowOpened()) {
         using glfw_cpp::operator""_fps;
-        windowManager.pollEvents(120_fps);    // NOLINT
+        windowManager->pollEvents(120_fps);    // NOLINT
     }
 }

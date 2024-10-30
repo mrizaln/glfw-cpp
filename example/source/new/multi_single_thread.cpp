@@ -1,5 +1,3 @@
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 #include <fmt/core.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
@@ -25,10 +23,10 @@ int main()
 
     std::array<glfw_cpp::Window, 2> windows;
     for (auto i : std::views::iota(0u, 2u)) {
-        windows[i] = wm.createWindow({}, fmt::format("Learn glfw-cpp {}", i), 800, 600, false);
+        windows[i] = wm->createWindow({}, fmt::format("Learn glfw-cpp {}", i), 800, 600, false);
     }
 
-    while (wm.hasWindowOpened()) {
+    while (wm->hasWindowOpened()) {
         for (auto& win : windows) {
             auto delta = win.use([&](const auto& events) {
                 std::ranges::for_each(events, [&](const glfw_cpp::Event& ev) {
@@ -51,10 +49,10 @@ int main()
                 gl::glClear(gl::GL_COLOR_BUFFER_BIT);
             });
             if (!delta.has_value()) {
-                glfwHideWindow(win.handle());    // I haven't implemented this yet
+                win.hide();
             }
         }
 
-        wm.pollEvents();
+        wm->pollEvents();
     }
 }

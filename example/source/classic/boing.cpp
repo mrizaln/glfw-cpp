@@ -624,7 +624,7 @@ int main(void)
         );
 
         auto wm     = glfw->createWindowManager();
-        auto window = wm.createWindow({}, "Boing (classic Amiga demo)", 400, 400);
+        auto window = wm->createWindow({}, "Boing (classic Amiga demo)", 400, 400);
 
         window.lockCurrentAspectRatio();
 
@@ -649,7 +649,7 @@ int main(void)
 
             display();
 
-            wm.pollEvents();
+            wm->pollEvents();
         });
     } catch (std::exception& e) {
         std::cerr << "Exception occurred: " << e.what() << '\n';

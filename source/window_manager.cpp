@@ -1,6 +1,4 @@
-#include "glfw_cpp/event.hpp"
 #include "glfw_cpp/instance.hpp"
-#include "glfw_cpp/window.hpp"
 #include "glfw_cpp/window_manager.hpp"
 
 #include "util.hpp"
@@ -84,29 +82,6 @@ namespace glfw_cpp
         // attached thread id will not be changed for the lifetime of this class instance.
     }
 
-    // clang-format off
-    WindowManager::WindowManager(WindowManager&& other) noexcept
-        : m_attachedThreadId { std::exchange(other.m_attachedThreadId, std::thread::id{}) }
-        , m_windows          { std::move(other.m_windows) }
-        , m_windowDeleteQueue{ std::move(other.m_windowDeleteQueue) }
-        , m_windowTaskQueue  { std::move(other.m_windowTaskQueue) }
-        , m_taskQueue        { std::move(other.m_taskQueue) }
-    // clang-format on
-    {
-    }
-
-    WindowManager& WindowManager::operator=(WindowManager&& other) noexcept
-    {
-        if (this != &other) {
-            m_attachedThreadId  = std::exchange(other.m_attachedThreadId, std::thread::id{});
-            m_windows           = std::move(other.m_windows);
-            m_windowDeleteQueue = std::move(other.m_windowDeleteQueue);
-            m_windowTaskQueue   = std::move(other.m_windowTaskQueue);
-            m_taskQueue         = std::move(other.m_taskQueue);
-        }
-        return *this;
-    }
-
     Window WindowManager::createWindow(
         const WindowHint& hint,
         std::string_view  title,
@@ -157,7 +132,9 @@ namespace glfw_cpp
         glfwGetCursorPos(handle, &xCursor, &yCursor);
         glfwGetFramebufferSize(handle, &fbWidth, &fbHeight);
 
-        return Window{ *this, handle, Window::Properties{
+        auto wmCopy = std::enable_shared_from_this<WindowManager>::shared_from_this();
+
+        return Window{ wmCopy, handle, Window::Properties{
             .m_title           = { title.begin(), title.end() },
             .m_pos             = { xPos, yPos },
             .m_dimension       = { realWidth, realHeight },
@@ -177,7 +154,7 @@ namespace glfw_cpp
         }, bindImmediately };
     }
 
-    void WindowManager::requestDeleteWindow(WindowManager::Handle handle)
+    void WindowManager::requestDeleteWindow(Window::Handle handle)
     {
         validateAccess(false);
         std::unique_lock lock{ m_mutex };
@@ -224,11 +201,11 @@ namespace glfw_cpp
     {
         validateAccess(false);
         using Ptr                 = decltype(m_windows)::value_type;
-        const auto shouldNotClose = [](Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
+        const auto shouldNotClose = [](Window::Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
         return std::ranges::any_of(m_windows, shouldNotClose, &Ptr::get);
     }
 
-    void WindowManager::enqueueWindowTask(Handle handle, Fun<void()>&& task)
+    void WindowManager::enqueueWindowTask(Window::Handle handle, Fun<void()>&& task)
     {
         validateAccess(false);
         std::unique_lock lock{ m_mutex };

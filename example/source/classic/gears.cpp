@@ -301,7 +301,7 @@ int main()
         H hint  = { .m_flags = H::DEFAULT | H::TRANSPARENT_FRAMEBUFFER, .m_depthBits = 16 };
 
         auto wm     = glfw->createWindowManager();
-        auto window = wm.createWindow(hint, "Gears", 300, 300);
+        auto window = wm->createWindow(hint, "Gears", 300, 300);
 
         reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
         init();
@@ -319,7 +319,7 @@ int main()
             draw();
             animate();
 
-            wm.pollEvents();
+            wm->pollEvents();
         });
     } catch (std::exception& e) {
         std::cerr << "Exception occurred: " << e.what() << '\n';

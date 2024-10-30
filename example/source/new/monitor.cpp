@@ -1,5 +1,8 @@
+// To use glfw_cpp::VideoMode, you need the full definition which glfw_cpp didn't provide, so including glfw C
+// header is necessary. I plan on creating a new type on glfw_cpp so there is no need to do this.
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
 #include <fmt/core.h>
 #include <glfw_cpp/instance.hpp>
 #include <glfw_cpp/monitor.hpp>
@@ -52,10 +55,7 @@ int main()
         if (!isCurrent) {
             fmt::println("current video mode:");
             fmt::println(
-                "\t\t{}x{} \tat {}Hz",
-                currentMode.width,
-                currentMode.height,
-                currentMode.refreshRate
+                "\t\t{}x{} \tat {}Hz", currentMode.width, currentMode.height, currentMode.refreshRate
             );
         }
 

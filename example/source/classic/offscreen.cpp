@@ -97,7 +97,7 @@ int main()
 
         auto glfw   = glfw_cpp::init(api, logger);
         auto wm     = glfw->createWindowManager();
-        auto window = wm.createWindow(hint, "Simple offscreen example", 800, 600);
+        auto window = wm->createWindow(hint, "Simple offscreen example", 800, 600);
 
         window.bind();
 

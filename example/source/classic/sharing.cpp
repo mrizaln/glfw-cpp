@@ -89,7 +89,7 @@ int main()
 
     std::array<glfw_cpp::Window, 2> windows;
 
-    windows[0] = wm.createWindow({}, "First", 400, 400);
+    windows[0] = wm->createWindow({}, "First", 400, 400);
 
     // Create the OpenGL objects inside the first context, created above
     // All objects will be shared with the second context, created below
@@ -146,7 +146,7 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    windows[1] = wm.createWindow({ .m_share = &windows[0] }, "Second", 400, 400);
+    windows[1] = wm->createWindow({ .m_share = &windows[0] }, "Second", 400, 400);
 
     // Only enable vsync for the first of the windows to be swapped to
     // avoid waiting out the interval for each window
@@ -174,7 +174,7 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    while (wm.hasWindowOpened()) {
+    while (wm->hasWindowOpened()) {
         const vec3 colors[] = { { 0.8f, 0.4f, 1.f }, { 0.3f, 0.4f, 1.f } };
 
         for (std::size_t i = 0; i < 2; i++) {
@@ -207,6 +207,6 @@ int main()
             windows[i].unbind();
         }
 
-        wm.waitEvents();
+        wm->waitEvents();
     }
 }
