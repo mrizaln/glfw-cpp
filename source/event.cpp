@@ -128,13 +128,13 @@ namespace glfw_cpp
         auto offset = count <= newCapacity ? 0ul : count - newCapacity;
 
         switch (policy) {
-        case ResizePolicy::DISCARD_OLD: {
+        case ResizePolicy::DiscardOld: {
             auto begin = (m_begin + offset) % capacity();
             for (std::size_t i = 0; i < std::min(newCapacity, count); ++i) {
                 buffer[i] = std::move(m_buffer[(begin + i) % capacity()]);
             }
         } break;
-        case ResizePolicy::DISCARD_NEW: {
+        case ResizePolicy::DiscardNew: {
             auto end = m_end == npos ? m_begin : m_end;
             end      = (end + capacity() - offset) % capacity();
             for (std::size_t i = std::min(newCapacity, count); i-- > 0;) {

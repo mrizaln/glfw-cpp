@@ -45,25 +45,25 @@ namespace glfw_cpp
         using Flag = std::int32_t;
         enum FlagBit : Flag
         {
-            RESIZABLE               = 1 << 0,
-            VISIBLE                 = 1 << 1,
-            DECORATED               = 1 << 2,
-            FOCUSED                 = 1 << 3,
-            AUTO_ICONIFY            = 1 << 4,
-            FLOATING                = 1 << 5,
-            MAXIMIZED               = 1 << 6,
-            CENTER_CURSOR           = 1 << 7,
-            TRANSPARENT_FRAMEBUFFER = 1 << 8,
-            FOCUS_ON_SHOW           = 1 << 9,
-            SCALE_TO_MONITOR        = 1 << 10,
+            Resizable              = 1 << 0,
+            Visible                = 1 << 1,
+            Decorated              = 1 << 2,
+            Focused                = 1 << 3,
+            AutoIconify            = 1 << 4,
+            Floating               = 1 << 5,
+            Maximized              = 1 << 6,
+            CenterCursor           = 1 << 7,
+            TransparentFramebuffer = 1 << 8,
+            FocusOnShow            = 1 << 9,
+            ScaleToMonitor         = 1 << 10,
 
-            DEFAULT = RESIZABLE | VISIBLE | DECORATED | FOCUSED | AUTO_ICONIFY | FOCUS_ON_SHOW,
+            Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
         };
 
         Monitor* m_monitor = nullptr;
         Window*  m_share   = nullptr;
 
-        Flag m_flags = FlagBit::DEFAULT;
+        Flag m_flags = FlagBit::Default;
 
         int m_redBits     = 8;
         int m_greenBits   = 8;

@@ -1,4 +1,5 @@
 #include "glfw_cpp/input.hpp"
+
 #include "util.hpp"
 
 #define GLFW_INCLUDE_NONE
@@ -15,25 +16,25 @@ namespace glfw_cpp
     {
         switch (keyCode) {
             // clang-format off
-            case KeyCode::UNKNOWN         : return 0;
-            case KeyCode::SPACE           : return 1;
-            case KeyCode::APOSTROPHE      : return 2;
-            case KeyCode::COMMA           : return 3;
-            case KeyCode::MINUS           : return 4;
-            case KeyCode::PERIOD          : return 5;
-            case KeyCode::SLASH           : return 6;
-            case KeyCode::ZERO            : return 7;
-            case KeyCode::ONE             : return 8;
-            case KeyCode::TWO             : return 9;
-            case KeyCode::THREE           : return 10;
-            case KeyCode::FOUR            : return 11;
-            case KeyCode::FIVE            : return 12;
-            case KeyCode::SIX             : return 13;
-            case KeyCode::SEVEN           : return 14;
-            case KeyCode::EIGHT           : return 15;
-            case KeyCode::NINE            : return 16;
-            case KeyCode::SEMICOLON       : return 17;
-            case KeyCode::EQUAL           : return 18;
+            case KeyCode::Unknown         : return 0;
+            case KeyCode::Space           : return 1;
+            case KeyCode::Apostrophe      : return 2;
+            case KeyCode::Comma           : return 3;
+            case KeyCode::Minus           : return 4;
+            case KeyCode::Period          : return 5;
+            case KeyCode::Slash           : return 6;
+            case KeyCode::Zero            : return 7;
+            case KeyCode::One             : return 8;
+            case KeyCode::Two             : return 9;
+            case KeyCode::Three           : return 10;
+            case KeyCode::Four            : return 11;
+            case KeyCode::Five            : return 12;
+            case KeyCode::Six             : return 13;
+            case KeyCode::Seven           : return 14;
+            case KeyCode::Eight           : return 15;
+            case KeyCode::Nine            : return 16;
+            case KeyCode::Semicolon       : return 17;
+            case KeyCode::Equal           : return 18;
             case KeyCode::A               : return 19;
             case KeyCode::B               : return 20;
             case KeyCode::C               : return 21;
@@ -60,31 +61,31 @@ namespace glfw_cpp
             case KeyCode::X               : return 42;
             case KeyCode::Y               : return 43;
             case KeyCode::Z               : return 44;
-            case KeyCode::LEFT_BRACKET    : return 45;
-            case KeyCode::BACKSLASH       : return 46;
-            case KeyCode::RIGHT_BRACKET   : return 47;
-            case KeyCode::GRAVE_ACCENT    : return 48;
-            case KeyCode::WORLD_1         : return 49;
-            case KeyCode::WORLD_2         : return 50;
-            case KeyCode::ESCAPE          : return 51;
-            case KeyCode::ENTER           : return 52;
-            case KeyCode::TAB             : return 53;
-            case KeyCode::BACKSPACE       : return 54;
-            case KeyCode::INSERT          : return 55;
-            case KeyCode::DELETE          : return 56;
-            case KeyCode::RIGHT           : return 57;
-            case KeyCode::LEFT            : return 58;
-            case KeyCode::DOWN            : return 59;
-            case KeyCode::UP              : return 60;
-            case KeyCode::PAGE_UP         : return 61;
-            case KeyCode::PAGE_DOWN       : return 62;
-            case KeyCode::HOME            : return 63;
-            case KeyCode::END             : return 64;
-            case KeyCode::CAPS_LOCK       : return 65;
-            case KeyCode::SCROLL_LOCK     : return 66;
-            case KeyCode::NUM_LOCK        : return 67;
-            case KeyCode::PRINT_SCREEN    : return 68;
-            case KeyCode::PAUSE           : return 69;
+            case KeyCode::LeftBracket     : return 45;
+            case KeyCode::BackSlash       : return 46;
+            case KeyCode::RightBracket    : return 47;
+            case KeyCode::GraveAccent     : return 48;
+            case KeyCode::World1          : return 49;
+            case KeyCode::World2          : return 50;
+            case KeyCode::Escape          : return 51;
+            case KeyCode::Enter           : return 52;
+            case KeyCode::Tab             : return 53;
+            case KeyCode::Backspace       : return 54;
+            case KeyCode::Insert          : return 55;
+            case KeyCode::Delete          : return 56;
+            case KeyCode::Right           : return 57;
+            case KeyCode::Left            : return 58;
+            case KeyCode::Down            : return 59;
+            case KeyCode::Up              : return 60;
+            case KeyCode::PageUp          : return 61;
+            case KeyCode::PageDown        : return 62;
+            case KeyCode::Home            : return 63;
+            case KeyCode::End             : return 64;
+            case KeyCode::CapsLock        : return 65;
+            case KeyCode::ScrollLock      : return 66;
+            case KeyCode::NumLock         : return 67;
+            case KeyCode::PrintScreen     : return 68;
+            case KeyCode::Pause           : return 69;
             case KeyCode::F1              : return 70;
             case KeyCode::F2              : return 71;
             case KeyCode::F3              : return 72;
@@ -110,32 +111,32 @@ namespace glfw_cpp
             case KeyCode::F23             : return 92;
             case KeyCode::F24             : return 93;
             case KeyCode::F25             : return 94;
-            case KeyCode::KEYPAD_0        : return 95;
-            case KeyCode::KEYPAD_1        : return 96;
-            case KeyCode::KEYPAD_2        : return 97;
-            case KeyCode::KEYPAD_3        : return 98;
-            case KeyCode::KEYPAD_4        : return 99;
-            case KeyCode::KEYPAD_5        : return 100;
-            case KeyCode::KEYPAD_6        : return 101;
-            case KeyCode::KEYPAD_7        : return 102;
-            case KeyCode::KEYPAD_8        : return 103;
-            case KeyCode::KEYPAD_9        : return 104;
-            case KeyCode::KEYPAD_DECIMAL  : return 105;
-            case KeyCode::KEYPAD_DIVIDE   : return 106;
-            case KeyCode::KEYPAD_MULTIPLY : return 107;
-            case KeyCode::KEYPAD_SUBTRACT : return 108;
-            case KeyCode::KEYPAD_ADD      : return 109;
-            case KeyCode::KEYPAD_ENTER    : return 110;
-            case KeyCode::KEYPAD_EQUAL    : return 111;
-            case KeyCode::LEFT_SHIFT      : return 112;
-            case KeyCode::LEFT_CONTROL    : return 113;
-            case KeyCode::LEFT_ALT        : return 114;
-            case KeyCode::LEFT_SUPER      : return 115;
-            case KeyCode::RIGHT_SHIFT     : return 116;
-            case KeyCode::RIGHT_CONTROL   : return 117;
-            case KeyCode::RIGHT_ALT       : return 118;
-            case KeyCode::RIGHT_SUPER     : return 119;
-            case KeyCode::MENU            : return 120;
+            case KeyCode::Keypad0        : return 95;
+            case KeyCode::Keypad1        : return 96;
+            case KeyCode::Keypad2        : return 97;
+            case KeyCode::Keypad3        : return 98;
+            case KeyCode::Keypad4        : return 99;
+            case KeyCode::Keypad5        : return 100;
+            case KeyCode::Keypad6        : return 101;
+            case KeyCode::Keypad7        : return 102;
+            case KeyCode::Keypad8        : return 103;
+            case KeyCode::Keypad9        : return 104;
+            case KeyCode::KeypadDecimal  : return 105;
+            case KeyCode::KeypadDivide   : return 106;
+            case KeyCode::KeypadMultiply : return 107;
+            case KeyCode::KeypadSubtract : return 108;
+            case KeyCode::KeypadAdd      : return 109;
+            case KeyCode::KeypadEnter    : return 110;
+            case KeyCode::KeypadEqual    : return 111;
+            case KeyCode::LeftShift      : return 112;
+            case KeyCode::LeftControl    : return 113;
+            case KeyCode::LeftAlt        : return 114;
+            case KeyCode::LeftSuper      : return 115;
+            case KeyCode::RightShift     : return 116;
+            case KeyCode::RightControl   : return 117;
+            case KeyCode::RightAlt       : return 118;
+            case KeyCode::RightSuper     : return 119;
+            case KeyCode::Menu            : return 120;
             default:                        return 0;       // return 0 for any unhadled KeyCode
             // clang-format on
         }
@@ -170,7 +171,7 @@ namespace glfw_cpp
         std::vector<KeyCode> keys;
 
         // kinda unsafe
-        for (int k = 0; k < static_cast<int>(KeyCode::MAXVALUE); ++k) {
+        for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
             if (bitPos(static_cast<KeyCode>(k)) == 0) {
                 continue;
@@ -188,7 +189,7 @@ namespace glfw_cpp
         std::vector<KeyCode> keys;
 
         // kinda unsafe
-        for (int k = 0; k < static_cast<int>(KeyCode::MAXVALUE); ++k) {
+        for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
             if (bitPos(static_cast<KeyCode>(k)) == 0) {
                 continue;
@@ -206,7 +207,7 @@ namespace glfw_cpp
 {
     std::size_t MouseButtonStateRecord::bitPos(MouseButton button) const noexcept
     {
-        assert(static_cast<std::size_t>(MouseButton::MAXVALUE) < CHAR_BIT * sizeof(State));
+        assert(static_cast<std::size_t>(MouseButton::MaxValue) < CHAR_BIT * sizeof(State));
         return static_cast<std::size_t>(button);
     }
 
@@ -227,7 +228,7 @@ namespace glfw_cpp
     std::vector<MouseButton> MouseButtonStateRecord::pressedButtons() const
     {
         std::vector<MouseButton> buttons;
-        for (int b = 0; b < static_cast<int>(MouseButton::MAXVALUE); ++b) {
+        for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
             if (isPressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }
@@ -238,7 +239,7 @@ namespace glfw_cpp
     std::vector<MouseButton> MouseButtonStateRecord::releasedButtons() const
     {
         std::vector<MouseButton> buttons;
-        for (int b = 0; b < static_cast<int>(MouseButton::MAXVALUE); ++b) {
+        for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
             if (!isPressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }

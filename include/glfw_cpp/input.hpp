@@ -1,10 +1,6 @@
 #ifndef INPUT_HPP_354TKEJR8H
 #define INPUT_HPP_354TKEJR8H
 
-#if defined(_WIN32)
-#    undef DELETE;
-#endif
-
 #include <algorithm>
 #include <array>
 #include <cstdint>
@@ -25,25 +21,25 @@ namespace glfw_cpp
     enum class KeyCode : int
     {
         // clang-format off
-        UNKNOWN         = -1,
-        SPACE           = 32,
-        APOSTROPHE      = 39,
-        COMMA           = 44,
-        MINUS,
-        PERIOD,
-        SLASH,
-        ZERO,
-        ONE,
-        TWO,
-        THREE,
-        FOUR,
-        FIVE,
-        SIX,
-        SEVEN,
-        EIGHT,
-        NINE,
-        SEMICOLON       = 59,
-        EQUAL           = 61,
+        Unknown         = -1,
+        Space           = 32,
+        Apostrophe      = 39,
+        Comma           = 44,
+        Minus,
+        Period,
+        Slash,
+        Zero,
+        One,
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+        Nine,
+        Semicolon       = 59,
+        Equal           = 61,
         A               = 65,
         B,
         C,
@@ -70,31 +66,31 @@ namespace glfw_cpp
         X,
         Y,
         Z,
-        LEFT_BRACKET,
-        BACKSLASH,
-        RIGHT_BRACKET,
-        GRAVE_ACCENT    = 96,
-        WORLD_1         = 161,
-        WORLD_2,
-        ESCAPE          = 256,
-        ENTER,
-        TAB,
-        BACKSPACE,
-        INSERT,
-        DELETE,
-        RIGHT,
-        LEFT,
-        DOWN,
-        UP,
-        PAGE_UP,
-        PAGE_DOWN,
-        HOME,
-        END,
-        CAPS_LOCK       = 280,
-        SCROLL_LOCK,
-        NUM_LOCK,
-        PRINT_SCREEN,
-        PAUSE,
+        LeftBracket,
+        BackSlash,
+        RightBracket,
+        GraveAccent     = 96,
+        World1          = 161,
+        World2,
+        Escape          = 256,
+        Enter,
+        Tab,
+        Backspace,
+        Insert,
+        Delete,
+        Right,
+        Left,
+        Down,
+        Up,
+        PageUp,
+        PageDown,
+        Home,
+        End,
+        CapsLock        = 280,
+        ScrollLock,
+        NumLock,
+        PrintScreen,
+        Pause,
         F1              = 290,
         F2,
         F3,
@@ -120,33 +116,33 @@ namespace glfw_cpp
         F23,
         F24,
         F25,
-        KEYPAD_0        = 320,
-        KEYPAD_1,
-        KEYPAD_2,
-        KEYPAD_3,
-        KEYPAD_4,
-        KEYPAD_5,
-        KEYPAD_6,
-        KEYPAD_7,
-        KEYPAD_8,
-        KEYPAD_9,
-        KEYPAD_DECIMAL,
-        KEYPAD_DIVIDE,
-        KEYPAD_MULTIPLY,
-        KEYPAD_SUBTRACT,
-        KEYPAD_ADD,
-        KEYPAD_ENTER,
-        KEYPAD_EQUAL,
-        LEFT_SHIFT      = 340,
-        LEFT_CONTROL,
-        LEFT_ALT,
-        LEFT_SUPER,
-        RIGHT_SHIFT,
-        RIGHT_CONTROL,
-        RIGHT_ALT,
-        RIGHT_SUPER,
-        MENU,
-        MAXVALUE        = MENU,
+        Keypad0         = 320,
+        Keypad1,
+        Keypad2,
+        Keypad3,
+        Keypad4,
+        Keypad5,
+        Keypad6,
+        Keypad7,
+        Keypad8,
+        Keypad9,
+        KeypadDecimal,
+        KeypadDivide,
+        KeypadMultiply,
+        KeypadSubtract,
+        KeypadAdd,
+        KeypadEnter,
+        KeypadEqual,
+        LeftShift       = 340,
+        LeftControl,
+        LeftAlt,
+        LeftSuper,
+        RightShift,
+        RightControl,
+        RightAlt,
+        RightSuper,
+        Menu,
+        MaxValue        = Menu,
         // clang-format on
     };
 
@@ -159,9 +155,9 @@ namespace glfw_cpp
      */
     enum class KeyState : int
     {
-        RELEASE = 0,
-        PRESS   = 1,
-        REPEAT  = 2
+        Release = 0,
+        Press   = 1,
+        Repeat  = 2
     };
 
     /**
@@ -174,18 +170,20 @@ namespace glfw_cpp
     enum class MouseButton : int
     {
         // clang-format off
-        ONE         = 0,
-        TWO,
-        THREE,
-        FOUR,
-        FIVE,
-        SIX,
-        SEVEN,
-        EIGHT,
-        LEFT        = ONE,
-        RIGHT       = TWO,
-        MIDDLE      = THREE,
-        MAXVALUE    = EIGHT,
+        One         = 0,
+        Two,
+        Three,
+        Four,
+        Five,
+        Six,
+        Seven,
+        Eight,
+
+        Left        = One,
+        Right       = Two,
+        Middle      = Three,
+
+        MaxValue    = Eight,
         // clang-format on
     };
 
@@ -198,8 +196,8 @@ namespace glfw_cpp
      */
     enum class MouseButtonState : int
     {
-        RELEASE = 0,
-        PRESS   = 1,
+        Release = 0,
+        Press   = 1,
     };
 
     /**
@@ -223,13 +221,13 @@ namespace glfw_cpp
          */
         enum Bit : Base
         {
-            NONE      = 0,
-            SHIFT     = 0x01,
-            CONTROL   = 0x02,
-            ALT       = 0x04,
-            SUPER     = 0x08,
-            CAPS_LOCK = 0x10,
-            NUM_LOCK  = 0x20,
+            None     = 0,
+            Shift    = 0x01,
+            Control  = 0x02,
+            Alt      = 0x04,
+            Super    = 0x08,
+            CapsLock = 0x10,
+            NumLock  = 0x20,
         };
 
         ModifierKey(std::convertible_to<Bit> auto... e) noexcept
@@ -249,7 +247,7 @@ namespace glfw_cpp
         auto& set(std::convertible_to<Bit> auto... e) noexcept
             requires(sizeof...(e) > 0)
         {
-            m_mods |= (NONE | ... | e);
+            m_mods |= (None | ... | e);
             return *this;
         }
 
@@ -260,7 +258,7 @@ namespace glfw_cpp
         auto& unset(std::convertible_to<Bit> auto... e) noexcept
             requires(sizeof...(e) > 0)
         {
-            m_mods &= ~(NONE | ... | e);
+            m_mods &= ~(None | ... | e);
             return *this;
         }
 
@@ -271,7 +269,7 @@ namespace glfw_cpp
         auto& toggle(std::convertible_to<Bit> auto... e) noexcept
             requires(sizeof...(e) > 0)
         {
-            m_mods ^= (NONE | ... | e);
+            m_mods ^= (None | ... | e);
             return *this;
         }
 
@@ -297,9 +295,9 @@ namespace glfw_cpp
         bool test(std::convertible_to<Bit> auto... e) const noexcept
             requires(sizeof...(e) > 0)
         {
-            auto flags{ static_cast<Base>((NONE | ... | e)) };
-            if (flags == NONE) {
-                return m_mods == NONE;
+            auto flags{ static_cast<Base>((None | ... | e)) };
+            if (flags == None) {
+                return m_mods == None;
             } else {
                 return (m_mods & flags) == flags;
             }
@@ -312,11 +310,11 @@ namespace glfw_cpp
         bool testSome(std::convertible_to<Bit> auto... e) const noexcept
             requires(sizeof...(e) > 0)
         {
-            auto flags{ static_cast<Base>((NONE | ... | e)) };
-            if (flags == NONE) {
+            auto flags{ static_cast<Base>((None | ... | e)) };
+            if (flags == None) {
                 return test(static_cast<Bit>(flags));
             } else {
-                return (m_mods & flags) != NONE;
+                return (m_mods & flags) != None;
             }
         }
 
@@ -325,7 +323,7 @@ namespace glfw_cpp
          */
         auto& reset() noexcept
         {
-            m_mods = NONE;
+            m_mods = None;
             return *this;
         }
 

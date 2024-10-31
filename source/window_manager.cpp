@@ -27,17 +27,17 @@ namespace
             glfwWindowHint(flag, (hint.m_flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
         };
 
-        setFlag(GLFW_RESIZABLE, F::RESIZABLE);
-        setFlag(GLFW_VISIBLE, F::VISIBLE);
-        setFlag(GLFW_DECORATED, F::DECORATED);
-        setFlag(GLFW_FOCUSED, F::FOCUSED);
-        setFlag(GLFW_AUTO_ICONIFY, F::AUTO_ICONIFY);
-        setFlag(GLFW_FLOATING, F::FLOATING);
-        setFlag(GLFW_MAXIMIZED, F::MAXIMIZED);
-        setFlag(GLFW_CENTER_CURSOR, F::CENTER_CURSOR);
-        setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TRANSPARENT_FRAMEBUFFER);
-        setFlag(GLFW_FOCUS_ON_SHOW, F::FOCUS_ON_SHOW);
-        setFlag(GLFW_SCALE_TO_MONITOR, F::SCALE_TO_MONITOR);
+        setFlag(GLFW_RESIZABLE, F::Resizable);
+        setFlag(GLFW_VISIBLE, F::Visible);
+        setFlag(GLFW_DECORATED, F::Decorated);
+        setFlag(GLFW_FOCUSED, F::Focused);
+        setFlag(GLFW_AUTO_ICONIFY, F::AutoIconify);
+        setFlag(GLFW_FLOATING, F::Floating);
+        setFlag(GLFW_MAXIMIZED, F::Maximized);
+        setFlag(GLFW_CENTER_CURSOR, F::CenterCursor);
+        setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TransparentFramebuffer);
+        setFlag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
+        setFlag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
 
         glfwWindowHint(GLFW_RED_BITS, hint.m_redBits);
         glfwWindowHint(GLFW_GREEN_BITS, hint.m_greenBits);
@@ -125,14 +125,14 @@ namespace glfw_cpp
             .m_cursor          = { xCursor, yCursor },
             .m_attribute       = {
                 .m_iconified   = 0,
-                .m_maximized   = (hint.m_flags & WindowHint::MAXIMIZED) != 0,
-                .m_focused     = (hint.m_flags & WindowHint::FOCUSED) != 0,
-                .m_visible     = (hint.m_flags & WindowHint::VISIBLE) != 0,
+                .m_maximized   = (hint.m_flags & WindowHint::Maximized) != 0,
+                .m_focused     = (hint.m_flags & WindowHint::Focused) != 0,
+                .m_visible     = (hint.m_flags & WindowHint::Visible) != 0,
                 .m_hovered     = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .m_resizable   = (hint.m_flags & WindowHint::RESIZABLE) != 0,
-                .m_floating    = (hint.m_flags & WindowHint::FLOATING) != 0,
-                .m_autoIconify = (hint.m_flags & WindowHint::AUTO_ICONIFY) != 0,
-                .m_focusOnShow = (hint.m_flags & WindowHint::FOCUS_ON_SHOW) != 0,
+                .m_resizable   = (hint.m_flags & WindowHint::Resizable) != 0,
+                .m_floating    = (hint.m_flags & WindowHint::Floating) != 0,
+                .m_autoIconify = (hint.m_flags & WindowHint::AutoIconify) != 0,
+                .m_focusOnShow = (hint.m_flags & WindowHint::FocusOnShow) != 0,
             },
         }, bindImmediately };
     }

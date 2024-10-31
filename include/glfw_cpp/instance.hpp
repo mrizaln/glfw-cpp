@@ -1,10 +1,6 @@
 #ifndef INSTANCE_HPP_AO39EW8FOEW
 #define INSTANCE_HPP_AO39EW8FOEW
 
-#if defined(_WIN32)
-#    undef ERROR
-#endif
-
 #include <format>
 #include <functional>
 #include <memory>
@@ -52,14 +48,14 @@ namespace glfw_cpp
              */
             enum class Profile
             {
-                CORE,
-                COMPAT,
-                ANY,
+                Core,
+                Compat,
+                Any,
             };
 
             int         m_major         = 1;
             int         m_minor         = 0;
-            Profile     m_profile       = Profile::CORE;    // only makes sense for OpenGL 3.2 above
+            Profile     m_profile       = Profile::Core;    // only makes sense for OpenGL 3.2 above
             bool        m_forwardCompat = true;             // only makes sense for OpenGL 3.0 above
             GlLoaderFun m_loader;
         };
@@ -87,12 +83,12 @@ namespace glfw_cpp
 
         enum class LogLevel
         {
-            NONE,
-            DEBUG,
-            INFO,
-            WARNING,
-            ERROR,
-            CRITICAL,
+            None,
+            Debug,
+            Info,
+            Warning,
+            Error,
+            Critical,
         };
 
         // LogFun should be noexcept
@@ -136,31 +132,31 @@ namespace glfw_cpp
         template <typename... Args>
         static void logD(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
-            log(LogLevel::DEBUG, std::format(fmt, std::forward<Args>(args)...));
+            log(LogLevel::Debug, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
         static void logI(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
-            log(LogLevel::INFO, std::format(fmt, std::forward<Args>(args)...));
+            log(LogLevel::Info, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
         static void logW(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
-            log(LogLevel::WARNING, std::format(fmt, std::forward<Args>(args)...));
+            log(LogLevel::Warning, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
         static void logE(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
-            log(LogLevel::ERROR, std::format(fmt, std::forward<Args>(args)...));
+            log(LogLevel::Error, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
         static void logC(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
-            log(LogLevel::CRITICAL, std::format(fmt, std::forward<Args>(args)...));
+            log(LogLevel::Critical, std::format(fmt, std::forward<Args>(args)...));
         }
     };
 

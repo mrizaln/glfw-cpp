@@ -8,7 +8,6 @@
 
 #include <cassert>
 #include <format>
-#include <stdexcept>
 #include <utility>
 
 namespace
@@ -114,9 +113,9 @@ namespace glfw_cpp
                 auto glProfile = [&] {
                     using P = glfw_cpp::Api::OpenGL::Profile;
                     switch (api.m_profile) {
-                    case P::CORE: return GLFW_OPENGL_CORE_PROFILE;
-                    case P::COMPAT: return GLFW_OPENGL_COMPAT_PROFILE;
-                    case P::ANY: return GLFW_OPENGL_ANY_PROFILE;
+                    case P::Core: return GLFW_OPENGL_CORE_PROFILE;
+                    case P::Compat: return GLFW_OPENGL_COMPAT_PROFILE;
+                    case P::Any: return GLFW_OPENGL_ANY_PROFILE;
                     default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
                     }
                 }();

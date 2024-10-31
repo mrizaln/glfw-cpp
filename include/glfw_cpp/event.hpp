@@ -473,8 +473,8 @@ namespace glfw_cpp
 
         enum class ResizePolicy
         {
-            DISCARD_OLD,
-            DISCARD_NEW,
+            DiscardOld,
+            DiscardNew,
         };
 
         static constexpr std::size_t npos = std::numeric_limits<std::size_t>::max();
@@ -549,7 +549,7 @@ namespace glfw_cpp
          * @param newCapacity New capacity of the queue
          * @param policy Resize policy to use
          */
-        void resize(std::size_t newCapacity, ResizePolicy policy = ResizePolicy::DISCARD_OLD) noexcept;
+        void resize(std::size_t newCapacity, ResizePolicy policy = ResizePolicy::DiscardOld) noexcept;
 
         Iterator<>     begin() noexcept;
         Iterator<>     end() noexcept;

@@ -204,21 +204,23 @@ namespace glfw_cpp
         , m_attachedThreadId{}
         , m_properties{ std::move(properties) }
     {
-        bind();
+        auto init = [&](auto* api) {
+            bind();
+            setVsync(m_vsync);
+            glfwSetWindowUserPointer(m_handle, this);
+            api->m_loader(handle, glfwGetProcAddress);
+            if (!bindImmediately) {
+                unbind();
+            }
+        };
 
         if (auto* api = std::get_if<Api::OpenGL>(&Instance::get().m_api)) {
-            api->m_loader(handle, glfwGetProcAddress);
+            init(api);
         } else if (auto* api = std::get_if<Api::OpenGLES>(&Instance::get().m_api)) {
-            api->m_loader(handle, glfwGetProcAddress);
+            init(api);
         } else {
+            glfwSetWindowUserPointer(m_handle, this);
             // don't need to do anything for NoApi
-        }
-
-        setVsync(m_vsync);
-        glfwSetWindowUserPointer(m_handle, this);
-
-        if (!bindImmediately) {
-            unbind();
         }
     }
 
@@ -274,7 +276,9 @@ namespace glfw_cpp
     Window::~Window()
     {
         if (m_handle != nullptr) {
-            unbind();
+            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+                unbind();
+            }
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
             m_manager->requestDeleteWindow(m_handle);
         } else {
@@ -287,10 +291,10 @@ namespace glfw_cpp
         if (m_attachedThreadId == std::thread::id{}) {
             // no thread attached, attach to this thread
 
-            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
-                m_attachedThreadId = std::this_thread::get_id();
-                Instance::logD("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
+            m_attachedThreadId = std::this_thread::get_id();
+            Instance::logD("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
+            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
             } else {
                 throw NoWindowContext{};
@@ -500,8 +504,8 @@ namespace glfw_cpp
     void Window::resizeEventQueue(std::size_t newSize) noexcept
     {
         std::scoped_lock lock{ m_queueMutex };
-        m_eventQueueFront.resize(newSize, EventQueue::ResizePolicy::DISCARD_OLD);
-        m_eventQueueBack.resize(newSize, EventQueue::ResizePolicy::DISCARD_OLD);
+        m_eventQueueFront.resize(newSize, EventQueue::ResizePolicy::DiscardOld);
+        m_eventQueueBack.resize(newSize, EventQueue::ResizePolicy::DiscardOld);
     }
 
     void Window::pushEvent(Event&& event) noexcept
@@ -524,8 +528,8 @@ namespace glfw_cpp
             [&](EV::WindowFocused&      e) { attr.m_focused   = e.m_focused;   },
             [&](EV::WindowIconified&    e) { attr.m_iconified = e.m_iconified; },
             [&](EV::WindowMaximized&    e) { attr.m_maximized = e.m_maximized; },
-            [&](EV::KeyPressed&         e) { keys.setValue(e.m_key,    e.m_state != KS::RELEASE); },
-            [&](EV::ButtonPressed&      e) { btns.setValue(e.m_button, e.m_state != MS::RELEASE); },
+            [&](EV::KeyPressed&         e) { keys.setValue(e.m_key,    e.m_state != KS::Release); },
+            [&](EV::ButtonPressed&      e) { btns.setValue(e.m_button, e.m_state != MS::Release); },
             [&] /* else */ (auto&)         { /* do nothing */ }
             // clang-format on
         });
