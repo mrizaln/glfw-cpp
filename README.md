@@ -151,4 +151,4 @@ doxygen Doxygen
 - [x] Eliminate `glfw_cpp::WindowManager` move limitation
   > By making `WindowManager` be exclusively `shared_ptr`, this issue is completely eliminated.
 - [x] Add documentation.
-- [ ] Add LICENSE
+- [x] Add LICENSE
