@@ -11,7 +11,7 @@ This wrapper is personalized and written to suit my needs. This is not a wrapper
 - C++20
 - GLFW 3.3
 
-You can use your system package manager or c++ package manager like conan (see [example](./example)) or even manually clone the [GLFW](https://github.com/glfw/glfw) repository and call `add_subdirectory` to add the GLFW dependency.
+You can use your system package manager or c++ package manager like Conan (see [example](./example)) or even manually clone the [GLFW](https://github.com/glfw/glfw) repository and call `add_subdirectory` to add the GLFW dependency.
 
 ## Usage
 
@@ -123,9 +123,20 @@ int main()
 
 No manual cleanup necessary, the classes defined already using RAII pattern.
 
-One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Handle` outlive `glfw_cpp::WindowManager` and `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
+One thing to keep in mind is that you need to make sure that `glfw_cpp::Instance::Unique` outlive `glfw_cpp::WindowManager` and `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
 
 The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/new/multi.cpp) or [here](./example/source/new/multi_multi_manager.cpp) (I also use a different OpenGL loader library there).
+
+## Documentation
+
+The project is documented using Doxygen. There is a Doxygen configuration in [docs](./docs/Doxygen) that can be used to generate a HTML documentation page.
+
+From the root of the project, just run these command (require doxygen binary to be installed). The output of the HTML page is in `docs/doxygen/html`
+
+```sh
+cd docs
+doxygen Doxygen
+```
 
 ## TODO
 
@@ -139,3 +150,5 @@ The above example is a single-threaded, one window example. For a multi-window a
   > While the handling itself still in the thread `WindowManager` is, with the introduction of `IEventInterceptor`, user can intercept events polled by `WindowManager`before getting pushed into`EventQueue`inside`WindowManager`(you can control whether to continue forwarding the event to the underlying `Window` or not). The intercepted `Event` then can be sent to other thread for example.
 - [x] Eliminate `glfw_cpp::WindowManager` move limitation
   > By making `WindowManager` be exclusively `shared_ptr`, this issue is completely eliminated.
+- [x] Add documentation.
+- [ ] Add LICENSE
