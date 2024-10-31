@@ -53,21 +53,21 @@ namespace glfw_cpp
         {
         }
 
-        explicit operator bool() { return m_handle != nullptr; }
-        Handle   handle() const { return m_handle; }
+        explicit operator bool() noexcept { return m_handle != nullptr; }
+        Handle   handle() const noexcept { return m_handle; }
 
-        std::string_view name() const;
-        Position         position() const;
-        WorkArea         workArea() const;
-        PhysicalSize     physicalSize() const;
-        ContentScale     contentScale() const;
+        std::string_view name() const noexcept;
+        Position         position() const noexcept;
+        WorkArea         workArea() const noexcept;
+        PhysicalSize     physicalSize() const noexcept;
+        ContentScale     contentScale() const noexcept;
 
-        const VideoMode*           currentVideoMode() const;
-        std::span<const VideoMode> availableVideoModes() const;
+        const VideoMode*           currentVideoMode() const noexcept;
+        std::span<const VideoMode> availableVideoModes() const noexcept;
 
-        void      setGamma(float gamma);
-        void      setGammaRamp(const GammaRamp& ramp);
-        GammaRamp getGammaRamp() const;
+        void      setGamma(float gamma) noexcept;
+        void      setGammaRamp(const GammaRamp& ramp) noexcept;
+        GammaRamp getGammaRamp() const noexcept;
 
     private:
         Handle m_handle;

@@ -19,7 +19,9 @@ struct GLFWwindow;
 
 namespace glfw_cpp
 {
-    // turns fps to milliseconds
+    /**
+     * @brief Turns fps to milliseconds.
+     */
     inline std::chrono::milliseconds operator""_fps(unsigned long long fps)
     {
         namespace chr = std::chrono;
@@ -31,6 +33,13 @@ namespace glfw_cpp
     class Window;
     struct IEventInterceptor;
 
+    /**
+     * @struct WindowHint
+     * @brief A struct that holds window hints.
+     *
+     * The window hints included here are only the relevant ones. Graphics API is omitted since the API is not
+     * allowed to change at runtime (my design choice).
+     */
     struct WindowHint
     {
         using Flag = std::int32_t;
@@ -67,6 +76,13 @@ namespace glfw_cpp
         int m_refreshRate = -1;
     };
 
+    /**
+     * @class WindowManager
+     * @brief A class that manages windows.
+     *
+     * This class is responsible for creating and managing windows. It is also responsible for polling events
+     * and executing tasks in the main thread.
+     */
     class WindowManager : public std::enable_shared_from_this<WindowManager>
     {
     public:
@@ -78,8 +94,6 @@ namespace glfw_cpp
         template <typename Sig>
         using Fun = std::function<Sig>;
 
-        class ErrorAccessFromWrongThread;
-
         WindowManager()                                = default;
         ~WindowManager()                               = default;
         WindowManager(const WindowManager&)            = delete;
@@ -87,7 +101,24 @@ namespace glfw_cpp
         WindowManager(WindowManager&&)                 = delete;
         WindowManager& operator=(WindowManager&&)      = delete;
 
-        // @thread_safety: call this function from the main thread only
+        /**
+         * @brief Create a window.
+         *
+         * @param hint The window hint.
+         * @param title The window title.
+         * @param width The window width.
+         * @param height The window height.
+         * @param bindImmediately Whether to bind the window immediately to current thread.
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         * @throw glfw_cpp::ApiUnavailable The requested client API is unavailable.
+         * @throw glfw_cpp::VersionUnavailable The requested client API version is unavailable.
+         * @throw glfw_cpp::FormatUnavailable The requested format is unavailable.
+         * @throw glfw_cpp::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
+         * @throw glfw_cpp::PlatformError A platform-specific error occurred.
+         */
         Window createWindow(
             const WindowHint& hint,
             std::string_view  title,
@@ -96,43 +127,90 @@ namespace glfw_cpp
             bool              bindImmediately = true
         );
 
-        // set an event interceptor for windows events that managed by this instance.
-        // returns old IEventInterceptor (nullptr means no eventInterceptor set before).
-        IEventInterceptor* setEventInterceptor(IEventInterceptor* eventInterceptor)
+        /**
+         * @brief Set an event interceptor.
+         *
+         * @param eventInterceptor The event interceptor.
+         *
+         * @return The old event interceptor.
+         */
+        IEventInterceptor* setEventInterceptor(IEventInterceptor* eventInterceptor) noexcept
         {
             return std::exchange(m_eventInterceptor, eventInterceptor);
         }
 
-        // this function poll events for all windows and then sleep for specified time. won't sleep
-        // after polling events if `msPollRate` is `std::nullopt`.
-        // @thread_safety: call this function from the main thread only
-        void pollEvents(std::optional<std::chrono::milliseconds> pollRate = {});
-
-        // like pollEvents, but this function will block the thread until an event is received or a
-        // timeout reached.
-        // @thread_safety: call this function from the main thread only
-        void waitEvents(std::optional<std::chrono::milliseconds> timeout = {});
-
-        // @thread_safety: this function can be called from any thread
-        void requestDeleteWindow(Window::Handle handle);
-
-        // this function is supposed to be called from a window thread.
-        // @thread_safety: this function can be called from any thread
-        void enqueueWindowTask(Window::Handle handle, Fun<void()>&& task);
-
-        // this function can be called for any task that needs to be executed in the main thread.
-        // for window task, use `enqueueWindowTask` instead.
-        // @thread_safety: this function can be called from any thread
-        void enqueueTask(Fun<void()>&& task);
-
+        /**
+         * @brief Check if any window managed by this manager is still open.
+         *
+         * @thread_safety This function can be called from any thread.
+         */
         bool hasWindowOpened();
 
-        std::thread::id attachedThreadId() const;
+        /**
+         * @brief Poll events for all windows.
+         *
+         * @param pollRate The poll rate, or `std::nullopt` if no sleep is needed.
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         */
+        void pollEvents(std::optional<std::chrono::milliseconds> pollRate = {});
+
+        /**
+         * @brief Wait for events for all windows.
+         *
+         * @param timeout The timeout, or `std::nullopt` if no timeout is needed.
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         */
+        void waitEvents(std::optional<std::chrono::milliseconds> timeout = {});
+
+        /**
+         * @brief Request to delete a window.
+         *
+         * @param handle The window handle.
+         *
+         * @thread_safety This function can be called from any thread.
+         */
+        void requestDeleteWindow(Window::Handle handle);
+
+        /**
+         * @brief Enqueue a window task to be processed in the main thread.
+         *
+         * @param handle The window handle.
+         * @param task The task.
+         *
+         * @thread_safety This function can be called from any thread.
+         *
+         * While this function can be called from any thread, this function is meant to be called from the
+         * thread a Window is running on. This function meant to be used for Window tasks that need to be
+         * executed in the main thread.
+         */
+        void enqueueWindowTask(Window::Handle handle, Fun<void()>&& task);
+
+        /**
+         * @brief Enqueue a task to be processed in the main thread.
+         *
+         * @param task The task.
+         *
+         * @thread_safety This function can be called from any thread.
+         *
+         * This function can be used for any task that needs to be executed in the main thread.
+         */
+        void enqueueTask(Fun<void()>&& task);
+
+        /**
+         * @brief Get the thread id this manager is attached to.
+         */
+        std::thread::id attachedThreadId() const noexcept { return m_attachedThreadId; }
 
     private:
         struct GLFWwindowDeleter
         {
-            void operator()(Window::Handle handle) const;
+            void operator()(Window::Handle handle) const noexcept;
         };
         using UniqueGLFWwindow = std::unique_ptr<GLFWwindow, GLFWwindowDeleter>;
 
@@ -142,13 +220,13 @@ namespace glfw_cpp
             Fun<void()>    m_task;
         };
 
-        WindowManager(std::thread::id threadId);
+        WindowManager(std::thread::id threadId) noexcept;
 
         // send event to interceptor, returns the value the interceptor returns. but if there is not
         // interceptor, the returned value will always be true.
         bool sendInterceptEvent(Window& window, Event& event) noexcept;
 
-        void validateAccess(bool checkThread) const;
+        void validateAccess() const;
         void checkTasks();
 
         mutable std::mutex m_mutex;    // protects current instance

@@ -70,7 +70,7 @@ namespace glfw_cpp
         return Instance::s_instance;
     }
 
-    void Instance::log(LogLevel level, std::string msg)
+    void Instance::log(LogLevel level, std::string msg) noexcept
     {
         auto& instance = Instance::get();
         assert(instance.m_initialized && "Instance not initialized!");
@@ -80,12 +80,12 @@ namespace glfw_cpp
         }
     }
 
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger) noexcept(false)
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger)
     {
         auto& instance = Instance::get();
 
         if (instance.m_initialized) {
-            throw std::runtime_error{ "Instance already initialized!" };
+            throw AlreadyInitialized{};
         }
 
         instance.m_api         = std::move(api);
@@ -94,42 +94,21 @@ namespace glfw_cpp
 
         glfwSetErrorCallback([](int err, const char* msg) {
             Instance::logE("(Internal error [{}|{:#8x}]) {}", errorToString(err), err, msg);
-
-            // throw on errors that is not caused by application programmer error
-            switch (err) {
-            case GLFW_OUT_OF_MEMORY: [[fallthrough]];
-            case GLFW_API_UNAVAILABLE: [[fallthrough]];
-            case GLFW_VERSION_UNAVAILABLE: [[fallthrough]];
-            case GLFW_PLATFORM_ERROR: [[fallthrough]];
-            case GLFW_FORMAT_UNAVAILABLE:
-#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
-                [[fallthrough]];
-            case GLFW_CURSOR_UNAVAILABLE: [[fallthrough]];
-            case GLFW_FEATURE_UNAVAILABLE: [[fallthrough]];
-            case GLFW_FEATURE_UNIMPLEMENTED: [[fallthrough]];
-            case GLFW_PLATFORM_UNAVAILABLE:
-#endif
-                throw std::runtime_error{
-                    std::format("GLFW error [{}|{:#8x}]: {}", errorToString(err), err, msg)
-                };
-            }
         });
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
-            throw std::runtime_error{ "Failed to initialize GLFW!" };
+            util::throwGlfwError();
         }
 
         const auto&& configureApi = util::VisitOverloaded{
             [](Api::OpenGL& api) {
                 if (api.m_major < 0 || api.m_minor < 0) {
-                    throw std::runtime_error{ std::format(
-                        "OpenGL version can't be negative: major={}, minor={}", api.m_major, api.m_minor
-                    ) };
+                    throw VersionUnavailable{};
                 }
 
                 if (api.m_loader == nullptr) {
-                    throw std::runtime_error{ "OpengGL loader can't be empty" };
+                    throw EmptyLoader{};
                 }
 
                 auto glProfile = [&] {

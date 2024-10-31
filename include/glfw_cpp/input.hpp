@@ -382,14 +382,14 @@ namespace glfw_cpp
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<KeyCode> pressedKeys() const;
+        std::vector<KeyCode> pressedKeys() const noexcept;
 
         /**
          * @brief Get the released keys as a vector.
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<KeyCode> releasedKeys() const;
+        std::vector<KeyCode> releasedKeys() const noexcept;
 
     private:
         using Element = std::uint64_t;

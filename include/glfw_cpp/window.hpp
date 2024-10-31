@@ -95,54 +95,170 @@ namespace glfw_cpp
         Window operator=(const Window&) = delete;
 
         /**
-         * @brief Bind the window context to the current thread (only makes sense for OpenGL and OpenGLES).
+         * @brief Bind window context to current thread (only makes sense for OpenGL and OpenGLES).
          *
-         * The function has an assertion that failed if the current context is already bound to other thread.
+         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
+         * @throw glfw_cpp::AlreadyBound If the window context is already bound to other thread.
          */
         void bind();
 
         /**
-         * @brief Unbind the window context from the current thread (only makes sense for OpenGL and
-         * OpenGLES).
+         * @brief Unbind window context from current thread (only makes sense for OpenGL and OpenGLES).
+         *
+         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
          */
         void unbind();
 
-        // destroy the underlying window resource and reset the instance to default-initialized state.
-        // basically doing `*this = {}`
-        void destroy();
+        /**
+         * @brief Destroy the window and reset the instance to default-initialized state.
+         *
+         * Basically doing `*this = {}`.
+         */
+        void destroy() noexcept;
 
-        void iconify();
-        void restore();
-        void maximize();
-        void show();
-        void hide();
-        void focus();
+        /**
+         * @brief Iconify the window.
+         *
+         * Corresponds to `glfwIconifyWindow`.
+         */
+        void iconify() noexcept;
 
-        void setWindowSize(int width, int height);
-        void setWindowPos(int x, int y);
+        /**
+         * @brief Restore the window.
+         *
+         * Corresponds to `glfwRestoreWindow`.
+         */
+        void restore() noexcept;
 
-        // lock the aspect ratio of the window, the ratio is width/height.
-        // the current width will be preserved while the height will be adjusted accordingly.
-        void lockAspectRatio(float ratio);
-        void lockCurrentAspectRatio();
-        void unlockAspectRatio();
+        /**
+         * @brief Maximize the window.
+         *
+         * Corresponds to `glfwMaximizeWindow`.
+         */
+        void maximize() noexcept;
 
-        void updateTitle(const std::string& title);
+        /**
+         * @brief Show the window if it's hidden.
+         *
+         * Corresponds to `glfwShowWindow`.
+         */
+        void show() noexcept;
 
-        // check if the Window should close it's window
-        bool shouldClose() const;
+        /**
+         * @brief Hide the window if it's shown.
+         *
+         * Corresponds to `glfwHideWindow`.
+         */
+        void hide() noexcept;
 
-        // poll just returns events polled by WindowManager and process any queued tasks if exists
-        const EventQueue& poll();
+        /**
+         * @brief Focus the window.
+         *
+         * Corresponds to `glfwFocusWindow`.
+         */
+        void focus() noexcept;
 
-        // swap glfw window buffer, do nothing if Api::NoApi.
-        // returns deltaTime/frameTime (the retuned time is the time taken between display() calls).
+        /**
+         * @brief Set window vertical sync (vsync).
+         *
+         * @param value True to enable vsync, false to disable.
+         */
+        void setVsync(bool value);
+
+        /**
+         * @brief Set window size.
+         *
+         * @param width The new width of the window.
+         * @param height The new height of the window.
+         *
+         * The window size are in screen coordinates.
+         */
+        void setWindowSize(int width, int height) noexcept;
+
+        /**
+         * @brief Set window position.
+         *
+         * @param x The new x position of the window.
+         * @param y The new y position of the window.
+         *
+         * The window position are in screen coordinates.
+         */
+        void setWindowPos(int x, int y) noexcept;
+
+        /**
+         * @brief Get current window aspect ratio.
+         *
+         * You could have use `glfw_cpp::Window::Properties::Dimension` to get the width and height of the
+         * window then calculate the aspect ratio yourself, or you could use this function.
+         */
+        float aspectRatio() const noexcept;
+
+        /**
+         * @brief Lock the aspect ratio of the window.
+         *
+         * @param ratio The aspect ratio to lock to.
+         *
+         * The ratio is width/height. The current width will be preserved while the height will be adjusted
+         * accordingly.
+         */
+        void lockAspectRatio(float ratio) noexcept;
+
+        /**
+         * @brief Lock the aspect ratio of the window to the current aspect ratio.
+         */
+        void lockCurrentAspectRatio() noexcept;
+
+        /**
+         * @brief Unlock the aspect ratio of the window.
+         */
+        void unlockAspectRatio() noexcept;
+
+        /**
+         * @brief Set the window title.
+         *
+         * @param title The new title of the window.
+         */
+        void updateTitle(std::string_view title) noexcept;
+
+        /**
+         * @brief Check if the window should close.
+         *
+         * Corresponds to `glfwWindowShouldClose`.
+         */
+        bool shouldClose() const noexcept;
+
+        /**
+         * @brief Swap the front and back event queue, then return the front queue.
+         *
+         * Besides of swapping the event queue double buffer, this function also runs tasks queued with
+         * `glfw_cpp::Window::enqueueTask`.
+         */
+        const EventQueue& poll() noexcept;
+
+        /**
+         * @brief Swap the framebuffer of the window.
+         *
+         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
+         * @throw glfw_cpp::PlatformError If platform-specific error occurs.
+         *
+         * @return The time taken between the last call to this function and the current call.
+         *
+         * This function corresponds to `glfwSwapBuffers`.
+         */
         double display();
 
-        // use window (check shouldClose(), poll(), and display() at the same time).
-        // returns deltaTime/frameTime if window is not closed else std::nullopt.
-        // the deltaTime returned is the time taken between display() calls.
-        // will bind() as long as the function runs and unbind() at the end.
+        /**
+         * @brief Use window, check if the window should close, poll events, and display the window at the
+         * same time.
+         *
+         * @param func The function to be called between polling events and displaying the window.
+         * @return std::nullopt if the window should close, otherwise the time it takes between the last call
+         * to `display()` (whether through this function or directly) and the current call.
+         *
+         * This function is a convenience function that combines the `shouldClose()`, `poll()`, and
+         * `display()` functions. It will bind the window at the beginning of the function and unbind it at
+         * the end.
+         */
         std::optional<double> use(std::invocable<const EventQueue&> auto&& func)
         {
             if (shouldClose()) {
@@ -160,8 +276,18 @@ namespace glfw_cpp
             return delta;
         }
 
-        // like use() but it loops until shouldClose() returns true.
-        // the Window will be bind() at the entirety of the loop.
+        /**
+         * @brief Run the window loop; each iteration will check if the window should close, poll events, and
+         * display the window.
+         *
+         * @param func The function to be called between polling events and displaying the window.
+         *
+         * This function is a convenience function that runs the window loop. Your works should be done in the
+         * `func` parameter. The loop will continue until the window should close. The window will be bound
+         * at the beginning of the loop and unbound at the end.
+         *
+         * Basically, this function is an analogue to `use` but with a loop.
+         */
         void run(std::invocable<const EventQueue&> auto&& func)
         {
             bind();
@@ -175,23 +301,72 @@ namespace glfw_cpp
             unbind();
         }
 
-        void enqueueTask(Fun<void()>&& func);
-        void requestClose();
+        /**
+         * @brief Enqueue a task to be run in the window thread.
+         *
+         * @param func The function to be run in the window thread.
+         *
+         * The function will be ran at the time `poll()` is called.
+         */
+        void enqueueTask(Fun<void()>&& func) noexcept;
 
-        // will do nothing when Api::NoApi is set as the instance API
-        void setVsync(bool value);
-        void setCaptureMouse(bool value);
-        void resizeEventQueue(std::size_t newSize);
+        /**
+         * @brief Request the window to close.
+         *
+         * Corresponds to `glfwSetWindowShouldClose`.
+         */
+        void requestClose() noexcept;
 
-        // The function added will be called from the window thread.
-        bool              isVsyncEnabled() const { return m_vsync; }
-        bool              isMouseCaptured() const { return m_captureMouse; }
-        const Properties& properties() const { return m_properties; }
-        double            deltaTime() const;
-        Handle            handle() const { return m_handle; }
+        /**
+         * @brief Set the mouse capture state.
+         *
+         * @param value True to capture the mouse, false to release it.
+         */
+        void setCaptureMouse(bool value) noexcept;
 
-        // may return a defaulted std::thread::id
-        std::thread::id attachedThreadId() const { return m_attachedThreadId; };
+        /**
+         * @brief Resize the event queue to the new size.
+         *
+         * @param newSize The new size of the event queue.
+         *
+         * Every EventQueue in each Window has a fized size. The default size is `s_defaultEventQueueSize`.
+         */
+        void resizeEventQueue(std::size_t newSize) noexcept;
+
+        /**
+         * @brief Get the properties of the window.
+         *
+         * @return The properties of the window.
+         */
+        const Properties& properties() const noexcept { return m_properties; }
+
+        /**
+         * @brief Get last frame time.
+         */
+        double deltaTime() const noexcept { return m_deltaTime; }
+
+        /**
+         * @brief Check whether the window vsync is enabled.
+         */
+        bool isVsyncEnabled() const noexcept { return m_vsync; }
+
+        /**
+         * @brief Check whether the mouse is captured.
+         */
+        bool isMouseCaptured() const noexcept { return m_captureMouse; }
+
+        /**
+         * @brief Get the underlying `GLFWwindow` handle.
+         */
+        Handle handle() const noexcept { return m_handle; }
+
+        /**
+         * @brief Get the thread id that the window is attached to.
+         *
+         * @return The thread id that the window is attached to. If the window is not attached to any thread,
+         * it will return a default-constructed `std::thread::id`.
+         */
+        std::thread::id attachedThreadId() const noexcept { return m_attachedThreadId; };
 
     private:
         Window(
@@ -199,7 +374,7 @@ namespace glfw_cpp
             Handle                         handle,
             Properties&&                   properties,
             bool                           bindImmediately
-        ) noexcept;
+        );
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
@@ -228,9 +403,9 @@ namespace glfw_cpp
 
         static void windowCallbackHelper(GLFWwindow* window, Event&& event) noexcept;
 
-        void pushEvent(Event&& event);
-        void processQueuedTasks();
-        void updateDeltaTime();
+        void pushEvent(Event&& event) noexcept;
+        void processQueuedTasks() noexcept;
+        void updateDeltaTime() noexcept;
 
         std::shared_ptr<WindowManager> m_manager = nullptr;
         Handle                         m_handle  = nullptr;

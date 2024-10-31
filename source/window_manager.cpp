@@ -2,17 +2,16 @@
 #include "glfw_cpp/window_manager.hpp"
 
 #include "util.hpp"
-#include <algorithm>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
+#include <algorithm>
 #include <chrono>
 #include <format>
 #include <functional>
 #include <mutex>
 #include <optional>
-#include <stdexcept>
 #include <thread>
 #include <utility>
 
@@ -20,7 +19,7 @@ using LogLevel = glfw_cpp::Instance::LogLevel;
 
 namespace
 {
-    void configureHints(const glfw_cpp::WindowHint& hint)
+    void configureHints(const glfw_cpp::WindowHint& hint) noexcept
     {
         using F = glfw_cpp::WindowHint::FlagBit;
 
@@ -54,28 +53,12 @@ namespace
 
 namespace glfw_cpp
 {
-    class WindowManager::ErrorAccessFromWrongThread : public std::runtime_error
-    {
-    public:
-        ErrorAccessFromWrongThread(std::thread::id initThreadId)
-            : std::runtime_error{
-                std::format(
-                    "(WindowManager) Instance accessed from different thread from initialization! "
-                    "[at init: {} | current: {}]",
-                    util::getThreadNum(initThreadId),
-                    util::getThreadNum(std::this_thread::get_id())
-                ),
-            }
-        {
-        }
-    };
-
-    void WindowManager::GLFWwindowDeleter::operator()(GLFWwindow* handle) const
+    void WindowManager::GLFWwindowDeleter::operator()(GLFWwindow* handle) const noexcept
     {
         glfwDestroyWindow(handle);
     };
 
-    WindowManager::WindowManager(std::thread::id threadId)
+    WindowManager::WindowManager(std::thread::id threadId) noexcept
         : m_attachedThreadId{ threadId }
     {
         // yeah, that's it.
@@ -90,7 +73,7 @@ namespace glfw_cpp
         bool              bindImmediately
     )
     {
-        validateAccess(true);
+        validateAccess();
         configureHints(hint);
 
         const auto handle = glfwCreateWindow(
@@ -102,7 +85,7 @@ namespace glfw_cpp
         );
         if (handle == nullptr) {
             Instance::logC("(WindowManager) Window creation failed");
-            throw std::runtime_error{ "Failed to create window" };
+            util::throwGlfwError();
         }
         m_windows.emplace_back(handle);
 
@@ -154,20 +137,16 @@ namespace glfw_cpp
         }, bindImmediately };
     }
 
-    void WindowManager::requestDeleteWindow(Window::Handle handle)
+    bool WindowManager::hasWindowOpened()
     {
-        validateAccess(false);
-        std::unique_lock lock{ m_mutex };
-
-        // accept request only for available windows
-        if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
-            m_windowDeleteQueue.push_back(handle);
-        }
+        using Ptr                 = decltype(m_windows)::value_type;
+        const auto shouldNotClose = [](Window::Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
+        return std::ranges::any_of(m_windows, shouldNotClose, &Ptr::get);
     }
 
     void WindowManager::pollEvents(std::optional<std::chrono::milliseconds> pollRate)
     {
-        validateAccess(true);
+        validateAccess();
 
         if (pollRate) {
             auto sleepUntilTime{ std::chrono::steady_clock::now() + *pollRate };
@@ -186,7 +165,7 @@ namespace glfw_cpp
 
     void WindowManager::waitEvents(std::optional<std::chrono::milliseconds> timeout)
     {
-        validateAccess(true);
+        validateAccess();
         if (timeout) {
             using SecondsDouble = std::chrono::duration<double>;
             const auto seconds  = std::chrono::duration_cast<SecondsDouble>(*timeout);
@@ -197,17 +176,18 @@ namespace glfw_cpp
         checkTasks();
     }
 
-    bool WindowManager::hasWindowOpened()
+    void WindowManager::requestDeleteWindow(Window::Handle handle)
     {
-        validateAccess(false);
-        using Ptr                 = decltype(m_windows)::value_type;
-        const auto shouldNotClose = [](Window::Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
-        return std::ranges::any_of(m_windows, shouldNotClose, &Ptr::get);
+        std::unique_lock lock{ m_mutex };
+
+        // accept request only for available windows
+        if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
+            m_windowDeleteQueue.push_back(handle);
+        }
     }
 
     void WindowManager::enqueueWindowTask(Window::Handle handle, Fun<void()>&& task)
     {
-        validateAccess(false);
         std::unique_lock lock{ m_mutex };
         m_windowTaskQueue.emplace_back(handle, std::move(task));
     }
@@ -215,24 +195,16 @@ namespace glfw_cpp
     void WindowManager::enqueueTask(Fun<void()>&& task)
     {
         std::unique_lock lock{ m_mutex };
-        validateAccess(false);
         m_taskQueue.emplace_back(std::move(task));
     }
 
-    std::thread::id WindowManager::attachedThreadId() const
+    void WindowManager::validateAccess() const
     {
-        validateAccess(false);
-        return m_attachedThreadId;
-    }
-
-    void WindowManager::validateAccess(bool checkThread) const
-    {
-        if (checkThread && m_attachedThreadId != std::this_thread::get_id()) {
-            throw ErrorAccessFromWrongThread{ m_attachedThreadId };
-        }
-
-        if (m_attachedThreadId == std::thread::id{}) {
-            throw std::runtime_error{ "WindowManager instance is moved" };
+        if (m_attachedThreadId != std::this_thread::get_id()) {
+            throw WrongThreadAccess{
+                util::getThreadNum(m_attachedThreadId),
+                util::getThreadNum(std::this_thread::get_id()),
+            };
         }
     }
 

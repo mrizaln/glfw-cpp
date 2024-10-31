@@ -95,19 +95,14 @@ namespace glfw_cpp
             CRITICAL,
         };
 
+        // LogFun should be noexcept
         using LogFun = std::function<void(LogLevel level, std::string msg)>;
         using Unique = std::unique_ptr<Instance, void (*)(Instance*)>;
 
         /**
          * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
-         *
-         * @param api The underlying graphics API to use with GLFW.
-         * @param logger The logger function to use.
-         * @return A RAII handle that will terminate GLFW on destruction.
-         *
-         * @throw std::runtime_error If the initialization failed.
          */
-        friend Unique init(Api::Variant&&, Instance::LogFun&&) noexcept(false);
+        friend Unique init(Api::Variant&&, Instance::LogFun&&);
 
         /**
          * @brief Create a WindowManager instance.
@@ -136,34 +131,34 @@ namespace glfw_cpp
         static Instance& get() noexcept;
 
         // can be called from any thread
-        static void log(LogLevel level, std::string msg);
+        static void log(LogLevel level, std::string msg) noexcept;
 
         template <typename... Args>
-        static void logD(std::format_string<Args...> fmt, Args&&... args)
+        static void logD(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::DEBUG, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logI(std::format_string<Args...> fmt, Args&&... args)
+        static void logI(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::INFO, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logW(std::format_string<Args...> fmt, Args&&... args)
+        static void logW(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::WARNING, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logE(std::format_string<Args...> fmt, Args&&... args)
+        static void logE(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::ERROR, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logC(std::format_string<Args...> fmt, Args&&... args)
+        static void logC(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::CRITICAL, std::format(fmt, std::forward<Args>(args)...));
         }
@@ -174,11 +169,18 @@ namespace glfw_cpp
 
     /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
+     *
      * @param api The underlying graphics API to use with GLFW.
      * @param logger The logger function to use.
      * @return A RAII handle that will terminate GLFW on destruction.
+     *
+     * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
+     * @throw glfw_cpp::EmptyLoader if the loader function is empty (OpenGL/OpenGL ES only).
+     * @throw glfw_cpp::ApiUnavailable if the requested client API is unavailable.
+     * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
+     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
      */
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr) noexcept(false);
+    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */

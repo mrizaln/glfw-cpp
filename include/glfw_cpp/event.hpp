@@ -317,7 +317,7 @@ namespace glfw_cpp
          */
         template <typename T>
             requires(not std::is_pointer_v<T>) and IsEventType_v<T>
-        T& get() noexcept(false)
+        T& get()
         {
             return std::get<T>(m_event);
         }
@@ -332,7 +332,7 @@ namespace glfw_cpp
          */
         template <typename T>
             requires(not std::is_pointer_v<T> and IsEventType_v<T>)
-        const T& get() const noexcept(false)
+        const T& get() const
         {
             return std::get<T>(m_event);
         }

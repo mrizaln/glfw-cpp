@@ -1,4 +1,5 @@
 #include "glfw_cpp/input.hpp"
+#include "util.hpp"
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
@@ -164,7 +165,7 @@ namespace glfw_cpp
         return (m_state[bytePos] & mask) != 0;
     }
 
-    std::vector<KeyCode> KeyStateRecord::pressedKeys() const
+    std::vector<KeyCode> KeyStateRecord::pressedKeys() const noexcept
     {
         std::vector<KeyCode> keys;
 
@@ -182,7 +183,7 @@ namespace glfw_cpp
         return keys;
     }
 
-    std::vector<KeyCode> KeyStateRecord::releasedKeys() const
+    std::vector<KeyCode> KeyStateRecord::releasedKeys() const noexcept
     {
         std::vector<KeyCode> keys;
 
@@ -251,30 +252,40 @@ namespace glfw_cpp
     void setClipboardString(const char* string)
     {
         glfwSetClipboardString(nullptr, string);
+        util::checkGlfwError();
     }
 
     std::string_view getClipboardString()
     {
-        return glfwGetClipboardString(nullptr);
+        auto value = glfwGetClipboardString(nullptr);
+        util::checkGlfwError();
+        return value;
     }
 
     double getTime()
     {
-        return glfwGetTime();
+        auto value = glfwGetTime();
+        util::checkGlfwError();
+        return value;
     }
 
     void setTime(double time)
     {
         glfwSetTime(time);
+        util::checkGlfwError();
     }
 
     uint64_t getTimerValue()
     {
-        return glfwGetTimerValue();
+        auto value = glfwGetTimerValue();
+        util::checkGlfwError();
+        return value;
     }
 
     uint64_t getTimerFrequency()
     {
-        return glfwGetTimerFrequency();
+        auto value = glfwGetTimerFrequency();
+        util::checkGlfwError();
+        return value;
     }
 }
