@@ -95,7 +95,7 @@ int main()
             .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::ERROR) {
+            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -138,7 +138,7 @@ int main()
 
         for (const EV& event : events) {
             if (auto* e = event.getIf<EV::KeyPressed>()) {
-                if (e->m_key == KC::ESCAPE && e->m_state == KS::PRESS) {
+                if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                     window.requestClose();
                 }
             }

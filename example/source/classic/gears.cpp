@@ -209,23 +209,23 @@ void key(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
 
     auto& [key, _, action, mods] = event;
 
-    if (action == S::RELEASE) {
+    if (action == S::Release) {
         return;
     }
 
     switch (key) {
     case K::Z:
-        if (mods.test(M::SHIFT)) {
+        if (mods.test(M::Shift)) {
             view_rotz -= 5.0f;
         } else {
             view_rotz += 5.0f;
         }
         break;
-    case K::ESCAPE: window.requestClose();
-    case K::UP: view_rotx += 5.0f; break;
-    case K::DOWN: view_rotx -= 5.0f; break;
-    case K::LEFT: view_roty += 5.0f; break;
-    case K::RIGHT: view_roty -= 5.0f; break;
+    case K::Escape: window.requestClose();
+    case K::Up: view_rotx += 5.0f; break;
+    case K::Down: view_rotx -= 5.0f; break;
+    case K::Left: view_roty += 5.0f; break;
+    case K::Right: view_roty -= 5.0f; break;
     default: return;
     }
 }
@@ -298,7 +298,7 @@ int main()
         );
 
         using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::DEFAULT | H::TRANSPARENT_FRAMEBUFFER, .m_depthBits = 16 };
+        H hint  = { .m_flags = H::Default | H::TransparentFramebuffer, .m_depthBits = 16 };
 
         auto wm     = glfw->createWindowManager();
         auto window = wm->createWindow(hint, "Gears", 300, 300);

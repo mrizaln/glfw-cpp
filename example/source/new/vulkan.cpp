@@ -1157,7 +1157,8 @@ int main()
 
     Vulkan vulkan{ window, "vulkan program" };
 
-    window.run([&](const auto& events) {
+    while (not window.shouldClose()) {
+        const auto& events = window.poll();
         for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.getIf<glfw_cpp::Event::KeyPressed>()) {
                 if (e->m_key == glfw_cpp::KeyCode::Q) {
@@ -1167,6 +1168,8 @@ int main()
         }
 
         vulkan.drawFrame();
+
+        window.display();
         wm->pollEvents();
-    });
+    }
 }

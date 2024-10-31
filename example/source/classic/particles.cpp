@@ -1025,9 +1025,9 @@ int main(int argc, char** argv)
                 glViewport(0, 0, width, height);
                 aspect_ratio = height ? width / (float)height : 1.f;
             } else if (auto* e = event.getIf<EV::KeyPressed>()) {
-                if (e->m_state == KS::PRESS) {
+                if (e->m_state == KS::Press) {
                     switch (e->m_key) {
-                    case KC::ESCAPE: window.requestClose(); break;
+                    case KC::Escape: window.requestClose(); break;
                     case KC::W:
                         wireframe = !wireframe;
                         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);

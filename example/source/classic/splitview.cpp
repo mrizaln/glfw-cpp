@@ -438,7 +438,7 @@ static void mouseButtonFun(const glfw_cpp::Event::ButtonPressed& event)
 
     auto [button, action, mods] = event;
 
-    if ((button == MB::LEFT) && action == MS::PRESS) {
+    if ((button == MB::Left) && action == MS::Press) {
         // Detect which of the four views was clicked
         active_view = 1;
         if (xpos >= width / 2) {
@@ -447,7 +447,7 @@ static void mouseButtonFun(const glfw_cpp::Event::ButtonPressed& event)
         if (ypos >= height / 2) {
             active_view += 2;
         }
-    } else if (button == MB::LEFT) {
+    } else if (button == MB::Left) {
         // Deselect any previously selected view
         active_view = 0;
     }
@@ -462,7 +462,7 @@ static void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPre
 
     auto [key, _, action, mods] = event;
 
-    if (key == KC::ESCAPE && action == KS::PRESS) {
+    if (key == KC::Escape && action == KS::Press) {
         window.requestClose();
     }
 }

@@ -45,7 +45,7 @@ int main()
     auto instance = glfw_cpp::init(glfw::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw::Api::OpenGL::Profile::CORE,
+        .m_profile = glfw::Api::OpenGL::Profile::Core,
         .m_loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 

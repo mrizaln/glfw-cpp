@@ -241,17 +241,17 @@ void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed&
 
     auto& [key, _, state, mods] = event;
 
-    if (state != S::PRESS) {
+    if (state != S::Press) {
         return;
     }
 
-    if (key == K::ESCAPE && mods.test(M::NONE)) {
+    if (key == K::Escape && mods.test(M::None)) {
         window.requestClose();
     }
 
     // should be fullscreen and off (but I haven't implemented adding monitor)
     // TODO: change to fullscreen toggle
-    if ((key == K::ENTER && mods.test(M::ALT)) || (key == K::F11 && mods.test(M::ALT))) {
+    if ((key == K::Enter && mods.test(M::Alt)) || (key == K::F11 && mods.test(M::Alt))) {
         if (window.properties().m_attribute.m_maximized) {
             window.restore();
             std::cout << "restore\n";
@@ -275,11 +275,11 @@ void handleMouseButtonEvent(const glfw_cpp::Event::ButtonPressed& event)
 
     auto& [button, action, mods] = event;
 
-    if (button != B::LEFT) {
+    if (button != B::Left) {
         return;
     }
 
-    if (action == S::PRESS) {
+    if (action == S::Press) {
         override_pos = true;
         setBallPos(cursor_x, cursor_y);
     } else {

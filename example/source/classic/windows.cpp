@@ -43,7 +43,7 @@ int main()
             .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::ERROR) {
+            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -66,10 +66,10 @@ int main()
         };
 
         auto hint = glfw_cpp::WindowHint{
-            .m_flags = glfw_cpp::WindowHint::DEFAULT & ~glfw_cpp::WindowHint::DECORATED,
+            .m_flags = glfw_cpp::WindowHint::Default & ~glfw_cpp::WindowHint::Decorated,
         };
         if (i > 0) {
-            hint.m_flags &= ~glfw_cpp::WindowHint::FOCUS_ON_SHOW;
+            hint.m_flags &= ~glfw_cpp::WindowHint::FocusOnShow;
         }
 
         windows[i] = wm->createWindow(hint, "Learn Multi-Window Example", size, size);
@@ -89,7 +89,7 @@ int main()
 
             glClear(GL_COLOR_BUFFER_BIT);
 
-            if (windows[i].properties().m_keyState.isPressed(glfw_cpp::KeyCode::ESCAPE)) {
+            if (windows[i].properties().m_keyState.isPressed(glfw_cpp::KeyCode::Escape)) {
                 std::ranges::for_each(windows, &glfw_cpp::Window::requestClose);
             }
 

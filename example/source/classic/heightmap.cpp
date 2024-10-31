@@ -377,18 +377,18 @@ int main()
         auto api = glfw_cpp::Api::OpenGL{
             .m_major         = 3,
             .m_minor         = 2,
-            .m_profile       = glfw_cpp::Api::OpenGL::Profile::CORE,
+            .m_profile       = glfw_cpp::Api::OpenGL::Profile::Core,
             .m_forwardCompat = true,
             .m_loader        = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::ERROR) {
+            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
                 fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
             }
         };
 
         using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::DEFAULT & ~H::RESIZABLE };
+        H hint  = { .m_flags = H::Default & ~H::Resizable };
 
         auto glfw   = glfw_cpp::init(api, logger);
         auto wm     = glfw->createWindowManager();
@@ -444,7 +444,7 @@ int main()
 
             for (const EV& event : window.poll()) {
                 if (auto* e = event.getIf<EV::KeyPressed>()) {
-                    if (e->m_key == KC::ESCAPE && e->m_state == KS::PRESS) {
+                    if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                         window.requestClose();
                     }
                 }

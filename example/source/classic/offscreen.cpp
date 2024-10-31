@@ -84,13 +84,13 @@ int main()
             .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::ERROR) {
+            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
                 fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
             }
         };
 
         using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::DEFAULT & ~H::VISIBLE };
+        H hint  = { .m_flags = H::Default & ~H::Visible };
 
         // TODO: implement
         // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);

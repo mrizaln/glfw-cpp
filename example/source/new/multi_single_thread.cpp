@@ -14,7 +14,7 @@ int main()
     auto glfw = glfw_cpp::init(glfw_cpp::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
+        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
         .m_loader  = [](auto handle,
                        auto proc) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
     });

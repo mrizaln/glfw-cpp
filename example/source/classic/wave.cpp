@@ -248,24 +248,24 @@ void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& e
 
     auto [key, _, action, mods] = event;
 
-    if (action != KS::PRESS) {
+    if (action != KS::Press) {
         return;
     }
 
     switch (key) {
-    case KC::ESCAPE: window.requestClose(); break;
-    case KC::SPACE: init_grid(); break;
-    case KC::LEFT: alpha += 5; break;
-    case KC::RIGHT: alpha -= 5; break;
-    case KC::UP: beta -= 5; break;
-    case KC::DOWN: beta += 5; break;
-    case KC::PAGE_UP:
+    case KC::Escape: window.requestClose(); break;
+    case KC::Space: init_grid(); break;
+    case KC::Left: alpha += 5; break;
+    case KC::Right: alpha -= 5; break;
+    case KC::Up: beta -= 5; break;
+    case KC::Down: beta += 5; break;
+    case KC::PageUp:
         zoom -= 0.25f;
         if (zoom < 0.f) {
             zoom = 0.f;
         }
         break;
-    case KC::PAGE_DOWN: zoom += 0.25f; break;
+    case KC::PageDown: zoom += 0.25f; break;
     default: break;
     }
 }
@@ -281,11 +281,11 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::Butt
 
     auto [button, action, mods] = event;
 
-    if (button != MB::LEFT) {
+    if (button != MB::Left) {
         return;
     }
 
-    if (action == MS::PRESS) {
+    if (action == MS::Press) {
         window.setCaptureMouse(true);
         cursorX = window.properties().m_cursor.m_x;
         cursorY = window.properties().m_cursor.m_y;
@@ -360,7 +360,7 @@ int main()
             .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::ERROR) {
+            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }

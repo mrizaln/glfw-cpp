@@ -15,12 +15,12 @@ void logCallback(glfw_cpp::Instance::LogLevel level, std::string message)
     using L  = glfw_cpp::Instance::LogLevel;
     auto str = [&] {
         switch (level) {
-        case L::NONE: return "NONE";
-        case L::DEBUG: return "DEBUG";
-        case L::INFO: return "INFO";
-        case L::WARNING: return "WARNING";
-        case L::ERROR: return "ERROR";
-        case L::CRITICAL: return "CRITICAL";
+        case L::None: return "NONE";
+        case L::Debug: return "DEBUG";
+        case L::Info: return "INFO";
+        case L::Warning: return "WARNING";
+        case L::Error: return "ERROR";
+        case L::Critical: return "CRITICAL";
         default: [[unlikely]] return "UNKNOWN";
         }
     }();
@@ -42,7 +42,7 @@ void handleEvents(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
                 gl::glViewport(0, 0, e.m_width, e.m_height);
             } else if constexpr (std::same_as<Ev, E::KeyPressed>) {
                 using K = glfw_cpp::KeyCode;
-                if (e.m_state != glfw_cpp::KeyState::PRESS) {
+                if (e.m_state != glfw_cpp::KeyState::Press) {
                     return;
                 }
 
@@ -88,7 +88,7 @@ int main()
     auto api = glfw_cpp::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
+        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
         .m_loader  = loader,
     };
 
@@ -98,7 +98,7 @@ int main()
     auto window1 = windowManager->createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
 
     using F      = glfw_cpp::WindowHint::FlagBit;
-    auto hint    = glfw_cpp::WindowHint{ .m_flags = F::DEFAULT ^ F::RESIZABLE };
+    auto hint    = glfw_cpp::WindowHint{ .m_flags = F::Default ^ F::Resizable };
     auto window2 = windowManager->createWindow(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
 
     auto thread1 = std::jthread{ threadFun, std::move(window1), 1.0F, 1 };

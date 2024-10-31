@@ -12,7 +12,7 @@ int main()
     auto instance = glfw_cpp::init(glfw_cpp::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
+        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
         .m_loader  = [](glfw_cpp::Api::GlContext /* handle */,
                        glfw_cpp::Api::GlGetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
@@ -38,7 +38,7 @@ int main()
             event.visit(E::Overloaded{
                 [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.requestClose(); },
                 [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);    },
-                [&](const auto&) {},  // catch-all case
+                [&](const auto& e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
             });
             // clang-format on
         }
@@ -52,7 +52,7 @@ int main()
                 std::cout << "HJKL key pressed all at once\n";
             }
 
-            if (keys.isPressed(K::LEFT_SHIFT) && keys.anyPressed({ K::W, K::A, K::S, K::D })) {
+            if (keys.isPressed(K::LeftShift) && keys.anyPressed({ K::W, K::A, K::S, K::D })) {
                 std::cout << "WASD key pressed with shift key being held\n";
             } else if (keys.anyPressed({ K::W, K::A, K::S, K::D })) {
                 std::cout << "WASD key pressed\n";
