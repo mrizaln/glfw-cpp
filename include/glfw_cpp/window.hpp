@@ -236,6 +236,15 @@ namespace glfw_cpp
         const EventQueue& poll() noexcept;
 
         /**
+         * @brief See last events queued before call to `poll()`
+         *
+         * This function just returns the last events happened before call to `poll()` it does not update the
+         * events, and if consecutive call to this function happen while there is no `poll()` in between,
+         * there will be no change to the event queue.
+         */
+        const EventQueue& events() noexcept { return m_eventQueueFront; }
+
+        /**
          * @brief Swap the framebuffer of the window.
          *
          * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
