@@ -331,7 +331,7 @@ void scroll_callback(const glfw_cpp::Event::Scrolled& event)
 
 void framebuffer_size_callback(const glfw_cpp::Event::FramebufferResized& event)
 {
-    auto [width, height] = event;
+    auto [width, height, _dw, _dh] = event;
 
     float  ratio = 1.f;
     mat4x4 projection;

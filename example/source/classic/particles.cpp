@@ -1021,7 +1021,7 @@ int main(int argc, char** argv)
             using KS = glfw_cpp::KeyState;
 
             if (auto* e = event.getIf<EV::FramebufferResized>()) {
-                auto [width, height] = *e;
+                auto [width, height, _dw, _dh] = *e;
                 glViewport(0, 0, width, height);
                 aspect_ratio = height ? width / (float)height : 1.f;
             } else if (auto* e = event.getIf<EV::KeyPressed>()) {

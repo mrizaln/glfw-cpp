@@ -21,21 +21,35 @@ namespace glfw_cpp
 {
     void Window::window_pos_callback(GLFWwindow* window, int x, int y)
     {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
         windowCallbackHelper(
             window,
             Event::WindowMoved{
-                .m_xPos = x,
-                .m_yPos = y,
+                .m_x  = x,
+                .m_y  = y,
+                .m_dx = x - w->properties().m_pos.m_x,
+                .m_dy = y - w->properties().m_pos.m_y,
             }
         );
     }
     void Window::window_size_callback(GLFWwindow* window, int width, int height)
     {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
         windowCallbackHelper(
             window,
             Event::WindowResized{
-                .m_width  = width,
-                .m_height = height,
+                .m_width        = width,
+                .m_height       = height,
+                .m_widthChange  = width - w->properties().m_dimension.m_width,
+                .m_heightChange = height - w->properties().m_dimension.m_height,
             }
         );
     }
@@ -72,11 +86,18 @@ namespace glfw_cpp
 
     void Window::framebuffer_size_callback(GLFWwindow* window, int width, int height)
     {
+        auto* w = static_cast<Window*>(glfwGetWindowUserPointer(window));
+        if (w == nullptr) {
+            return;
+        }
+
         windowCallbackHelper(
             window,
             Event::FramebufferResized{
-                .m_width  = width,
-                .m_height = height,
+                .m_width        = width,
+                .m_height       = height,
+                .m_widthChange  = width - w->properties().m_framebufferSize.m_width,
+                .m_heightChange = height - w->properties().m_framebufferSize.m_height,
             }
         );
     }
@@ -100,14 +121,13 @@ namespace glfw_cpp
             return;
         }
 
-        // kinda useless using the helper here, but eh, I like consistency
         windowCallbackHelper(
             window,
             Event::CursorMoved{
-                .m_xPos   = x,
-                .m_yPos   = y,
-                .m_xDelta = x - w->properties().m_cursor.m_x,
-                .m_yDelta = y - w->properties().m_cursor.m_y,
+                .m_x  = x,
+                .m_y  = y,
+                .m_dx = x - w->properties().m_cursor.m_x,
+                .m_dy = y - w->properties().m_cursor.m_y,
             }
         );
     }
@@ -127,8 +147,8 @@ namespace glfw_cpp
         windowCallbackHelper(
             window,
             Event::Scrolled{
-                .m_xOffset = x,
-                .m_yOffset = y,
+                .m_dx = x,
+                .m_dy = y,
             }
         );
     }
@@ -492,7 +512,7 @@ namespace glfw_cpp
         m_captureMouse = value;
         m_manager->enqueueTask([this] {
             if (m_captureMouse) {
-                auto [x, y] = m_properties.m_cursor;
+                auto& [x, y] = m_properties.m_cursor;
                 glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
@@ -520,10 +540,10 @@ namespace glfw_cpp
         auto& [_, pos, dim, frame, cursor, attr, btns, keys, __] = m_properties;
         event.visit(util::VisitOverloaded{
             // clang-format off
-            [&](EV::WindowMoved&        e) { pos    = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::WindowMoved&        e) { pos    = { .m_x     = e.m_x,     .m_y      = e.m_y   }; },
             [&](EV::WindowResized&      e) { dim    = { .m_width = e.m_width, .m_height = e.m_height }; },
             [&](EV::FramebufferResized& e) { frame  = { .m_width = e.m_width, .m_height = e.m_height }; },
-            [&](EV::CursorMoved&        e) { cursor = { .m_x     = e.m_xPos,  .m_y      = e.m_yPos   }; },
+            [&](EV::CursorMoved&        e) { cursor = { .m_x     = e.m_x,     .m_y      = e.m_y      }; },
             [&](EV::CursorEntered&      e) { attr.m_hovered   = e.m_entered;   },
             [&](EV::WindowFocused&      e) { attr.m_focused   = e.m_focused;   },
             [&](EV::WindowIconified&    e) { attr.m_iconified = e.m_iconified; },

@@ -52,8 +52,10 @@ namespace glfw_cpp
          */
         struct WindowMoved
         {
-            int m_xPos;
-            int m_yPos;
+            int m_x;
+            int m_y;
+            int m_dx;
+            int m_dy;
         };
 
         /**
@@ -65,6 +67,8 @@ namespace glfw_cpp
         {
             int m_width;
             int m_height;
+            int m_widthChange;
+            int m_heightChange;
         };
 
         /**
@@ -114,6 +118,8 @@ namespace glfw_cpp
         {
             int m_width;
             int m_height;
+            int m_widthChange;
+            int m_heightChange;
         };
 
         /**
@@ -135,10 +141,10 @@ namespace glfw_cpp
          */
         struct CursorMoved
         {
-            double m_xPos;
-            double m_yPos;
-            double m_xDelta;    // delta of current to previous x
-            double m_yDelta;    // delta of current to previous y
+            double m_x;
+            double m_y;
+            double m_dx;
+            double m_dy;
         };
 
         /**
@@ -158,8 +164,8 @@ namespace glfw_cpp
          */
         struct Scrolled
         {
-            double m_xOffset;
-            double m_yOffset;
+            double m_dx;
+            double m_dy;
         };
 
         /**
