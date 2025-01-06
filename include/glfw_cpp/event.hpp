@@ -25,8 +25,8 @@ namespace glfw_cpp
     {
     public:
         /**
-         * @struct Template struct for overloading operator() for multiple event types, can be used with to
-         * visit `Event` throught its `Event::visit` method
+         * @struct Overloaded Struct for overloading operator() for multiple event types, can be used with to
+         * visit `Event` through its `Event::visit` method
          *
          * @tparam Ts List of types or lambdas that have `operator()` defined for each event variant in
          * `Event::Variant`
@@ -292,6 +292,8 @@ namespace glfw_cpp
          * @return The return value of the visitor
          *
          * @throw <exception> If the visitor throws an exception, the exception is propagated
+         *
+         * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
          */
         decltype(auto) visit(auto&& visitor)
         {
@@ -306,6 +308,8 @@ namespace glfw_cpp
          * @return The return value of the visitor
          *
          * @throw <exception> If the visitor throws an exception, the exception is propagated
+         *
+         * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
          */
         decltype(auto) visit(auto&& visitor) const
         {
@@ -493,6 +497,24 @@ namespace glfw_cpp
         EventQueue& operator=(const EventQueue& other) = delete;
 
         /**
+         * @brief Visit all events.
+         *
+         * @param visitor The visitor.
+         * @throw <exception> If the visitor throws an exception, the exception is propagated
+         *
+         * This function is functionally the same as calling `Event::visit` on each event in the queue.
+         *
+         * ```cpp
+         * for (const auto& event : queue) { event.visit(visitor); }
+         * ```
+         *
+         * Notice that this function returns nothing and will iterate all the events in the queue. If you
+         * want to break from the loop or want the visitor to return something, then you better off writing
+         * the loop yourself and use `Event::visit` traditionally.
+         */
+        void visit(auto&& visitor) const;
+
+        /**
          * @brief Get a view of the underlying buffer as a `std::span`
          */
         std::span<const Event> buf() const noexcept { return { m_buffer.get(), capacity() }; }
@@ -653,6 +675,14 @@ namespace glfw_cpp
 
     static_assert(std::forward_iterator<EventQueue::Iterator<false>>);
     static_assert(std::forward_iterator<EventQueue::Iterator<true>>);
+
+    // NOTE: the visit function must be defined in the header since it's a template
+    void EventQueue::visit(auto&& visitor) const
+    {
+        for (const auto& event : *this) {
+            event.visit(visitor);
+        }
+    }
 }
 
 #endif /* end of include guard: EVENT_HPP_Q439GUKLHFWE */
