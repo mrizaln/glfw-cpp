@@ -20,38 +20,43 @@ namespace glfw_cpp
 
         struct Position
         {
-            int m_x;
-            int m_y;
+            int  m_x;
+            int  m_y;
+            auto operator<=>(const Position&) const = default;
         };
 
         struct WorkArea
         {
-            int m_x;
-            int m_y;
-            int m_width;
-            int m_height;
+            int  m_x;
+            int  m_y;
+            int  m_width;
+            int  m_height;
+            auto operator<=>(const WorkArea&) const = default;
         };
 
         struct PhysicalSize
         {
-            int m_width_mm;
-            int m_height_mm;
+            int  m_width_mm;
+            int  m_height_mm;
+            auto operator<=>(const PhysicalSize&) const = default;
         };
 
         struct ContentScale
         {
             float m_x;
             float m_y;
+            auto  operator<=>(const ContentScale&) const = default;
         };
 
         struct VideoMode
         {
-            int m_width;
-            int m_height;
-            int m_red_bits;
-            int m_green_bits;
-            int m_blue_bits;
-            int m_refresh_rate;
+            int  m_width;
+            int  m_height;
+            int  m_red_bits;
+            int  m_green_bits;
+            int  m_blue_bits;
+            int  m_refresh_rate;
+            auto operator<=>(const VideoMode&) const = default;
         };
 
         struct GammaRamp

@@ -2,7 +2,6 @@
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
 #include "glfw_cpp/instance.hpp"
-#include "glfw_cpp/monitor.hpp"
 #include "glfw_cpp/window.hpp"
 
 #include <chrono>
@@ -31,6 +30,7 @@ namespace glfw_cpp
 
     class Instance;
     class Window;
+    class Monitor;
     struct IEventInterceptor;
 
     /**

@@ -43,6 +43,7 @@ namespace glfw_cpp
          */
         struct Empty
         {
+            constexpr bool operator==(const Empty&) const = default;
         };
 
         /**
@@ -52,10 +53,11 @@ namespace glfw_cpp
          */
         struct WindowMoved
         {
-            int m_x;
-            int m_y;
-            int m_dx;
-            int m_dy;
+            int  m_x;
+            int  m_y;
+            int  m_dx;
+            int  m_dy;
+            auto operator<=>(const WindowMoved&) const = default;
         };
 
         /**
@@ -65,10 +67,11 @@ namespace glfw_cpp
          */
         struct WindowResized
         {
-            int m_width;
-            int m_height;
-            int m_width_change;
-            int m_height_change;
+            int  m_width;
+            int  m_height;
+            int  m_width_change;
+            int  m_height_change;
+            auto operator<=>(const WindowResized&) const = default;
         };
 
         /**
@@ -78,6 +81,7 @@ namespace glfw_cpp
          */
         struct WindowClosed
         {
+            constexpr bool operator==(const WindowClosed&) const = default;
         };
 
         /**
@@ -87,6 +91,7 @@ namespace glfw_cpp
          */
         struct WindowRefreshed
         {
+            constexpr bool operator==(const WindowRefreshed&) const = default;
         };
 
         /**
@@ -97,6 +102,7 @@ namespace glfw_cpp
         struct WindowFocused
         {
             bool m_focused;
+            auto operator<=>(const WindowFocused&) const = default;
         };
 
         /**
@@ -107,6 +113,7 @@ namespace glfw_cpp
         struct WindowIconified
         {
             bool m_iconified;
+            auto operator<=>(const WindowIconified&) const = default;
         };
 
         /**
@@ -116,10 +123,11 @@ namespace glfw_cpp
          */
         struct FramebufferResized
         {
-            int m_width;
-            int m_height;
-            int m_width_change;
-            int m_height_change;
+            int  m_width;
+            int  m_height;
+            int  m_width_change;
+            int  m_height_change;
+            auto operator<=>(const FramebufferResized&) const = default;
         };
 
         /**
@@ -132,6 +140,7 @@ namespace glfw_cpp
             MouseButton      m_button;
             MouseButtonState m_state;
             ModifierKey      m_mods;
+            bool             operator==(const ButtonPressed&) const = default;
         };
 
         /**
@@ -145,6 +154,7 @@ namespace glfw_cpp
             double m_y;
             double m_dx;
             double m_dy;
+            auto   operator<=>(const CursorMoved&) const = default;
         };
 
         /**
@@ -155,6 +165,7 @@ namespace glfw_cpp
         struct CursorEntered
         {
             bool m_entered;
+            auto operator<=>(const CursorEntered&) const = default;
         };
 
         /**
@@ -166,6 +177,7 @@ namespace glfw_cpp
         {
             double m_dx;
             double m_dy;
+            auto   operator<=>(const Scrolled&) const = default;
         };
 
         /**
@@ -179,6 +191,7 @@ namespace glfw_cpp
             int         m_scancode;
             KeyState    m_state;
             ModifierKey m_mods;
+            bool        operator==(const KeyPressed&) const = default;
         };
 
         /**
@@ -189,6 +202,7 @@ namespace glfw_cpp
         struct CharInput
         {
             unsigned int m_codepoint;
+            auto         operator<=>(const CharInput&) const = default;
         };
 
         /**
@@ -198,6 +212,7 @@ namespace glfw_cpp
         struct FileDropped
         {
             std::vector<std::filesystem::path> m_files;
+            bool                               operator==(const FileDropped&) const = default;
         };
 
         /**
@@ -208,6 +223,7 @@ namespace glfw_cpp
         struct WindowMaximized
         {
             bool m_maximized;
+            auto operator<=>(const WindowMaximized&) const = default;
         };
 
         /**
@@ -219,6 +235,7 @@ namespace glfw_cpp
         {
             float m_x;
             float m_y;
+            auto  operator<=>(const WindowScaleChanged&) const = default;
         };
 
         /**

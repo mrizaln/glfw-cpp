@@ -40,26 +40,30 @@ namespace glfw_cpp
 
             struct Position
             {
-                int m_x;
-                int m_y;
+                int  m_x;
+                int  m_y;
+                auto operator<=>(const Position&) const = default;
             } m_pos;
 
             struct Dimension
             {
-                int m_width;
-                int m_height;
+                int  m_width;
+                int  m_height;
+                auto operator<=>(const Dimension&) const = default;
             } m_dimension;
 
             struct FramebufferSize
             {
-                int m_width;
-                int m_height;
+                int  m_width;
+                int  m_height;
+                auto operator<=>(const FramebufferSize&) const = default;
             } m_framebuffer_size;
 
             struct CursorPos
             {
                 double m_x;
                 double m_y;
+                auto   operator<=>(const CursorPos&) const = default;
             } m_cursor;
 
             struct Atrribute
@@ -73,6 +77,8 @@ namespace glfw_cpp
                 unsigned int m_floating      : 1 = 0;
                 unsigned int m_auto_iconify  : 1 = 0;
                 unsigned int m_focus_on_show : 1 = 0;
+
+                bool operator==(const Atrribute&) const = default;
             } m_attribute;
 
             MouseButtonStateRecord m_mouse_button_state = {};

@@ -333,6 +333,8 @@ namespace glfw_cpp
          */
         explicit operator int() const noexcept { return static_cast<Base>(m_mods); }
 
+        bool operator==(const ModifierKey&) const = default;
+
     private:
         Base m_mods = 0;
     };
