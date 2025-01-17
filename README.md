@@ -131,11 +131,11 @@ The above example is a single-threaded, one window example. For a multi-window a
 
 The project is documented using Doxygen. There is a Doxygen configuration in [docs](./docs/Doxygen) that can be used to generate a HTML documentation page.
 
-From the root of the project, just run these command (require doxygen binary to be installed). The output of the HTML page is in `docs/doxygen/html`
+From the root of the project, just run this command (require `doxygen` binary to be installed). The output of the HTML page is in `docs/doxygen/html`
 
 ```sh
 cd docs
-doxygen Doxygen
+doxygen docs/Doxygen
 ```
 
 ## TODO
