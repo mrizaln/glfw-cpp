@@ -246,7 +246,7 @@ void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed&
     }
 
     if (key == K::Escape && mods.test(M::None)) {
-        window.requestClose();
+        window.request_close();
     }
 
     // should be fullscreen and off (but I haven't implemented adding monitor)
@@ -623,33 +623,31 @@ int main(void)
             [](auto level, auto msg) { std::cout << std::format("glfw-cpp [{}]: {}\n", (int)level, msg); }
         );
 
-        auto wm     = glfw->createWindowManager();
-        auto window = wm->createWindow({}, "Boing (classic Amiga demo)", 400, 400);
+        auto wm     = glfw->create_window_manager();
+        auto window = wm->create_window({}, "Boing (classic Amiga demo)", 400, 400);
 
-        window.lockCurrentAspectRatio();
+        window.lock_current_aspect_ratio();
 
         reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
         init();
 
         window.run([&](const glfw_cpp::EventQueue& events) {
-            t     = glfw_cpp::getTime();
+            t     = glfw_cpp::get_time();
             dt    = t - t_old;
             t_old = t;
 
             using EV = glfw_cpp::Event;
-            for (const EV& event : events) {
-                event.visit(EV::Overloaded{
-                    [&](const EV::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
-                    [&](const EV::KeyPressed& e) { handleKeyEvent(window, e); },
-                    [&](const EV::CursorMoved& e) { handleCursorEvent(e); },
-                    [&](const EV::ButtonPressed& e) { handleMouseButtonEvent(e); },
-                    [](auto&) {},
-                });
-            }
+            events.visit(EV::Overloaded{
+                [&](const EV::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
+                [&](const EV::KeyPressed& e) { handleKeyEvent(window, e); },
+                [&](const EV::CursorMoved& e) { handleCursorEvent(e); },
+                [&](const EV::ButtonPressed& e) { handleMouseButtonEvent(e); },
+                [](auto&) {},
+            });
 
             display();
 
-            wm->pollEvents();
+            wm->poll_events();
         });
     } catch (std::exception& e) {
         std::cerr << "Exception occurred: " << e.what() << '\n';

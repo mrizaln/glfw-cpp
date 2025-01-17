@@ -5,6 +5,7 @@
 #include <array>
 #include <cstdint>
 #include <initializer_list>
+#include <span>
 #include <string_view>
 #include <utility>
 #include <vector>
@@ -245,7 +246,7 @@ namespace glfw_cpp
          * @param e The modifier key(s) to set.
          */
         auto& set(std::convertible_to<Bit> auto... e) noexcept
-            requires(sizeof...(e) > 0)
+            requires (sizeof...(e) > 0)
         {
             m_mods |= (None | ... | e);
             return *this;
@@ -256,7 +257,7 @@ namespace glfw_cpp
          * @param e The modifier key(s) to unset.
          */
         auto& unset(std::convertible_to<Bit> auto... e) noexcept
-            requires(sizeof...(e) > 0)
+            requires (sizeof...(e) > 0)
         {
             m_mods &= ~(None | ... | e);
             return *this;
@@ -267,7 +268,7 @@ namespace glfw_cpp
          * @param e The modifier key(s) to toggle.
          */
         auto& toggle(std::convertible_to<Bit> auto... e) noexcept
-            requires(sizeof...(e) > 0)
+            requires (sizeof...(e) > 0)
         {
             m_mods ^= (None | ... | e);
             return *this;
@@ -278,8 +279,8 @@ namespace glfw_cpp
          * @param value The value to set the modifier key(s) to.
          * @param e The modifier key(s) to be set.
          */
-        auto& setToValue(bool value, std::convertible_to<Bit> auto... e) noexcept
-            requires(sizeof...(e) > 0)
+        auto& set_to_value(bool value, std::convertible_to<Bit> auto... e) noexcept
+            requires (sizeof...(e) > 0)
         {
             if (value) {
                 return set(std::forward<Bit>(e)...);
@@ -293,7 +294,7 @@ namespace glfw_cpp
          * @param e The modifier key(s) to test.
          */
         bool test(std::convertible_to<Bit> auto... e) const noexcept
-            requires(sizeof...(e) > 0)
+            requires (sizeof...(e) > 0)
         {
             auto flags{ static_cast<Base>((None | ... | e)) };
             if (flags == None) {
@@ -307,8 +308,8 @@ namespace glfw_cpp
          * @brief Test if any of the modifier key(s) are set.
          * @param e The modifier key(s) to test.
          */
-        bool testSome(std::convertible_to<Bit> auto... e) const noexcept
-            requires(sizeof...(e) > 0)
+        bool test_some(std::convertible_to<Bit> auto... e) const noexcept
+            requires (sizeof...(e) > 0)
         {
             auto flags{ static_cast<Base>((None | ... | e)) };
             if (flags == None) {
@@ -353,26 +354,44 @@ namespace glfw_cpp
 
         /**
          * @brief Check if a key is pressed.
-         * @param keyCode The key code to check.
+         * @param key_code The key code to check.
          */
-        bool isPressed(KeyCode keyCode) const noexcept { return getBit(bitPos(keyCode)); }
+        bool is_pressed(KeyCode key_code) const noexcept { return get_bit(bit_pos(key_code)); }
 
         /**
          * @brief Check if all keys are pressed.
-         * @param keyCodes The key codes to check.
+         * @param key_codes The key codes to check.
          */
-        bool allPressed(std::initializer_list<KeyCode> keyCodes) const noexcept
+        bool all_pressed(std::span<const KeyCode> key_codes) const noexcept
         {
-            return std::all_of(keyCodes.begin(), keyCodes.end(), [this](auto k) { return isPressed(k); });
+            return std::all_of(key_codes.begin(), key_codes.end(), [this](auto k) { return is_pressed(k); });
+        }
+
+        /**
+         * @brief Check if all keys are pressed.
+         * @param key_codes The key codes to check.
+         */
+        bool all_pressed(std::initializer_list<KeyCode> key_codes) const noexcept
+        {
+            return std::all_of(key_codes.begin(), key_codes.end(), [this](auto k) { return is_pressed(k); });
         }
 
         /**
          * @brief Check if any key is pressed.
-         * @param keyCodes The key codes to check.
+         * @param key_codes The key codes to check.
          */
-        bool anyPressed(std::initializer_list<KeyCode> keyCodes) const noexcept
+        bool any_pressed(std::span<const KeyCode> key_codes) const noexcept
         {
-            return std::any_of(keyCodes.begin(), keyCodes.end(), [this](auto k) { return isPressed(k); });
+            return std::any_of(key_codes.begin(), key_codes.end(), [this](auto k) { return is_pressed(k); });
+        }
+
+        /**
+         * @brief Check if any key is pressed.
+         * @param key_codes The key codes to check.
+         */
+        bool any_pressed(std::initializer_list<KeyCode> key_codes) const noexcept
+        {
+            return std::any_of(key_codes.begin(), key_codes.end(), [this](auto k) { return is_pressed(k); });
         }
 
         /**
@@ -380,29 +399,29 @@ namespace glfw_cpp
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<KeyCode> pressedKeys() const noexcept;
+        std::vector<KeyCode> pressed_keys() const noexcept;
 
         /**
          * @brief Get the released keys as a vector.
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<KeyCode> releasedKeys() const noexcept;
+        std::vector<KeyCode> released_keys() const noexcept;
 
     private:
         using Element = std::uint64_t;
         using State   = std::array<Element, 2>;
 
         // for friends
-        void setValue(KeyCode keyCode, bool value) noexcept { setBit(bitPos(keyCode), value); }
-        void set(KeyCode keyCode) noexcept { setValue(keyCode, true); }
-        void unset(KeyCode keyCode) noexcept { setValue(keyCode, false); }
+        void set_value(KeyCode key_code, bool value) noexcept { set_bit(bit_pos(key_code), value); }
+        void set(KeyCode key_code) noexcept { set_value(key_code, true); }
+        void unset(KeyCode key_code) noexcept { set_value(key_code, false); }
         void clear() noexcept { m_state.fill(0); };
 
         // impl detail
-        std::size_t bitPos(KeyCode keyCode) const noexcept;
-        void        setBit(std::size_t pos, bool value) noexcept;
-        bool        getBit(std::size_t pos) const noexcept;
+        std::size_t bit_pos(KeyCode key_code) const noexcept;
+        void        set_bit(std::size_t pos, bool value) noexcept;
+        bool        get_bit(std::size_t pos) const noexcept;
 
         State m_state = {};
     };
@@ -424,24 +443,42 @@ namespace glfw_cpp
          * @brief Check if a mouse button is pressed.
          * @param button The mouse button to check.
          */
-        bool isPressed(MouseButton button) const noexcept { return getBit(bitPos(button)); }
+        bool is_pressed(MouseButton button) const noexcept { return get_bit(bit_pos(button)); }
 
         /**
          * @brief Check if all mouse buttons are pressed.
          * @param buttons The mouse buttons to check.
          */
-        bool allPressed(std::initializer_list<MouseButton> buttons) const noexcept
+        bool all_pressed(std::span<const MouseButton> buttons) const noexcept
         {
-            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) { return isPressed(k); });
+            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) { return is_pressed(k); });
+        }
+
+        /**
+         * @brief Check if all mouse buttons are pressed.
+         * @param buttons The mouse buttons to check.
+         */
+        bool all_pressed(std::initializer_list<MouseButton> buttons) const noexcept
+        {
+            return std::all_of(buttons.begin(), buttons.end(), [this](auto k) { return is_pressed(k); });
         }
 
         /**
          * @brief Check if any mouse button is pressed.
          * @param buttons The mouse buttons to check.
          */
-        bool anyPressed(std::initializer_list<MouseButton> buttons) const noexcept
+        bool any_pressed(std::span<const MouseButton> buttons) const noexcept
         {
-            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) { return isPressed(k); });
+            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) { return is_pressed(k); });
+        }
+
+        /**
+         * @brief Check if any mouse button is pressed.
+         * @param buttons The mouse buttons to check.
+         */
+        bool any_pressed(std::initializer_list<MouseButton> buttons) const noexcept
+        {
+            return std::any_of(buttons.begin(), buttons.end(), [this](auto k) { return is_pressed(k); });
         }
 
         /**
@@ -449,28 +486,28 @@ namespace glfw_cpp
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<MouseButton> pressedButtons() const;
+        std::vector<MouseButton> pressed_buttons() const;
 
         /**
          * @brief Get the released mouse buttons as a vector.
          *
          * This function is expensive since it creates a new vector every time it is called. Use sparingly.
          */
-        std::vector<MouseButton> releasedButtons() const;
+        std::vector<MouseButton> released_buttons() const;
 
     private:
         using State = std::uint8_t;
 
         // for friends
-        void setValue(MouseButton button, bool value) noexcept { setBit(bitPos(button), value); }
-        void set(MouseButton button) noexcept { setValue(button, true); }
-        void unset(MouseButton button) noexcept { setValue(button, false); }
+        void set_value(MouseButton button, bool value) noexcept { set_bit(bit_pos(button), value); }
+        void set(MouseButton button) noexcept { set_value(button, true); }
+        void unset(MouseButton button) noexcept { set_value(button, false); }
         void clear() noexcept { m_state = 0; };
 
         // impl detail
-        std::size_t bitPos(MouseButton button) const noexcept;
-        void        setBit(std::size_t pos, bool value) noexcept;
-        bool        getBit(std::size_t pos) const noexcept;
+        std::size_t bit_pos(MouseButton button) const noexcept;
+        void        set_bit(std::size_t pos, bool value) noexcept;
+        bool        get_bit(std::size_t pos) const noexcept;
 
         State m_state = {};
     };
@@ -500,7 +537,7 @@ namespace glfw_cpp
      *
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    void setClipboardString(const char* string);
+    void set_clipboard_string(const char* string);
 
     /**
      * @brief Get the clipboard string.
@@ -508,7 +545,7 @@ namespace glfw_cpp
      *
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    std::string_view getClipboardString();
+    std::string_view get_clipboard_string();
 
     /**
      * @brief Get time in seconds since the GLFW library was initialized.
@@ -516,7 +553,7 @@ namespace glfw_cpp
      *
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    double getTime();
+    double get_time();
 
     /**
      * @brief Set the current GLFW time.
@@ -525,7 +562,7 @@ namespace glfw_cpp
      * The time value must be a positive finite number less than or equal to 18446744073.0.
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    void setTime(double time);
+    void set_time(double time);
 
     /**
      * @brief Get the current value of the raw timer, measured in 1 / frequency seconds.
@@ -533,7 +570,7 @@ namespace glfw_cpp
      *
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    uint64_t getTimerValue();
+    uint64_t get_timer_value();
 
     /**
      * @brief Get the frequency, in Hz, of the raw timer.
@@ -541,7 +578,7 @@ namespace glfw_cpp
      *
      * TODO: move this function to `glfw_cpp::Instance` class
      */
-    uint64_t getTimerFrequency();
+    uint64_t get_timer_frequency();
 }
 
 #endif /* end of include guard: INPUT_HPP_354TKEJR8H */

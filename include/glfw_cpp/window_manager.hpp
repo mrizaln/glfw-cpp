@@ -65,15 +65,15 @@ namespace glfw_cpp
 
         Flag m_flags = FlagBit::Default;
 
-        int m_redBits     = 8;
-        int m_greenBits   = 8;
-        int m_blueBits    = 8;
-        int m_alphaBits   = 8;
-        int m_depthBits   = 24;
-        int m_stencilBits = 8;
+        int m_red_bits     = 8;
+        int m_green_bits   = 8;
+        int m_blue_bits    = 8;
+        int m_alpha_bits   = 8;
+        int m_depth_bits   = 24;
+        int m_stencil_bits = 8;
 
-        int m_samples     = 0;
-        int m_refreshRate = -1;
+        int m_samples      = 0;
+        int m_refresh_rate = -1;
     };
 
     /**
@@ -108,7 +108,7 @@ namespace glfw_cpp
          * @param title The window title.
          * @param width The window width.
          * @param height The window height.
-         * @param bindImmediately Whether to bind the window immediately to current thread.
+         * @param bind_immediately Whether to bind the window immediately to current thread.
          *
          * @thread_safety This function must be called from the main thread.
          *
@@ -119,24 +119,24 @@ namespace glfw_cpp
          * @throw glfw_cpp::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
          * @throw glfw_cpp::PlatformError A platform-specific error occurred.
          */
-        Window createWindow(
+        Window create_window(
             const WindowHint& hint,
             std::string_view  title,
             int               width,
             int               height,
-            bool              bindImmediately = true
+            bool              bind_immediately = true
         );
 
         /**
          * @brief Set an event interceptor.
          *
-         * @param eventInterceptor The event interceptor.
+         * @param event_interceptor The event interceptor.
          *
          * @return The old event interceptor.
          */
-        IEventInterceptor* setEventInterceptor(IEventInterceptor* eventInterceptor) noexcept
+        IEventInterceptor* set_event_interceptor(IEventInterceptor* event_interceptor) noexcept
         {
-            return std::exchange(m_eventInterceptor, eventInterceptor);
+            return std::exchange(m_event_interceptor, event_interceptor);
         }
 
         /**
@@ -144,18 +144,18 @@ namespace glfw_cpp
          *
          * @thread_safety This function can be called from any thread.
          */
-        bool hasWindowOpened();
+        bool has_window_opened();
 
         /**
          * @brief Poll events for all windows.
          *
-         * @param pollRate The poll rate, or `std::nullopt` if no sleep is needed.
+         * @param poll_rate The poll rate, or `std::nullopt` if no sleep is needed.
          *
          * @thread_safety This function must be called from the main thread.
          *
          * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
          */
-        void pollEvents(std::optional<std::chrono::milliseconds> pollRate = {});
+        void poll_events(std::optional<std::chrono::milliseconds> poll_rate = {});
 
         /**
          * @brief Wait for events for all windows.
@@ -166,7 +166,7 @@ namespace glfw_cpp
          *
          * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
          */
-        void waitEvents(std::optional<std::chrono::milliseconds> timeout = {});
+        void wait_events(std::optional<std::chrono::milliseconds> timeout = {});
 
         /**
          * @brief Request to delete a window.
@@ -175,7 +175,7 @@ namespace glfw_cpp
          *
          * @thread_safety This function can be called from any thread.
          */
-        void requestDeleteWindow(Window::Handle handle);
+        void request_delete_window(Window::Handle handle);
 
         /**
          * @brief Enqueue a window task to be processed in the main thread.
@@ -189,7 +189,7 @@ namespace glfw_cpp
          * thread a Window is running on. This function meant to be used for Window tasks that need to be
          * executed in the main thread.
          */
-        void enqueueWindowTask(Window::Handle handle, Fun<void()>&& task);
+        void enqueue_window_task(Window::Handle handle, Fun<void()>&& task);
 
         /**
          * @brief Enqueue a task to be processed in the main thread.
@@ -200,12 +200,12 @@ namespace glfw_cpp
          *
          * This function can be used for any task that needs to be executed in the main thread.
          */
-        void enqueueTask(Fun<void()>&& task);
+        void enqueue_task(Fun<void()>&& task);
 
         /**
          * @brief Get the thread id this manager is attached to.
          */
-        std::thread::id attachedThreadId() const noexcept { return m_attachedThreadId; }
+        std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; }
 
     private:
         struct GLFWwindowDeleter
@@ -220,24 +220,24 @@ namespace glfw_cpp
             Fun<void()>    m_task;
         };
 
-        WindowManager(std::thread::id threadId) noexcept;
+        WindowManager(std::thread::id thread_id) noexcept;
 
         // send event to interceptor, returns the value the interceptor returns. but if there is not
         // interceptor, the returned value will always be true.
-        bool sendInterceptEvent(Window& window, Event& event) noexcept;
+        bool send_intercept_event(Window& window, Event& event) noexcept;
 
-        void validateAccess() const;
-        void checkTasks();
+        void validate_access() const;
+        void check_tasks();
 
         mutable std::mutex m_mutex;    // protects current instance
-        std::thread::id    m_attachedThreadId;
+        std::thread::id    m_attached_thread_id;
 
         std::vector<UniqueGLFWwindow> m_windows;
-        std::vector<Window::Handle>   m_windowDeleteQueue;
-        std::vector<WindowTask>       m_windowTaskQueue;    // window task (checked)
-        std::vector<Fun<void()>>      m_taskQueue;          // general task
+        std::vector<Window::Handle>   m_window_delete_queue;
+        std::vector<WindowTask>       m_window_task_queue;    // window task (checked)
+        std::vector<Fun<void()>>      m_task_queue;           // general task
 
-        IEventInterceptor* m_eventInterceptor = nullptr;
+        IEventInterceptor* m_event_interceptor = nullptr;
     };
 }
 

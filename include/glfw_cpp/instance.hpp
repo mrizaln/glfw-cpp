@@ -53,10 +53,10 @@ namespace glfw_cpp
                 Any,
             };
 
-            int         m_major         = 1;
-            int         m_minor         = 0;
-            Profile     m_profile       = Profile::Core;    // only makes sense for OpenGL 3.2 above
-            bool        m_forwardCompat = true;             // only makes sense for OpenGL 3.0 above
+            int         m_major          = 1;
+            int         m_minor          = 0;
+            Profile     m_profile        = Profile::Core;    // only makes sense for OpenGL 3.2 above
+            bool        m_forward_compat = true;             // only makes sense for OpenGL 3.0 above
             GlLoaderFun m_loader;
         };
 
@@ -104,7 +104,7 @@ namespace glfw_cpp
          * @brief Create a WindowManager instance.
          * @return A shared pointer to the WindowManager instance.
          */
-        std::shared_ptr<WindowManager> createWindowManager() noexcept;
+        std::shared_ptr<WindowManager> create_window_manager() noexcept;
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -121,7 +121,7 @@ namespace glfw_cpp
 
         Instance() = default;
 
-        void setLogger(LogFun&& logger) noexcept;
+        void set_logger(LogFun&& logger) noexcept;
         void reset() noexcept;
 
         static Instance& get() noexcept;
@@ -130,31 +130,31 @@ namespace glfw_cpp
         static void log(LogLevel level, std::string msg) noexcept;
 
         template <typename... Args>
-        static void logD(std::format_string<Args...> fmt, Args&&... args) noexcept
+        static void log_d(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::Debug, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logI(std::format_string<Args...> fmt, Args&&... args) noexcept
+        static void log_i(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::Info, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logW(std::format_string<Args...> fmt, Args&&... args) noexcept
+        static void log_w(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::Warning, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logE(std::format_string<Args...> fmt, Args&&... args) noexcept
+        static void log_e(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::Error, std::format(fmt, std::forward<Args>(args)...));
         }
 
         template <typename... Args>
-        static void logC(std::format_string<Args...> fmt, Args&&... args) noexcept
+        static void log_c(std::format_string<Args...> fmt, Args&&... args) noexcept
         {
             log(LogLevel::Critical, std::format(fmt, std::forward<Args>(args)...));
         }
@@ -177,6 +177,20 @@ namespace glfw_cpp
      * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
      */
     Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
+
+    inline std::string_view to_string(Instance::LogLevel level)
+    {
+        using L = glfw_cpp::Instance::LogLevel;
+        switch (level) {
+        case L::None: return "NONE";
+        case L::Debug: return "DEBUG";
+        case L::Info: return "INFO";
+        case L::Warning: return "WARNING";
+        case L::Error: return "ERROR";
+        case L::Critical: return "CRITICAL";
+        default: [[unlikely]] return "UNKNOWN";
+        }
+    }
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */

@@ -14,10 +14,10 @@
 
 namespace util
 {
-    inline std::size_t getThreadNum(const std::thread::id& threadId)
+    inline std::size_t get_thread_num(const std::thread::id& thread_id)
     {
-        auto hash{ std::hash<std::thread::id>{} };
-        return hash(threadId);
+        auto hash = std::hash<std::thread::id>{};
+        return hash(thread_id);
     }
 
     template <typename... Fs>
@@ -27,20 +27,21 @@ namespace util
     };
 
     template <typename T, typename M>
-        requires requires(M m) {
+        requires requires (M m) {
             m.lock();
             m.unlock();
         }
-    T lockExchange(M& mutex, T& value, T&& newValue)
+    T lock_exchange(M& mutex, T& value, T&& new_value)
     {
-        std::scoped_lock lock{ mutex };
+        auto lock = std::scoped_lock{ mutex };
 
-        T oldValue = std::move(value);
-        value      = std::forward<T>(newValue);
-        return oldValue;
+        T old_value = std::move(value);
+        value       = std::forward<T>(new_value);
+
+        return old_value;
     }
 
-    inline void checkGlfwError()
+    inline void check_glfw_error()
     {
         int error = glfwGetError(nullptr);
 
@@ -64,7 +65,7 @@ namespace util
         // clang-format on
     }
 
-    [[noreturn]] inline void throwGlfwError()
+    [[noreturn]] inline void throw_glfw_error()
     {
         int error = glfwGetError(nullptr);
 

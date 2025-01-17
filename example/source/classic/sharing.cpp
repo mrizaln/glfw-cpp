@@ -85,11 +85,11 @@ int main()
     };
 
     auto glfw = glfw_cpp::init(api, logger);
-    auto wm   = glfw->createWindowManager();
+    auto wm   = glfw->create_window_manager();
 
     std::array<glfw_cpp::Window, 2> windows;
 
-    windows[0] = wm->createWindow({}, "First", 400, 400);
+    windows[0] = wm->create_window({}, "First", 400, 400);
 
     // Create the OpenGL objects inside the first context, created above
     // All objects will be shared with the second context, created below
@@ -101,7 +101,7 @@ int main()
         glGenTextures(1, &texture);
         glBindTexture(GL_TEXTURE_2D, texture);
 
-        srand((unsigned int)glfw_cpp::getTimerValue());
+        srand((unsigned int)glfw_cpp::get_timer_value());
 
         for (y = 0; y < 16; y++) {
             for (x = 0; x < 16; x++) {
@@ -146,11 +146,11 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    windows[1] = wm->createWindow({ .m_share = &windows[0] }, "Second", 400, 400);
+    windows[1] = wm->create_window({ .m_share = &windows[0] }, "Second", 400, 400);
 
     // Only enable vsync for the first of the windows to be swapped to
     // avoid waiting out the interval for each window
-    windows[1].setVsync(false);
+    windows[1].set_vsync(false);
 
     // Place the second window to the right of the first
     {
@@ -159,7 +159,7 @@ int main()
         // glfwGetWindowFrameSize(windows[0].handle(), &left, NULL, &right, NULL);
 
         auto& [_1, pos, dim, _2, _3, _4, _5, _6, _7] = windows[0].properties();
-        windows[1].setWindowPos(pos.m_x + dim.m_width, pos.m_y);
+        windows[1].set_window_pos(pos.m_x + dim.m_width, pos.m_y);
     }
 
     // While objects are shared, the global context state is not and will
@@ -174,7 +174,7 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    while (wm->hasWindowOpened()) {
+    while (wm->has_window_opened()) {
         const vec3 colors[] = { { 0.8f, 0.4f, 1.f }, { 0.3f, 0.4f, 1.f } };
 
         for (std::size_t i = 0; i < 2; i++) {
@@ -185,16 +185,16 @@ int main()
                 using KC = glfw_cpp::KeyCode;
                 using KS = glfw_cpp::KeyState;
 
-                if (auto* e = event.getIf<EV::KeyPressed>()) {
+                if (auto* e = event.get_if<EV::KeyPressed>()) {
                     if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                         // close both
-                        windows[0].requestClose();
-                        windows[1].requestClose();
+                        windows[0].request_close();
+                        windows[1].request_close();
                     }
                 }
             }
 
-            auto [width, height] = windows[i].properties().m_framebufferSize;
+            auto [width, height] = windows[i].properties().m_framebuffer_size;
             glViewport(0, 0, width, height);
 
             mat4x4 mvp;
@@ -207,6 +207,6 @@ int main()
             windows[i].unbind();
         }
 
-        wm->waitEvents();
+        wm->wait_events();
     }
 }

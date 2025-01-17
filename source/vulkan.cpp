@@ -7,25 +7,25 @@
 
 namespace glfw_cpp::vk
 {
-    bool vulkanSupported()
+    bool vulkan_supported()
     {
         return glfwVulkanSupported();
     }
 
-    std::vector<const char*> getRequiredInstanceExtensions()
+    std::vector<const char*> get_required_instance_extensions()
     {
-        uint32_t count;
-        auto     pExtensionNames = glfwGetRequiredInstanceExtensions(&count);
+        auto count             = uint32_t{};
+        auto p_extension_names = glfwGetRequiredInstanceExtensions(&count);
 
-        std::vector<const char*> extensionNames;
-        extensionNames.reserve(count);
+        auto extension_names = std::vector<const char*>{};
+        extension_names.reserve(count);
         for (uint32_t i = 0; i < count; ++i) {
-            extensionNames.push_back(pExtensionNames[i]);
+            extension_names.push_back(p_extension_names[i]);
         }
-        return extensionNames;
+        return extension_names;
     }
 
-    VkResult createSurface(
+    VkResult create_surface(
         const Window&                window,
         VkInstance                   instance,
         const VkAllocationCallbacks* allocator,
@@ -35,17 +35,17 @@ namespace glfw_cpp::vk
         return glfwCreateWindowSurface(instance, window.handle(), allocator, surface);
     }
 
-    bool getPhysicalDevicePresentationSupport(
+    bool get_physical_device_presentation_support(
         VkInstance       instance,
         VkPhysicalDevice device,
-        uint32_t         queueFamily
+        uint32_t         queue_family
     )
     {
-        return glfwGetPhysicalDevicePresentationSupport(instance, device, queueFamily);
+        return glfwGetPhysicalDevicePresentationSupport(instance, device, queue_family);
     }
 
-    VkProc getInstanceProcAddress(VkInstance instance, const char* procName)
+    VkProc get_instance_proc_address(VkInstance instance, const char* proc_name)
     {
-        return glfwGetInstanceProcAddress(instance, procName);
+        return glfwGetInstanceProcAddress(instance, proc_name);
     }
 }

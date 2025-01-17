@@ -79,11 +79,11 @@ int main()
 {
     auto glfw = glfw_cpp::init(
         glfw_cpp::Api::OpenGL{
-            .m_major         = 3,
-            .m_minor         = 3,
-            .m_profile       = glfw_cpp::Api::OpenGL::Profile::Core,
-            .m_forwardCompat = true,
-            .m_loader        = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+            .m_major          = 3,
+            .m_minor          = 3,
+            .m_profile        = glfw_cpp::Api::OpenGL::Profile::Core,
+            .m_forward_compat = true,
+            .m_loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
             if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
@@ -92,8 +92,8 @@ int main()
         }
     );
 
-    auto wm     = glfw->createWindowManager();
-    auto window = wm->createWindow({}, "OpenGL Triangle", 640, 480);
+    auto wm     = glfw->create_window_manager();
+    auto window = wm->create_window({}, "OpenGL Triangle", 640, 480);
 
     // NOTE: OpenGL error checks have been omitted for brevity
 
@@ -133,14 +133,14 @@ int main()
         using KS = glfw_cpp::KeyState;
 
         for (const EV& event : events) {
-            if (auto* e = event.getIf<EV::KeyPressed>()) {
+            if (auto* e = event.get_if<EV::KeyPressed>()) {
                 if (e->m_key == KC::Escape && e->m_state == KS::Press) {
-                    window.requestClose();
+                    window.request_close();
                 }
             }
         }
 
-        const auto [width, height] = window.properties().m_framebufferSize;
+        const auto [width, height] = window.properties().m_framebuffer_size;
         const float ratio          = width / (float)height;
 
         glViewport(0, 0, width, height);
@@ -148,7 +148,7 @@ int main()
 
         mat4x4 m, p, mvp;
         mat4x4_identity(m);
-        mat4x4_rotate_Z(m, m, (float)glfw_cpp::getTime());
+        mat4x4_rotate_Z(m, m, (float)glfw_cpp::get_time());
         mat4x4_ortho(p, -ratio, ratio, -1.f, 1.f, 1.f, -1.f);
         mat4x4_mul(mvp, p, m);
 
@@ -157,6 +157,6 @@ int main()
         glBindVertexArray(vertex_array);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        wm->pollEvents();
+        wm->poll_events();
     });
 }

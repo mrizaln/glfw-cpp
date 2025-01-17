@@ -12,9 +12,9 @@
 namespace glfw_cpp
 {
     // NOTE: every time KeyCode is updated, this function must be updated as well
-    std::size_t KeyStateRecord::bitPos(KeyCode keyCode) const noexcept
+    std::size_t KeyStateRecord::bit_pos(KeyCode key_code) const noexcept
     {
-        switch (keyCode) {
+        switch (key_code) {
             // clang-format off
             case KeyCode::Unknown         : return 0;
             case KeyCode::Space           : return 1;
@@ -136,66 +136,66 @@ namespace glfw_cpp
             case KeyCode::RightControl   : return 117;
             case KeyCode::RightAlt       : return 118;
             case KeyCode::RightSuper     : return 119;
-            case KeyCode::Menu            : return 120;
-            default:                        return 0;       // return 0 for any unhadled KeyCode
+            case KeyCode::Menu           : return 120;
+            default:                       return 0;        // return 0 for any unhadled KeyCode
             // clang-format on
         }
     }
 
-    void KeyStateRecord::setBit(std::size_t pos, bool value) noexcept
+    void KeyStateRecord::set_bit(std::size_t pos, bool value) noexcept
     {
-        constexpr auto ElementBitCount = sizeof(State::value_type) * CHAR_BIT;
-        assert(pos < ElementBitCount * State{}.size());
+        constexpr auto element_bit_count = sizeof(State::value_type) * CHAR_BIT;
+        assert(pos < element_bit_count * State{}.size());
 
-        const auto bytePos = pos / ElementBitCount;
-        const auto bitPos  = pos % ElementBitCount;
+        const auto byte_pos = pos / element_bit_count;
+        const auto bit_pos  = pos % element_bit_count;
 
-        const Element mask = 1ul << bitPos;
-        m_state[bytePos]   = value ? m_state[bytePos] | mask : m_state[bytePos] & ~mask;
+        const Element mask = 1ul << bit_pos;
+        m_state[byte_pos]  = value ? m_state[byte_pos] | mask : m_state[byte_pos] & ~mask;
     }
 
-    bool KeyStateRecord::getBit(std::size_t pos) const noexcept
+    bool KeyStateRecord::get_bit(std::size_t pos) const noexcept
     {
-        constexpr auto ElementBitCount = sizeof(State::value_type) * CHAR_BIT;
-        assert(pos < ElementBitCount * State{}.size());
+        constexpr auto element_bit_count = sizeof(State::value_type) * CHAR_BIT;
+        assert(pos < element_bit_count * State{}.size());
 
-        const auto bytePos = pos / ElementBitCount;
-        const auto bitPos  = pos % ElementBitCount;
+        const auto byte_pos = pos / element_bit_count;
+        const auto bit_pos  = pos % element_bit_count;
 
-        const Element mask = 1ul << bitPos;
-        return (m_state[bytePos] & mask) != 0;
+        const Element mask = 1ul << bit_pos;
+        return (m_state[byte_pos] & mask) != 0;
     }
 
-    std::vector<KeyCode> KeyStateRecord::pressedKeys() const noexcept
+    std::vector<KeyCode> KeyStateRecord::pressed_keys() const noexcept
     {
         std::vector<KeyCode> keys;
 
         // kinda unsafe
         for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
-            if (bitPos(static_cast<KeyCode>(k)) == 0) {
+            if (bit_pos(static_cast<KeyCode>(k)) == 0) {
                 continue;
             }
 
-            if (isPressed(static_cast<KeyCode>(k))) {
+            if (is_pressed(static_cast<KeyCode>(k))) {
                 keys.push_back(static_cast<KeyCode>(k));
             }
         }
         return keys;
     }
 
-    std::vector<KeyCode> KeyStateRecord::releasedKeys() const noexcept
+    std::vector<KeyCode> KeyStateRecord::released_keys() const noexcept
     {
         std::vector<KeyCode> keys;
 
         // kinda unsafe
         for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
-            if (bitPos(static_cast<KeyCode>(k)) == 0) {
+            if (bit_pos(static_cast<KeyCode>(k)) == 0) {
                 continue;
             }
 
-            if (!isPressed(static_cast<KeyCode>(k))) {
+            if (!is_pressed(static_cast<KeyCode>(k))) {
                 keys.push_back(static_cast<KeyCode>(k));
             }
         }
@@ -205,42 +205,42 @@ namespace glfw_cpp
 
 namespace glfw_cpp
 {
-    std::size_t MouseButtonStateRecord::bitPos(MouseButton button) const noexcept
+    std::size_t MouseButtonStateRecord::bit_pos(MouseButton button) const noexcept
     {
         assert(static_cast<std::size_t>(MouseButton::MaxValue) < CHAR_BIT * sizeof(State));
         return static_cast<std::size_t>(button);
     }
 
-    void MouseButtonStateRecord::setBit(std::size_t pos, bool value) noexcept
+    void MouseButtonStateRecord::set_bit(std::size_t pos, bool value) noexcept
     {
         assert(pos < CHAR_BIT * sizeof(State));
         const State mask = static_cast<State>(1u << pos);
         m_state          = value ? m_state | mask : m_state & ~mask;
     }
 
-    bool MouseButtonStateRecord::getBit(std::size_t pos) const noexcept
+    bool MouseButtonStateRecord::get_bit(std::size_t pos) const noexcept
     {
         assert(pos < CHAR_BIT * sizeof(State));
         const State mask = static_cast<State>(1u << pos);
         return (m_state & mask) != 0;
     }
 
-    std::vector<MouseButton> MouseButtonStateRecord::pressedButtons() const
+    std::vector<MouseButton> MouseButtonStateRecord::pressed_buttons() const
     {
         std::vector<MouseButton> buttons;
         for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
-            if (isPressed(static_cast<MouseButton>(b))) {
+            if (is_pressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }
         }
         return buttons;
     }
 
-    std::vector<MouseButton> MouseButtonStateRecord::releasedButtons() const
+    std::vector<MouseButton> MouseButtonStateRecord::released_buttons() const
     {
         std::vector<MouseButton> buttons;
         for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
-            if (!isPressed(static_cast<MouseButton>(b))) {
+            if (!is_pressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }
         }
@@ -250,43 +250,43 @@ namespace glfw_cpp
 
 namespace glfw_cpp
 {
-    void setClipboardString(const char* string)
+    void set_clipboard_string(const char* string)
     {
         glfwSetClipboardString(nullptr, string);
-        util::checkGlfwError();
+        util::check_glfw_error();
     }
 
-    std::string_view getClipboardString()
+    std::string_view get_clipboard_string()
     {
         auto value = glfwGetClipboardString(nullptr);
-        util::checkGlfwError();
+        util::check_glfw_error();
         return value;
     }
 
-    double getTime()
+    double get_time()
     {
         auto value = glfwGetTime();
-        util::checkGlfwError();
+        util::check_glfw_error();
         return value;
     }
 
-    void setTime(double time)
+    void set_time(double time)
     {
         glfwSetTime(time);
-        util::checkGlfwError();
+        util::check_glfw_error();
     }
 
-    uint64_t getTimerValue()
+    uint64_t get_timer_value()
     {
         auto value = glfwGetTimerValue();
-        util::checkGlfwError();
+        util::check_glfw_error();
         return value;
     }
 
-    uint64_t getTimerFrequency()
+    uint64_t get_timer_frequency()
     {
         auto value = glfwGetTimerFrequency();
-        util::checkGlfwError();
+        util::check_glfw_error();
         return value;
     }
 }

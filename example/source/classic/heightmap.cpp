@@ -375,11 +375,11 @@ int main()
 {
     try {
         auto api = glfw_cpp::Api::OpenGL{
-            .m_major         = 3,
-            .m_minor         = 2,
-            .m_profile       = glfw_cpp::Api::OpenGL::Profile::Core,
-            .m_forwardCompat = true,
-            .m_loader        = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+            .m_major          = 3,
+            .m_minor          = 2,
+            .m_profile        = glfw_cpp::Api::OpenGL::Profile::Core,
+            .m_forward_compat = true,
+            .m_loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
             if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
@@ -391,8 +391,8 @@ int main()
         H hint  = { .m_flags = H::Default & ~H::Resizable };
 
         auto glfw   = glfw_cpp::init(api, logger);
-        auto wm     = glfw->createWindowManager();
-        auto window = wm->createWindow(hint, "GLFW OpenGL3 Heightmap demo", 800, 600);
+        auto wm     = glfw->create_window_manager();
+        auto window = wm->create_window(hint, "GLFW OpenGL3 Heightmap demo", 800, 600);
 
         /* Prepare opengl resources for rendering */
         GLuint shader_program = make_shader_program(vertex_shader_text, fragment_shader_text);
@@ -428,24 +428,24 @@ int main()
         /* Create the vbo to store all the information for the grid and the height */
 
         /* setup the scene ready for rendering */
-        auto [width, height] = window.properties().m_framebufferSize;
+        auto [width, height] = window.properties().m_framebuffer_size;
         glViewport(0, 0, width, height);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
         /* main loop */
         int    frame            = 0;
         int    iter             = 0;
-        double last_update_time = glfw_cpp::getTime();
+        double last_update_time = glfw_cpp::get_time();
 
-        while (!window.shouldClose()) {
+        while (!window.should_close()) {
             using EV = glfw_cpp::Event;
             using KC = glfw_cpp::KeyCode;
             using KS = glfw_cpp::KeyState;
 
             for (const EV& event : window.poll()) {
-                if (auto* e = event.getIf<EV::KeyPressed>()) {
+                if (auto* e = event.get_if<EV::KeyPressed>()) {
                     if (e->m_key == KC::Escape && e->m_state == KS::Press) {
-                        window.requestClose();
+                        window.request_close();
                     }
                 }
             }
@@ -457,10 +457,10 @@ int main()
             glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
 
             window.display();
-            wm->pollEvents();
+            wm->poll_events();
 
             /* Check the frame rate and update the heightmap if needed */
-            double dt = glfw_cpp::getTime();
+            double dt = glfw_cpp::get_time();
             if ((dt - last_update_time) > 0.2) {
                 /* generate the next iteration of the heightmap */
                 if (iter < MAX_ITER) {

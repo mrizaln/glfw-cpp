@@ -6,131 +6,144 @@
 
 namespace glfw_cpp
 {
-    // GLFW error codes
-    // -------------------------------------------------------------------------
+    class Error : public std::runtime_error
+    {
+    public:
+        template <typename... Args>
+        Error(std::format_string<Args...> fmt, Args&&... args)
+            : std::runtime_error{ std::format(fmt, std::forward<Args>(args)...) }
+        {
+        }
+    };
 
-    class NotInitialized : public std::runtime_error
+    // GLFW error codes
+    // ----------------
+
+    class NotInitialized : public Error
     {
     public:
         NotInitialized()
-            : std::runtime_error{ "GLFW is not initialized" }
+            : Error{ "GLFW is not initialized" }
         {
         }
     };
 
-    class NoCurrentContext : public std::runtime_error
+    class NoCurrentContext : public Error
     {
     public:
         NoCurrentContext()
-            : std::runtime_error{ "No current OpenGL or OpenGL ES context" }
+            : Error{ "No current OpenGL or OpenGL ES context" }
         {
         }
     };
 
-    class OutOfMemory : public std::runtime_error
+    class OutOfMemory : public Error
     {
     public:
         OutOfMemory()
-            : std::runtime_error{ "A memory allocation failed" }
+            : Error{ "A memory allocation failed" }
         {
         }
     };
 
-    class ApiUnavailable : public std::runtime_error
+    class ApiUnavailable : public Error
     {
     public:
         ApiUnavailable()
-            : std::runtime_error{ "The requested client API is unavailable" }
+            : Error{ "The requested client API is unavailable" }
         {
         }
     };
 
-    class VersionUnavailable : public std::runtime_error
+    class VersionUnavailable : public Error
     {
     public:
         VersionUnavailable()
-            : std::runtime_error{ "The requested client API version is unavailable" }
+            : Error{ "The requested client API version is unavailable" }
         {
         }
     };
 
-    class PlatformError : public std::runtime_error
+    class PlatformError : public Error
     {
     public:
         PlatformError()
-            : std::runtime_error{ "A platform-specific error occurred" }
+            : Error{ "A platform-specific error occurred" }
         {
         }
     };
 
-    class FormatUnavailable : public std::runtime_error
+    class FormatUnavailable : public Error
     {
     public:
         FormatUnavailable()
-            : std::runtime_error{ "The requested format is unavailable" }
+            : Error{ "The requested format is unavailable" }
         {
         }
     };
 
-    class NoWindowContext : public std::runtime_error
+    class NoWindowContext : public Error
     {
     public:
         NoWindowContext()
-            : std::runtime_error{ "The specified window does not have an OpenGL or OpenGL ES context" }
+            : Error{ "The specified window does not have an OpenGL or OpenGL ES context" }
         {
         }
     };
 
-    // glfw-cpp errors
-    // -------------------------------------------------------------------------
+    // ----------------
 
-    class AlreadyInitialized : public std::runtime_error
+    // glfw-cpp errors
+    // ---------------
+
+    class AlreadyInitialized : public Error
     {
     public:
         AlreadyInitialized()
-            : std::runtime_error{ "Instance already initialized" }
+            : Error{ "Instance already initialized" }
         {
         }
     };
 
-    class AlreadyBound : public std::runtime_error
+    class AlreadyBound : public Error
     {
     public:
         // std::formatter<std::thread::id> only available in C++23, damn it
         AlreadyBound(std::size_t current, std::size_t other)
-            : std::runtime_error{ std::format(
-                  "The current context is already bound to another thread: current={}, other={}",
-                  current,
-                  other
-              ) }
-        {
-        }
-    };
-
-    class EmptyLoader : public std::runtime_error
-    {
-    public:
-        EmptyLoader()
-            : std::runtime_error{ "The OpenGL/OpenGL ES loader can't be empty" }
-        {
-        }
-    };
-
-    class WrongThreadAccess : public std::runtime_error
-    {
-    public:
-        WrongThreadAccess(std::size_t init, std::size_t current)
-            : std::runtime_error{
-                std::format(
-                    "(WindowManager) Instance accessed from different thread from initialization! "
-                    "[at init: {} | current: {}]",
-                    init,
-                    current
-                ),
+            : Error{
+                "The current context is already bound to another thread: current={}, other={}",
+                current,
+                other,
             }
         {
         }
     };
+
+    class EmptyLoader : public Error
+    {
+    public:
+        EmptyLoader()
+            : Error{ "The OpenGL/OpenGL ES loader can't be empty" }
+        {
+        }
+    };
+
+    class WrongThreadAccess : public Error
+    {
+    public:
+        WrongThreadAccess(std::size_t init, std::size_t current)
+            : Error{
+
+                "(WindowManager) Instance accessed from different thread from initialization! "
+                "[init: {} | current: {}]",
+                init,
+                current,
+            }
+        {
+        }
+    };
+
+    // ---------------
 }
 
 #endif /* end of include guard: ERROR_HPP_32QWETF9D8 */

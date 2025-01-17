@@ -2,6 +2,7 @@
 #include "plane.hpp"
 
 #include <fmt/core.h>
+#include <fmt/std.h>
 #include <glbinding/glbinding.h>
 #include <glbinding/gl/gl.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -10,66 +11,61 @@
 #include <thread>
 #include <type_traits>
 
-void logCallback(glfw_cpp::Instance::LogLevel level, std::string message)
+std::optional<std::string> read_file(const std::filesystem::path& path)
 {
-    using L  = glfw_cpp::Instance::LogLevel;
-    auto str = [&] {
-        switch (level) {
-        case L::None: return "NONE";
-        case L::Debug: return "DEBUG";
-        case L::Info: return "INFO";
-        case L::Warning: return "WARNING";
-        case L::Error: return "ERROR";
-        case L::Critical: return "CRITICAL";
-        default: [[unlikely]] return "UNKNOWN";
-        }
-    }();
-    fmt::println(stderr, "[GLFW] [{}] {}", str, message);
-}
+    auto file = std::ifstream{ path };
 
-void handleEvents(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
-{
-    for (const glfw_cpp::Event& event : events) {
-        // Event is a std::variant, use visit to see its content. Internally it is using std::visit.
-        // Not the best looking code IMO compared to unsafe manual tagged union (use getIf instead
-        // if you think it would be better or use an overloaded set)
-
-        event.visit([&](auto& e) {
-            using E  = glfw_cpp::Event;
-            using Ev = std::decay_t<decltype(e)>;
-
-            if constexpr (std::same_as<Ev, E::WindowResized>) {
-                gl::glViewport(0, 0, e.m_width, e.m_height);
-            } else if constexpr (std::same_as<Ev, E::KeyPressed>) {
-                using K = glfw_cpp::KeyCode;
-                if (e.m_state != glfw_cpp::KeyState::Press) {
-                    return;
-                }
-
-                switch (e.m_key) {
-                case K::Q: window.requestClose(); break;
-                case K::A: {
-                    static int i = 0;
-                    window.updateTitle(std::format("hi: {}", i++));
-                } break;
-                default: /* nothing */;
-                }
-            } else {
-                /* do nothing */
-            }
-        });
+    if (not file) {
+        fmt::println(stderr, "[Shader] Error reading vertex shader file '{}", path);
+        return std::nullopt;
     }
+
+    auto buffer = std::stringstream{};
+    buffer << file.rdbuf();
+    return buffer.str();
 }
 
-void threadFun(glfw_cpp::Window&& window, float side, float color)
+void handle_events(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
+{
+    // Event is a std::variant, use visit to see its content. Internally it is using std::visit.
+    // Not the best looking code IMO compared to unsafe manual tagged union (use get_if instead
+    // if you think it would be better or use an overloaded set)
+
+    events.visit([&](auto& e) {
+        using E  = glfw_cpp::Event;
+        using Ev = std::decay_t<decltype(e)>;
+
+        if constexpr (std::same_as<Ev, E::WindowResized>) {
+            gl::glViewport(0, 0, e.m_width, e.m_height);
+        } else if constexpr (std::same_as<Ev, E::KeyPressed>) {
+            using K = glfw_cpp::KeyCode;
+            if (e.m_state != glfw_cpp::KeyState::Press) {
+                return;
+            }
+
+            switch (e.m_key) {
+            case K::Q: window.request_close(); break;
+            case K::A: {
+                static int i = 0;
+                window.update_title(std::format("hi: {}", i++));
+            } break;
+            default: /* nothing */;
+            }
+        } else {
+            /* do nothing */
+        }
+    });
+}
+
+void thread_fun(glfw_cpp::Window&& window, std::string_view vs, std::string_view fs, float side, float color)
 {
     window.bind();
 
-    auto shader = Shader{ "asset/shader/shader.vert", "asset/shader/shader.frag" };
+    auto shader = Shader{ vs, fs };
     auto plane  = Plane{ side };
 
-    window.run([&](const glfw_cpp::EventQueue& eventQueue) {
-        handleEvents(window, eventQueue);
+    window.run([&](const glfw_cpp::EventQueue& event_queue) {
+        handle_events(window, event_queue);
 
         gl::glClearColor(0.1F * color, 0.1F * color, 0.11F * color, 1.0F);    // NOLINT
         gl::glClear(gl::GL_COLOR_BUFFER_BIT);
@@ -91,21 +87,25 @@ int main()
         .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
         .m_loader  = loader,
     };
+    auto log = [](auto level, auto str) { fmt::println(stderr, "[GLFW: {:<7}] {}", to_string(level), str); };
 
-    auto glfw          = glfw_cpp::init(api, logCallback);
-    auto windowManager = glfw->createWindowManager();
+    auto glfw = glfw_cpp::init(api, log);
+    auto wm   = glfw->create_window_manager();
 
-    auto window1 = windowManager->createWindow({}, "Learn glfw-cpp 1", 800, 600, false);
+    auto window1 = wm->create_window({}, "Learn glfw-cpp 1", 800, 600, false);
 
     using F      = glfw_cpp::WindowHint::FlagBit;
     auto hint    = glfw_cpp::WindowHint{ .m_flags = F::Default ^ F::Resizable };
-    auto window2 = windowManager->createWindow(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
+    auto window2 = wm->create_window(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
 
-    auto thread1 = std::jthread{ threadFun, std::move(window1), 1.0F, 1 };
-    auto thread2 = std::jthread{ threadFun, std::move(window2), -1.0F, 2 };
+    auto vs_source = read_file("asset/shader/shader.vert").value();
+    auto fs_source = read_file("asset/shader/shader.frag").value();
 
-    while (windowManager->hasWindowOpened()) {
+    auto thread1 = std::jthread{ thread_fun, std::move(window1), vs_source, fs_source, 1.0F, 1 };
+    auto thread2 = std::jthread{ thread_fun, std::move(window2), vs_source, fs_source, -1.0F, 2 };
+
+    while (wm->has_window_opened()) {
         using glfw_cpp::operator""_fps;
-        windowManager->pollEvents(120_fps);    // NOLINT
+        wm->poll_events(120_fps);    // NOLINT
     }
 }

@@ -197,7 +197,7 @@ static void draw()
 /* update animation parameters */
 static void animate()
 {
-    angle = 100.f * (float)glfw_cpp::getTime();
+    angle = 100.f * (float)glfw_cpp::get_time();
 }
 
 /* change view angle, exit upon ESC */
@@ -221,7 +221,7 @@ void key(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
             view_rotz += 5.0f;
         }
         break;
-    case K::Escape: window.requestClose();
+    case K::Escape: window.request_close();
     case K::Up: view_rotx += 5.0f; break;
     case K::Down: view_rotx -= 5.0f; break;
     case K::Left: view_roty += 5.0f; break;
@@ -298,10 +298,10 @@ int main()
         );
 
         using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::Default | H::TransparentFramebuffer, .m_depthBits = 16 };
+        H hint  = { .m_flags = H::Default | H::TransparentFramebuffer, .m_depth_bits = 16 };
 
-        auto wm     = glfw->createWindowManager();
-        auto window = wm->createWindow(hint, "Gears", 300, 300);
+        auto wm     = glfw->create_window_manager();
+        auto window = wm->create_window(hint, "Gears", 300, 300);
 
         reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
         init();
@@ -309,9 +309,9 @@ int main()
         window.run([&](auto&& events) {
             using EV = glfw_cpp::Event;
             for (const EV& event : events) {
-                if (auto* e = event.getIf<EV::FramebufferResized>()) {
+                if (auto* e = event.get_if<EV::FramebufferResized>()) {
                     reshape(e->m_width, e->m_height);
-                } else if (auto* e = event.getIf<EV::KeyPressed>()) {
+                } else if (auto* e = event.get_if<EV::KeyPressed>()) {
                     key(window, *e);
                 }
             }
@@ -319,7 +319,7 @@ int main()
             draw();
             animate();
 
-            wm->pollEvents();
+            wm->poll_events();
         });
     } catch (std::exception& e) {
         std::cerr << "Exception occurred: " << e.what() << '\n';

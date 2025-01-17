@@ -12,12 +12,12 @@
 
 namespace
 {
-    std::string_view errorToString(int glfwErrc)
+    std::string_view error_to_string(int glfw_errc)
     {
 #define CASE_ENTRY(Val)                                                                                      \
     case Val: return #Val
 
-        switch (glfwErrc) {
+        switch (glfw_errc) {
             CASE_ENTRY(GLFW_NOT_INITIALIZED);
             CASE_ENTRY(GLFW_NO_CURRENT_CONTEXT);
             CASE_ENTRY(GLFW_INVALID_ENUM);
@@ -50,7 +50,7 @@ namespace glfw_cpp
         }
     }
 
-    void Instance::setLogger(LogFun&& logger) noexcept
+    void Instance::set_logger(LogFun&& logger) noexcept
     {
         m_loggger = logger;
     }
@@ -92,15 +92,15 @@ namespace glfw_cpp
         instance.m_initialized = true;
 
         glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::logE("(Internal error [{}|{:#8x}]) {}", errorToString(err), err, msg);
+            Instance::log_e("(Internal error [{}|{:#8x}]) {}", error_to_string(err), err, msg);
         });
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
-            util::throwGlfwError();
+            util::throw_glfw_error();
         }
 
-        const auto&& configureApi = util::VisitOverloaded{
+        const auto&& configure_api = util::VisitOverloaded{
             [](Api::OpenGL& api) {
                 if (api.m_major < 0 || api.m_minor < 0) {
                     throw VersionUnavailable{};
@@ -110,7 +110,7 @@ namespace glfw_cpp
                     throw EmptyLoader{};
                 }
 
-                auto glProfile = [&] {
+                auto gl_profile = [&] {
                     using P = glfw_cpp::Api::OpenGL::Profile;
                     switch (api.m_profile) {
                     case P::Core: return GLFW_OPENGL_CORE_PROFILE;
@@ -125,11 +125,11 @@ namespace glfw_cpp
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
 
                 if (api.m_major >= 3 && api.m_minor >= 0) {
-                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.m_forwardCompat);
+                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.m_forward_compat);
                 }
 
                 if (api.m_major >= 3 && api.m_minor >= 2) {
-                    glfwWindowHint(GLFW_OPENGL_PROFILE, glProfile);
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, gl_profile);
                 }
             },
             [](Api::OpenGLES& api) {
@@ -138,14 +138,16 @@ namespace glfw_cpp
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.m_minor);
                 glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
             },
-            [](Api::NoApi&) { glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API); },
+            [](Api::NoApi&) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
+            },
         };
-        std::visit(configureApi, instance.m_api);
+        std::visit(configure_api, instance.m_api);
 
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
 
-    WindowManager::Shared Instance::createWindowManager() noexcept
+    WindowManager::Shared Instance::create_window_manager() noexcept
     {
         // using new here instead of `std::make_shared` since `WindowManager` constructor is private and can
         // only be seen by itself and its friends (`Instance` is one of it, but `std::make_shared` is not).

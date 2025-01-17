@@ -96,8 +96,8 @@ int main()
         // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
 
         auto glfw   = glfw_cpp::init(api, logger);
-        auto wm     = glfw->createWindowManager();
-        auto window = wm->createWindow(hint, "Simple offscreen example", 800, 600);
+        auto wm     = glfw->create_window_manager();
+        auto window = wm->create_window(hint, "Simple offscreen example", 800, 600);
 
         window.bind();
 
@@ -135,7 +135,7 @@ int main()
             vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)(sizeof(float) * 2)
         );
 
-        auto [width, height] = window.properties().m_framebufferSize;
+        auto [width, height] = window.properties().m_framebuffer_size;
         float ratio          = width / (float)height;
 
         glViewport(0, 0, width, height);

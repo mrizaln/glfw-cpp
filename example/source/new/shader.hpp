@@ -1,16 +1,9 @@
 #ifndef SHADER_HPP_CM510QXM
 #define SHADER_HPP_CM510QXM
 
+#include <fmt/core.h>
 #include <glbinding/gl/gl.h>
 #include <glm/glm.hpp>
-
-#include <filesystem>
-#include <format>
-#include <fstream>
-#include <iostream>
-#include <mutex>
-#include <sstream>
-#include <string>
 
 class Shader
 {
@@ -23,44 +16,22 @@ public:
     Shader& operator=(const Shader&) = delete;
     Shader& operator=(Shader&&)      = delete;
 
-    Shader(const std::filesystem::path& vsPath, const std::filesystem::path& fsPath)
-        : m_id{ gl::glCreateProgram() }    // create program
+    Shader(std::string_view vs_source, std::string_view fs_source)
+        : m_id{ gl::glCreateProgram() }
     {
-        // quick dirty hack to prevent data race :>
-        std::unique_lock lock{ s_mutex };
-
-        std::string   vsSource;
-        std::ifstream vsFile{ vsPath };
-        if (!vsFile) {
-            std::cerr << "Error reading vertex shader file: " << vsPath << '\n';
-        } else {
-            std::stringstream buffer;
-            buffer << vsFile.rdbuf();
-            vsSource = buffer.str();
-        }
-
-        std::string   fsSource;
-        std::ifstream fsFile{ fsPath };
-        if (!fsFile) {
-            std::cerr << "Error reading fragment shader file: " << fsPath << '\n';
-        } else {
-            std::stringstream buffer;
-            buffer << fsFile.rdbuf();
-            fsSource = buffer.str();
-        }
-
-        auto vsId{ prepareShader(vsSource, ShaderStage::VERTEX) };
-        auto fsId{ prepareShader(fsSource, ShaderStage::FRAGMENT) };
+        auto vs_id = prepare_shader(vs_source, ShaderStage::Vertex);
+        auto fs_id = prepare_shader(fs_source, ShaderStage::Fragment);
 
         // link shaders to shader program
-        gl::glAttachShader(m_id, vsId);
-        gl::glAttachShader(m_id, fsId);
+        gl::glAttachShader(m_id, vs_id);
+        gl::glAttachShader(m_id, fs_id);
         gl::glLinkProgram(m_id);
-        shaderLinkInfo(m_id);
+
+        shader_link_info(m_id);
 
         // delete shader objects
-        gl::glDeleteShader(vsId);
-        gl::glDeleteShader(fsId);
+        gl::glDeleteShader(vs_id);
+        gl::glDeleteShader(fs_id);
     }
 
     ~Shader() { gl::glDeleteProgram(m_id); }
@@ -70,67 +41,66 @@ public:
 private:
     enum class ShaderStage
     {
-        VERTEX,
-        FRAGMENT,
+        Vertex,
+        Fragment,
     };
 
-    // global mutex for data race prevention when reading file (a hack)
-    static inline std::mutex s_mutex;
+    // // global mutex for data race prevention when reading file (a hack)
+    // static inline std::mutex s_mutex;
 
-    void shaderCompileInfo(gl::GLuint shader, ShaderStage stage)
+    void shader_compile_info(gl::GLuint shader, ShaderStage stage)
     {
-        std::string_view name;
+        auto name = std::string_view{};
         switch (stage) {
-        case ShaderStage::VERTEX: name = "VERTEX"; break;
-        case ShaderStage::FRAGMENT: name = "FRAGMENT"; break;
+        case ShaderStage::Vertex: name = "VERTEX"; break;
+        case ShaderStage::Fragment: name = "FRAGMENT"; break;
         }
 
-        gl::GLint status{};
+        auto status = gl::GLint{};
         gl::glGetShaderiv(shader, gl::GL_COMPILE_STATUS, &status);
         if (status != 1) {
-            gl::GLint maxLength{};
-            gl::GLint logLength{};
+            auto max_len = gl::GLint{};
+            auto log_len = gl::GLint{};
 
-            gl::glGetShaderiv(shader, gl::GL_INFO_LOG_LENGTH, &maxLength);
-            auto* log{ new gl::GLchar[(std::size_t)maxLength] };
-            gl::glGetShaderInfoLog(shader, maxLength, &logLength, log);
-            std::cerr << std::format("Shader compilation of type {} failed:\n{}\n", name, log);
-            delete[] log;
+            gl::glGetShaderiv(shader, gl::GL_INFO_LOG_LENGTH, &max_len);
+            auto log = std::basic_string<gl::GLchar>(static_cast<std::size_t>(max_len), '\0');
+            gl::glGetShaderInfoLog(shader, max_len, &log_len, log.data());
+            fmt::println(stderr, "[Shader] Shader compilation of type {} failed:\n{}\n", name, log);
         }
     }
 
-    void shaderLinkInfo(gl::GLuint program)
+    void shader_link_info(gl::GLuint program)
     {
-        gl::GLint status{};
-        glGetProgramiv(program, gl::GL_LINK_STATUS, &status);
+        auto status = gl::GLint{};
+        gl::glGetProgramiv(program, gl::GL_LINK_STATUS, &status);
         if (status != 1) {
-            gl::GLint maxLength{};
-            gl::GLint logLength{};
+            auto max_len = gl::GLint{};
+            auto log_len = gl::GLint{};
 
-            glGetProgramiv(program, gl::GL_INFO_LOG_LENGTH, &maxLength);
-            auto* log{ new gl::GLchar[(std::size_t)maxLength] };
-            gl::glGetProgramInfoLog(program, maxLength, &logLength, log);
-            std::cerr << "Program linking failed: \n" << log << '\n';
-            delete[] log;
+            gl::glGetProgramiv(program, gl::GL_INFO_LOG_LENGTH, &max_len);
+            auto log = std::basic_string<gl::GLchar>(static_cast<std::size_t>(max_len), '\0');
+            gl::glGetProgramInfoLog(program, max_len, &log_len, log.data());
+            fmt::println(stderr, "[Shader] Program linking failed: {}", log);
         }
     }
 
-    gl::GLuint prepareShader(const std::string& vsSource, ShaderStage stage)
+    gl::GLuint prepare_shader(std::string_view shader_source, ShaderStage stage)
     {
         gl::GLenum type;
         switch (stage) {
-        case ShaderStage::VERTEX: type = gl::GL_VERTEX_SHADER; break;
-        case ShaderStage::FRAGMENT: type = gl::GL_FRAGMENT_SHADER; break;
+        case ShaderStage::Vertex: type = gl::GL_VERTEX_SHADER; break;
+        case ShaderStage::Fragment: type = gl::GL_FRAGMENT_SHADER; break;
         }
 
         // compile vertex shader
-        gl::GLuint  vsId{ glCreateShader(type) };
-        const char* vsSourceCharPtr{ vsSource.c_str() };
-        gl::glShaderSource(vsId, 1, &vsSourceCharPtr, nullptr);
-        gl::glCompileShader(vsId);
-        shaderCompileInfo(vsId, stage);
+        auto  shader_id         = gl::glCreateShader(type);
+        auto* shader_source_ptr = shader_source.data();
+        auto  len               = static_cast<int>(shader_source.size());
+        gl::glShaderSource(shader_id, 1, &shader_source_ptr, &len);
+        gl::glCompileShader(shader_id);
+        shader_compile_info(shader_id, stage);
 
-        return vsId;
+        return shader_id;
     }
 };
 

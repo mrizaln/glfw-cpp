@@ -15,19 +15,19 @@ namespace glfw_cpp::vk
 {
     using VkProc = void (*)(void);
 
-    bool                     vulkanSupported();
-    std::vector<const char*> getRequiredInstanceExtensions();
+    bool                     vulkan_supported();
+    std::vector<const char*> get_required_instance_extensions();
 
 #if defined(VK_VERSION_1_0)
-    VkProc getInstanceProcAddress(VkInstance instance, const char* procName);
+    VkProc get_instance_proc_address(VkInstance instance, const char* proc_name);
 
-    bool getPhysicalDevicePresentationSupport(
+    bool get_physical_device_presentation_support(
         VkInstance       instance,
         VkPhysicalDevice device,
-        uint32_t         queueFamily
+        uint32_t         queue_family
     );
 
-    VkResult createSurface(
+    VkResult create_surface(
         const Window&                window,
         VkInstance                   instance,
         const VkAllocationCallbacks* allocator,
@@ -37,37 +37,37 @@ namespace glfw_cpp::vk
 #endif    // VK_VERSION_1_0
 
 #ifdef VULKAN_HPP
-    inline VkProc getInstanceProcAddress(const ::vk::Instance& instance, const char* procName)
+    inline VkProc get_instance_proc_address(const ::vk::Instance& instance, const char* proc_name)
     {
-        return getInstanceProcAddress(static_cast<VkInstance>(instance), procName);
+        return get_instance_proc_address(static_cast<VkInstance>(instance), proc_name);
     }
 
-    inline bool getPhysicalDevicePresentationSupport(
+    inline bool get_physical_device_presentation_support(
         const ::vk::Instance&       instance,
         const ::vk::PhysicalDevice& device,
-        uint32_t                    queueFamily
+        uint32_t                    queue_family
     )
     {
-        return getPhysicalDevicePresentationSupport(
-            static_cast<VkInstance>(instance), static_cast<VkPhysicalDevice>(device), queueFamily
+        return get_physical_device_presentation_support(
+            static_cast<VkInstance>(instance), static_cast<VkPhysicalDevice>(device), queue_family
         );
     }
 
-    inline ::vk::ResultValue<::vk::SurfaceKHR> createSurface(
+    inline ::vk::ResultValue<::vk::SurfaceKHR> create_surface(
         const Window&                             window,
         const ::vk::Instance&                     instance,
         ::vk::Optional<::vk::AllocationCallbacks> allocator = nullptr
     )
     {
-        VkSurfaceKHR surface;
-        VkResult     result;
-        auto         cInstance = static_cast<VkInstance>(instance);
+        auto surface    = VkSurfaceKHR{};
+        auto result     = VkResult{};
+        auto c_instance = static_cast<VkInstance>(instance);
 
         if (allocator) {
-            auto cAlloc = static_cast<VkAllocationCallbacks>(*allocator);
-            result      = createSurface(window, cInstance, &cAlloc, &surface);
+            auto c_alloc = static_cast<VkAllocationCallbacks>(*allocator);
+            result       = create_surface(window, c_instance, &c_alloc, &surface);
         } else {
-            result = createSurface(window, cInstance, nullptr, &surface);
+            result = create_surface(window, c_instance, nullptr, &surface);
         }
 
         return { ::vk::Result(result), ::vk::SurfaceKHR(surface) };

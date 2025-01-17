@@ -259,7 +259,7 @@ public:
     Vulkan(glfw_cpp::Window& window, const std::string& name)
         : m_window{ &window }
     {
-        std::vector extensions = glfw_cpp::vk::getRequiredInstanceExtensions();
+        std::vector extensions = glfw_cpp::vk::get_required_instance_extensions();
         if constexpr (s_enableValidation) {
             extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
@@ -712,7 +712,7 @@ private:
 
     static vk::UniqueSurfaceKHR createSurface(glfw_cpp::Window& window, const vk::Instance& instance)
     {
-        auto [result, surface] = glfw_cpp::vk::createSurface(window, instance);
+        auto [result, surface] = glfw_cpp::vk::create_surface(window, instance);
         if (result != vk::Result::eSuccess) {
             throw std::runtime_error(std::format("Failed to create window surface: {}", vk::to_string(result))
             );
@@ -1152,17 +1152,17 @@ int main()
     };
 
     auto glfw   = glfw_cpp::init(glfw_cpp::Api::NoApi{}, glfwLogger);
-    auto wm     = glfw->createWindowManager();
-    auto window = wm->createWindow({}, "Learn vulkan", 800, 600);
+    auto wm     = glfw->create_window_manager();
+    auto window = wm->create_window({}, "Learn vulkan", 800, 600);
 
     Vulkan vulkan{ window, "vulkan program" };
 
-    while (not window.shouldClose()) {
+    while (not window.should_close()) {
         const auto& events = window.poll();
         for (const glfw_cpp::Event& event : events) {
-            if (auto* e = event.getIf<glfw_cpp::Event::KeyPressed>()) {
+            if (auto* e = event.get_if<glfw_cpp::Event::KeyPressed>()) {
                 if (e->m_key == glfw_cpp::KeyCode::Q) {
-                    window.requestClose();
+                    window.request_close();
                 }
             }
         }
@@ -1170,6 +1170,6 @@ int main()
         vulkan.drawFrame();
 
         window.display();
-        wm->pollEvents();
+        wm->poll_events();
     }
 }

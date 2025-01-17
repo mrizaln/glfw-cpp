@@ -444,7 +444,7 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
 
     // Wait for particle physics thread to be done
     mtx_lock(&thread_sync.particles_lock);
-    while (!window.shouldClose() && thread_sync.p_frame <= thread_sync.d_frame) {
+    while (!window.should_close() && thread_sync.p_frame <= thread_sync.d_frame) {
         auto     time = std::chrono::system_clock::now().time_since_epoch().count();
         timespec ts   = {
               .tv_sec  = 0,
@@ -855,7 +855,7 @@ static int physics_thread_main(void* arg)
         mtx_lock(&thread_sync.particles_lock);
 
         // Wait for particle drawing to be done
-        while (!window->shouldClose() && thread_sync.p_frame > thread_sync.d_frame) {
+        while (!window->should_close() && thread_sync.p_frame > thread_sync.d_frame) {
             auto     time = std::chrono::system_clock::now().time_since_epoch().count();
             timespec ts   = {
                   .tv_sec  = 0,
@@ -868,7 +868,7 @@ static int physics_thread_main(void* arg)
             cnd_timedwait(&thread_sync.d_done, &thread_sync.particles_lock, &ts);
         }
 
-        if (window->shouldClose()) {
+        if (window->should_close()) {
             break;
         }
 
@@ -905,7 +905,7 @@ int main(int argc, char** argv)
     auto monitor = [&] {
         while ((ch = getopt(argc, argv, "fh")) != -1) {
             switch (ch) {
-            case 'f': return glfw_cpp::getPrimaryMonitor();
+            case 'f': return glfw_cpp::get_primary_monitor();
             case 'h': usage(); exit(EXIT_SUCCESS);
             }
         }
@@ -914,30 +914,30 @@ int main(int argc, char** argv)
 
     auto hint = glfw_cpp::WindowHint{};
     if (monitor) {
-        auto* mode = monitor.currentVideoMode();
+        auto mode = monitor.current_video_mode();
 
         hint.m_monitor = &monitor;
 
-        hint.m_redBits     = mode->redBits;
-        hint.m_greenBits   = mode->greenBits;
-        hint.m_blueBits    = mode->blueBits;
-        hint.m_refreshRate = mode->refreshRate;
+        hint.m_red_bits     = mode.m_red_bits;
+        hint.m_green_bits   = mode.m_green_bits;
+        hint.m_blue_bits    = mode.m_blue_bits;
+        hint.m_refresh_rate = mode.m_refresh_rate;
 
-        width  = mode->width;
-        height = mode->height;
+        width  = mode.m_width;
+        height = mode.m_height;
     } else {
         width  = 640;
         height = 480;
     }
 
-    auto wm     = glfw->createWindowManager();
-    auto window = wm->createWindow(hint, "Particle Engine", width, height);
+    auto wm     = glfw->create_window_manager();
+    auto window = wm->create_window(hint, "Particle Engine", width, height);
 
     // Set initial aspect ratio
-    window.lockCurrentAspectRatio();
+    window.lock_current_aspect_ratio();
 
     if (monitor) {
-        window.setCaptureMouse(true);
+        window.set_capture_mouse(true);
     }
 
     glViewport(0, 0, width, height);
@@ -1008,11 +1008,11 @@ int main(int argc, char** argv)
 
     glfwSetTime(0.0);
 
-    while (wm->hasWindowOpened()) {
-        draw_scene(window, glfw_cpp::getTime());
+    while (wm->has_window_opened()) {
+        draw_scene(window, glfw_cpp::get_time());
 
         // the real polling done here. WindowManager sends the events to Window's events queue here.
-        wm->pollEvents();
+        wm->poll_events();
 
         // this poll returns the events from the queue
         for (const auto& event : window.poll()) {
@@ -1020,14 +1020,14 @@ int main(int argc, char** argv)
             using KC = glfw_cpp::KeyCode;
             using KS = glfw_cpp::KeyState;
 
-            if (auto* e = event.getIf<EV::FramebufferResized>()) {
+            if (auto* e = event.get_if<EV::FramebufferResized>()) {
                 auto [width, height, _dw, _dh] = *e;
                 glViewport(0, 0, width, height);
                 aspect_ratio = height ? width / (float)height : 1.f;
-            } else if (auto* e = event.getIf<EV::KeyPressed>()) {
+            } else if (auto* e = event.get_if<EV::KeyPressed>()) {
                 if (e->m_state == KS::Press) {
                     switch (e->m_key) {
-                    case KC::Escape: window.requestClose(); break;
+                    case KC::Escape: window.request_close(); break;
                     case KC::W:
                         wireframe = !wireframe;
                         glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);

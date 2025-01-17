@@ -253,7 +253,7 @@ void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& e
     }
 
     switch (key) {
-    case KC::Escape: window.requestClose(); break;
+    case KC::Escape: window.request_close(); break;
     case KC::Space: init_grid(); break;
     case KC::Left: alpha += 5; break;
     case KC::Right: alpha -= 5; break;
@@ -286,11 +286,11 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::Butt
     }
 
     if (action == MS::Press) {
-        window.setCaptureMouse(true);
+        window.set_capture_mouse(true);
         cursorX = window.properties().m_cursor.m_x;
         cursorY = window.properties().m_cursor.m_y;
     } else {
-        window.setCaptureMouse(false);
+        window.set_capture_mouse(false);
     }
 }
 
@@ -302,7 +302,7 @@ void cursor_position_callback(glfw_cpp::Window& window, const glfw_cpp::Event::C
 {
     auto [x, y, dx, dy] = event;
 
-    if (window.isMouseCaptured()) {
+    if (window.is_mouse_captured()) {
         alpha += (GLfloat)(x - cursorX) / 10.f;
         beta  += (GLfloat)(y - cursorY) / 10.f;
 
@@ -366,10 +366,10 @@ int main()
         }
     );
 
-    auto wm     = glfw->createWindowManager();
-    auto window = wm->createWindow({}, "Wave Simulation", 640, 480);
+    auto wm     = glfw->create_window_manager();
+    auto window = wm->create_window({}, "Wave Simulation", 640, 480);
 
-    auto [width, height] = window.properties().m_framebufferSize;
+    auto [width, height] = window.properties().m_framebuffer_size;
     framebuffer_size_callback({ width, height });
 
     // Initialize OpenGL
@@ -381,26 +381,24 @@ int main()
     adjust_grid();
 
     // Initialize timer
-    double t_old    = glfw_cpp::getTime() - 0.01;
+    double t_old    = glfw_cpp::get_time() - 0.01;
     double dt_total = 0.0;
 
     window.run([&](const auto& events) {
         using EV = glfw_cpp::Event;
 
-        for (const EV& event : events) {
-            event.visit(EV::Overloaded{
-                // clang-format off
-                [&](const EV::KeyPressed&         e) { key_callback(window, e); },
-                [&](const EV::FramebufferResized& e) { framebuffer_size_callback(e); },
-                [&](const EV::ButtonPressed&      e) { mouse_button_callback(window, e); },
-                [&](const EV::CursorMoved&        e) { cursor_position_callback(window, e); },
-                [&](const EV::Scrolled&           e) { scroll_callback(e); },
-                [](auto) { /* Do nothing */ },
-                // clang-format on
-            });
-        }
+        events.visit(EV::Overloaded{
+            // clang-format off
+            [&](const EV::KeyPressed&         e) { key_callback(window, e); },
+            [&](const EV::FramebufferResized& e) { framebuffer_size_callback(e); },
+            [&](const EV::ButtonPressed&      e) { mouse_button_callback(window, e); },
+            [&](const EV::CursorMoved&        e) { cursor_position_callback(window, e); },
+            [&](const EV::Scrolled&           e) { scroll_callback(e); },
+            [](auto) { /* Do nothing */ },
+            // clang-format on
+        });
 
-        double t = glfw_cpp::getTime();
+        double t = glfw_cpp::get_time();
         dt_total = t - t_old;
         t_old    = t;
 
@@ -420,6 +418,6 @@ int main()
         // Draw wave grid to OpenGL display
         draw_scene();
 
-        wm->pollEvents();
+        wm->poll_events();
     });
 }

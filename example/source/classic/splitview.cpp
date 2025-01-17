@@ -13,7 +13,6 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
-#include <algorithm>
 #if defined(_MSC_VER)
 // Make MS math.h define M_PI
 #    define _USE_MATH_DEFINES
@@ -393,7 +392,7 @@ static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::Event::Cursor
 {
     auto [x, y, dx, dy]          = event;
     auto [wnd_width, wnd_height] = window.properties().m_dimension;
-    auto [fb_width, fb_height]   = window.properties().m_framebufferSize;
+    auto [fb_width, fb_height]   = window.properties().m_framebuffer_size;
 
     double scale = (double)fb_width / (double)wnd_width;
 
@@ -463,7 +462,7 @@ static void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPre
     auto [key, _, action, mods] = event;
 
     if (key == KC::Escape && action == KS::Press) {
-        window.requestClose();
+        window.request_close();
     }
 }
 
@@ -482,35 +481,33 @@ int main()
     );
 
     auto hint   = glfw_cpp::WindowHint{ .m_samples = 4 };
-    auto wm     = glfw->createWindowManager();
-    auto window = wm->createWindow(hint, "Split view demo", 500, 500);
+    auto wm     = glfw->create_window_manager();
+    auto window = wm->create_window(hint, "Split view demo", 500, 500);
 
     glEnable(GL_MULTISAMPLE);
 
-    width  = window.properties().m_framebufferSize.m_width;
-    height = window.properties().m_framebufferSize.m_height;
+    width  = window.properties().m_framebuffer_size.m_width;
+    height = window.properties().m_framebuffer_size.m_height;
 
     framebufferSizeFun(width, height);
 
-    while (wm->hasWindowOpened()) {
-        for (const auto& event : window.poll()) {
-            using EV = glfw_cpp::Event;
-            event.visit(EV::Overloaded{
-                // clang-format off
-                [&](const EV::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
-                [&](const EV::WindowRefreshed&      ) { windowRefreshFun(window); },
-                [&](const EV::CursorMoved&        ev) { cursorPosFun(window, ev); },
-                [&](const EV::ButtonPressed&      ev) { mouseButtonFun(ev); },
-                [&](const EV::KeyPressed&         ev) { key_callback(window, ev); },
-                [](auto&) { /* ignore */ },
-                // clang-format on
-            });
-        }
+    while (wm->has_window_opened()) {
+        using EV = glfw_cpp::Event;
+        window.poll().visit(EV::Overloaded{
+            // clang-format off
+            [&](const EV::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
+            [&](const EV::WindowRefreshed&      ) { windowRefreshFun(window); },
+            [&](const EV::CursorMoved&        ev) { cursorPosFun(window, ev); },
+            [&](const EV::ButtonPressed&      ev) { mouseButtonFun(ev); },
+            [&](const EV::KeyPressed&         ev) { key_callback(window, ev); },
+            [](auto&) { /* ignore */ },
+            // clang-format on
+        });
 
         if (do_redraw) {
             windowRefreshFun(window);
         }
 
-        wm->waitEvents();
+        wm->wait_events();
     }
 }

@@ -19,35 +19,35 @@ using LogLevel = glfw_cpp::Instance::LogLevel;
 
 namespace
 {
-    void configureHints(const glfw_cpp::WindowHint& hint) noexcept
+    void configure_hints(const glfw_cpp::WindowHint& hint) noexcept
     {
         using F = glfw_cpp::WindowHint::FlagBit;
 
-        const auto setFlag = [&](int flag, F bit) {
+        const auto set_flag = [&](int flag, F bit) {
             glfwWindowHint(flag, (hint.m_flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
         };
 
-        setFlag(GLFW_RESIZABLE, F::Resizable);
-        setFlag(GLFW_VISIBLE, F::Visible);
-        setFlag(GLFW_DECORATED, F::Decorated);
-        setFlag(GLFW_FOCUSED, F::Focused);
-        setFlag(GLFW_AUTO_ICONIFY, F::AutoIconify);
-        setFlag(GLFW_FLOATING, F::Floating);
-        setFlag(GLFW_MAXIMIZED, F::Maximized);
-        setFlag(GLFW_CENTER_CURSOR, F::CenterCursor);
-        setFlag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TransparentFramebuffer);
-        setFlag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
-        setFlag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
+        set_flag(GLFW_RESIZABLE, F::Resizable);
+        set_flag(GLFW_VISIBLE, F::Visible);
+        set_flag(GLFW_DECORATED, F::Decorated);
+        set_flag(GLFW_FOCUSED, F::Focused);
+        set_flag(GLFW_AUTO_ICONIFY, F::AutoIconify);
+        set_flag(GLFW_FLOATING, F::Floating);
+        set_flag(GLFW_MAXIMIZED, F::Maximized);
+        set_flag(GLFW_CENTER_CURSOR, F::CenterCursor);
+        set_flag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TransparentFramebuffer);
+        set_flag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
+        set_flag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
 
-        glfwWindowHint(GLFW_RED_BITS, hint.m_redBits);
-        glfwWindowHint(GLFW_GREEN_BITS, hint.m_greenBits);
-        glfwWindowHint(GLFW_BLUE_BITS, hint.m_blueBits);
-        glfwWindowHint(GLFW_ALPHA_BITS, hint.m_alphaBits);
-        glfwWindowHint(GLFW_DEPTH_BITS, hint.m_depthBits);
-        glfwWindowHint(GLFW_STENCIL_BITS, hint.m_stencilBits);
+        glfwWindowHint(GLFW_RED_BITS, hint.m_red_bits);
+        glfwWindowHint(GLFW_GREEN_BITS, hint.m_green_bits);
+        glfwWindowHint(GLFW_BLUE_BITS, hint.m_blue_bits);
+        glfwWindowHint(GLFW_ALPHA_BITS, hint.m_alpha_bits);
+        glfwWindowHint(GLFW_DEPTH_BITS, hint.m_depth_bits);
+        glfwWindowHint(GLFW_STENCIL_BITS, hint.m_stencil_bits);
 
         glfwWindowHint(GLFW_SAMPLES, hint.m_samples);
-        glfwWindowHint(GLFW_REFRESH_RATE, hint.m_refreshRate);
+        glfwWindowHint(GLFW_REFRESH_RATE, hint.m_refresh_rate);
     }
 }
 
@@ -58,23 +58,23 @@ namespace glfw_cpp
         glfwDestroyWindow(handle);
     };
 
-    WindowManager::WindowManager(std::thread::id threadId) noexcept
-        : m_attachedThreadId{ threadId }
+    WindowManager::WindowManager(std::thread::id thread_id) noexcept
+        : m_attached_thread_id{ thread_id }
     {
         // yeah, that's it.
         // attached thread id will not be changed for the lifetime of this class instance.
     }
 
-    Window WindowManager::createWindow(
+    Window WindowManager::create_window(
         const WindowHint& hint,
         std::string_view  title,
         int               width,
         int               height,
-        bool              bindImmediately
+        bool              bind_immediately
     )
     {
-        validateAccess();
-        configureHints(hint);
+        validate_access();
+        configure_hints(hint);
 
         const auto handle = glfwCreateWindow(
             width,
@@ -84,12 +84,12 @@ namespace glfw_cpp
             hint.m_share ? hint.m_share->handle() : nullptr
         );
         if (handle == nullptr) {
-            Instance::logC("(WindowManager) Window creation failed");
-            util::throwGlfwError();
+            Instance::log_c("(WindowManager) Window creation failed");
+            util::throw_glfw_error();
         }
         m_windows.emplace_back(handle);
 
-        Instance::logI("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
+        Instance::log_i("(WindowManager) Window ({:#x}) created", (std::size_t)handle);
 
         glfwSetWindowPosCallback(handle, Window::window_pos_callback);
         glfwSetWindowSizeCallback(handle, Window::window_size_callback);
@@ -108,64 +108,64 @@ namespace glfw_cpp
         glfwSetWindowMaximizeCallback(handle, Window::window_maximize_callback);
         glfwSetWindowContentScaleCallback(handle, Window::window_content_scale_callback);
 
-        int    xPos, yPos, realWidth, realHeight, fbWidth, fbHeight;
-        double xCursor, yCursor;
-        glfwGetWindowPos(handle, &xPos, &yPos);
-        glfwGetWindowSize(handle, &realWidth, &realHeight);
-        glfwGetCursorPos(handle, &xCursor, &yCursor);
-        glfwGetFramebufferSize(handle, &fbWidth, &fbHeight);
+        int    x_pos, y_pos, real_width, real_height, fb_width, fb_height;
+        double x_cursor, y_cursor;
+        glfwGetWindowPos(handle, &x_pos, &y_pos);
+        glfwGetWindowSize(handle, &real_width, &real_height);
+        glfwGetCursorPos(handle, &x_cursor, &y_cursor);
+        glfwGetFramebufferSize(handle, &fb_width, &fb_height);
 
-        auto wmCopy = std::enable_shared_from_this<WindowManager>::shared_from_this();
+        auto wm_copy = std::enable_shared_from_this<WindowManager>::shared_from_this();
 
-        return Window{ wmCopy, handle, Window::Properties{
-            .m_title           = { title.begin(), title.end() },
-            .m_pos             = { xPos, yPos },
-            .m_dimension       = { realWidth, realHeight },
-            .m_framebufferSize = { fbWidth, fbHeight },
-            .m_cursor          = { xCursor, yCursor },
-            .m_attribute       = {
-                .m_iconified   = 0,
-                .m_maximized   = (hint.m_flags & WindowHint::Maximized) != 0,
-                .m_focused     = (hint.m_flags & WindowHint::Focused) != 0,
-                .m_visible     = (hint.m_flags & WindowHint::Visible) != 0,
-                .m_hovered     = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .m_resizable   = (hint.m_flags & WindowHint::Resizable) != 0,
-                .m_floating    = (hint.m_flags & WindowHint::Floating) != 0,
-                .m_autoIconify = (hint.m_flags & WindowHint::AutoIconify) != 0,
-                .m_focusOnShow = (hint.m_flags & WindowHint::FocusOnShow) != 0,
+        return Window{ wm_copy, handle, Window::Properties{
+            .m_title             = { title.begin(), title.end() },
+            .m_pos               = { x_pos, y_pos },
+            .m_dimension         = { real_width, real_height },
+            .m_framebuffer_size  = { fb_width, fb_height },
+            .m_cursor            = { x_cursor, y_cursor },
+            .m_attribute         = {
+                .m_iconified     = 0,
+                .m_maximized     = (hint.m_flags & WindowHint::Maximized) != 0,
+                .m_focused       = (hint.m_flags & WindowHint::Focused) != 0,
+                .m_visible       = (hint.m_flags & WindowHint::Visible) != 0,
+                .m_hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .m_resizable     = (hint.m_flags & WindowHint::Resizable) != 0,
+                .m_floating      = (hint.m_flags & WindowHint::Floating) != 0,
+                .m_auto_iconify  = (hint.m_flags & WindowHint::AutoIconify) != 0,
+                .m_focus_on_show = (hint.m_flags & WindowHint::FocusOnShow) != 0,
             },
-        }, bindImmediately };
+        }, bind_immediately };
     }
 
-    bool WindowManager::hasWindowOpened()
+    bool WindowManager::has_window_opened()
     {
-        using Ptr                 = decltype(m_windows)::value_type;
-        const auto shouldNotClose = [](Window::Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
-        return std::ranges::any_of(m_windows, shouldNotClose, &Ptr::get);
+        using Ptr                   = decltype(m_windows)::value_type;
+        const auto should_not_close = [](Window::Handle h) { return glfwWindowShouldClose(h) != GLFW_TRUE; };
+        return std::ranges::any_of(m_windows, should_not_close, &Ptr::get);
     }
 
-    void WindowManager::pollEvents(std::optional<std::chrono::milliseconds> pollRate)
+    void WindowManager::poll_events(std::optional<std::chrono::milliseconds> poll_rate)
     {
-        validateAccess();
+        validate_access();
 
-        if (pollRate) {
-            auto sleepUntilTime{ std::chrono::steady_clock::now() + *pollRate };
+        if (poll_rate) {
+            auto sleep_until_time = std::chrono::steady_clock::now() + *poll_rate;
 
             glfwPollEvents();
-            checkTasks();
+            check_tasks();
 
-            if (sleepUntilTime > std::chrono::steady_clock::now()) {
-                std::this_thread::sleep_until(sleepUntilTime);
+            if (sleep_until_time > std::chrono::steady_clock::now()) {
+                std::this_thread::sleep_until(sleep_until_time);
             }
         } else {
             glfwPollEvents();
-            checkTasks();
+            check_tasks();
         }
     }
 
-    void WindowManager::waitEvents(std::optional<std::chrono::milliseconds> timeout)
+    void WindowManager::wait_events(std::optional<std::chrono::milliseconds> timeout)
     {
-        validateAccess();
+        validate_access();
         if (timeout) {
             using SecondsDouble = std::chrono::duration<double>;
             const auto seconds  = std::chrono::duration_cast<SecondsDouble>(*timeout);
@@ -173,56 +173,56 @@ namespace glfw_cpp
         } else {
             glfwWaitEvents();
         }
-        checkTasks();
+        check_tasks();
     }
 
-    void WindowManager::requestDeleteWindow(Window::Handle handle)
+    void WindowManager::request_delete_window(Window::Handle handle)
     {
         std::unique_lock lock{ m_mutex };
 
         // accept request only for available windows
         if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
-            m_windowDeleteQueue.push_back(handle);
+            m_window_delete_queue.push_back(handle);
         }
     }
 
-    void WindowManager::enqueueWindowTask(Window::Handle handle, Fun<void()>&& task)
+    void WindowManager::enqueue_window_task(Window::Handle handle, Fun<void()>&& task)
     {
         std::unique_lock lock{ m_mutex };
-        m_windowTaskQueue.emplace_back(handle, std::move(task));
+        m_window_task_queue.emplace_back(handle, std::move(task));
     }
 
-    void WindowManager::enqueueTask(Fun<void()>&& task)
+    void WindowManager::enqueue_task(Fun<void()>&& task)
     {
         std::unique_lock lock{ m_mutex };
-        m_taskQueue.emplace_back(std::move(task));
+        m_task_queue.emplace_back(std::move(task));
     }
 
-    void WindowManager::validateAccess() const
+    void WindowManager::validate_access() const
     {
-        if (m_attachedThreadId != std::this_thread::get_id()) {
+        if (m_attached_thread_id != std::this_thread::get_id()) {
             throw WrongThreadAccess{
-                util::getThreadNum(m_attachedThreadId),
-                util::getThreadNum(std::this_thread::get_id()),
+                util::get_thread_num(m_attached_thread_id),
+                util::get_thread_num(std::this_thread::get_id()),
             };
         }
     }
 
-    void WindowManager::checkTasks()
+    void WindowManager::check_tasks()
     {
         // window deletion
-        for (auto handle : util::lockExchange(m_mutex, m_windowDeleteQueue, {})) {
+        for (auto handle : util::lock_exchange(m_mutex, m_window_delete_queue, {})) {
             if (std::erase_if(m_windows, [handle](auto& e) { return e.get() == handle; }) != 0) {
-                Instance::logI("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
+                Instance::log_i("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
             }
         }
 
         // window task requests
-        for (auto&& [handle, task] : util::lockExchange(m_mutex, m_windowTaskQueue, {})) {
+        for (auto&& [handle, task] : util::lock_exchange(m_mutex, m_window_task_queue, {})) {
             if (std::ranges::find(m_windows, handle, &UniqueGLFWwindow::get) != m_windows.end()) {
                 task();
             } else {
-                Instance::logW(
+                Instance::log_w(
                     "(WindowManager) Task for window ({:#x}) failed: window has destroyed",
                     (std::size_t)handle
                 );
@@ -230,36 +230,36 @@ namespace glfw_cpp
         }
 
         // general task request
-        for (auto&& task : std::exchange(m_taskQueue, {})) {
+        for (auto&& task : std::exchange(m_task_queue, {})) {
             task();
         }
     }
 
-    bool WindowManager::sendInterceptEvent(Window& window, Event& event) noexcept
+    bool WindowManager::send_intercept_event(Window& window, Event& event) noexcept
     {
-        if (!m_eventInterceptor) {
+        if (!m_event_interceptor) {
             return true;
         }
 
-        auto& intr = *m_eventInterceptor;
+        auto& intr = *m_event_interceptor;
         return event.visit(Event::Overloaded{
             // clang-format off
-            [&](Event::WindowMoved&        event) { return intr.onWindowMoved       (window, event); },
-            [&](Event::WindowResized&      event) { return intr.onWindowResized     (window, event); },
-            [&](Event::WindowClosed&       event) { return intr.onWindowClosed      (window, event); },
-            [&](Event::WindowRefreshed&    event) { return intr.onWindowRefreshed   (window, event); },
-            [&](Event::WindowFocused&      event) { return intr.onWindowFocused     (window, event); },
-            [&](Event::WindowIconified&    event) { return intr.onWindowIconified   (window, event); },
-            [&](Event::WindowMaximized&    event) { return intr.onWindowMaximized   (window, event); },
-            [&](Event::WindowScaleChanged& event) { return intr.onWindowScaleChanged(window, event); },
-            [&](Event::FramebufferResized& event) { return intr.onFramebufferResized(window, event); },
-            [&](Event::ButtonPressed&      event) { return intr.onButtonPressed     (window, event); },
-            [&](Event::CursorMoved&        event) { return intr.onCursorMoved       (window, event); },
-            [&](Event::CursorEntered&      event) { return intr.onCursorEntered     (window, event); },
-            [&](Event::Scrolled&           event) { return intr.onScrolled          (window, event); },
-            [&](Event::KeyPressed&         event) { return intr.onKeyPressed        (window, event); },
-            [&](Event::CharInput&          event) { return intr.onCharInput         (window, event); },
-            [&](Event::FileDropped&        event) { return intr.onFileDropped       (window, event); },
+            [&](Event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
+            [&](Event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
+            [&](Event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
+            [&](Event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
+            [&](Event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
+            [&](Event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
+            [&](Event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
+            [&](Event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
+            [&](Event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
+            [&](Event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
+            [&](Event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
+            [&](Event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
+            [&](Event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
+            [&](Event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
+            [&](Event::CharInput&          event) { return intr.on_char_input          (window, event); },
+            [&](Event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
             [&](Event::Empty&                   ) { return true; /* always true                   */ },
             // clang-format on
         });

@@ -67,8 +67,8 @@ namespace glfw_cpp
         {
             int m_width;
             int m_height;
-            int m_widthChange;
-            int m_heightChange;
+            int m_width_change;
+            int m_height_change;
         };
 
         /**
@@ -118,8 +118,8 @@ namespace glfw_cpp
         {
             int m_width;
             int m_height;
-            int m_widthChange;
-            int m_heightChange;
+            int m_width_change;
+            int m_height_change;
         };
 
         /**
@@ -217,8 +217,8 @@ namespace glfw_cpp
          */
         struct WindowScaleChanged
         {
-            float m_xScale;
-            float m_yScale;
+            float m_x;
+            float m_y;
         };
 
         /**
@@ -239,7 +239,7 @@ namespace glfw_cpp
          */
         struct JoystickConnected
         {
-            int  m_joystickId;    // No dedicated wrapper class for joystick for now
+            int  m_joystick_id;    // No dedicated wrapper class for joystick for now
             bool m_connected;
         };
 
@@ -269,7 +269,7 @@ namespace glfw_cpp
         using Variant = std::variant<GLFW_CPP_EVENT_TYPE_LIST>;
 
         template <typename T>
-        static constexpr bool IsEventType_v = detail::IsAnyOf<T, GLFW_CPP_EVENT_TYPE_LIST>;
+        static constexpr bool is_event_type = detail::IsAnyOf<T, GLFW_CPP_EVENT_TYPE_LIST>;
 
 #undef GLFW_CPP_EVENT_TYPE_LIST
 
@@ -279,7 +279,7 @@ namespace glfw_cpp
         }
 
         template <typename E>
-            requires IsEventType_v<E>
+            requires is_event_type<E>
         Event(E&& event) noexcept
             : m_event{ std::move(event) }
         {
@@ -326,7 +326,7 @@ namespace glfw_cpp
          * @throw std::bad_variant_access If the event is not of the specified type
          */
         template <typename T>
-            requires(not std::is_pointer_v<T>) and IsEventType_v<T>
+            requires (not std::is_pointer_v<T>) and is_event_type<T>
         T& get()
         {
             return std::get<T>(m_event);
@@ -341,7 +341,7 @@ namespace glfw_cpp
          * @throw std::bad_variant_access If the event is not of the specified type
          */
         template <typename T>
-            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
+            requires (not std::is_pointer_v<T> and is_event_type<T>)
         const T& get() const
         {
             return std::get<T>(m_event);
@@ -354,8 +354,8 @@ namespace glfw_cpp
          * @return Pointer to the event, or nullptr if the event is not of the specified type
          */
         template <typename T>
-            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
-        T* getIf() noexcept
+            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        T* get_if() noexcept
         {
             return std::get_if<T>(&m_event);
         }
@@ -367,8 +367,8 @@ namespace glfw_cpp
          * @return Pointer to the event, or nullptr if the event is not of the specified type
          */
         template <typename T>
-            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
-        const T* getIf() const noexcept
+            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        const T* get_if() const noexcept
         {
             return std::get_if<T>(&m_event);
         }
@@ -380,7 +380,7 @@ namespace glfw_cpp
          * @param event Event to set
          */
         template <typename T>
-            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
+            requires (not std::is_pointer_v<T> and is_event_type<T>)
         void set(T&& event) noexcept
         {
             m_event = std::forward<T>(event);
@@ -393,7 +393,7 @@ namespace glfw_cpp
          * @return true If the event holds the specified type
          */
         template <typename T>
-            requires(not std::is_pointer_v<T> and IsEventType_v<T>)
+            requires (not std::is_pointer_v<T> and is_event_type<T>)
         bool holds() const noexcept
         {
             return std::holds_alternative<T>(m_event);
@@ -415,26 +415,27 @@ namespace glfw_cpp
     {
     public:
         // clang-format off
-        virtual bool onWindowMoved       (Window& window, Event::WindowMoved&        event) noexcept = 0;
-        virtual bool onWindowResized     (Window& window, Event::WindowResized&      event) noexcept = 0;
-        virtual bool onWindowClosed      (Window& window, Event::WindowClosed&       event) noexcept = 0;
-        virtual bool onWindowRefreshed   (Window& window, Event::WindowRefreshed&    event) noexcept = 0;
-        virtual bool onWindowFocused     (Window& window, Event::WindowFocused&      event) noexcept = 0;
-        virtual bool onWindowIconified   (Window& window, Event::WindowIconified&    event) noexcept = 0;
-        virtual bool onWindowMaximized   (Window& window, Event::WindowMaximized&    event) noexcept = 0;
-        virtual bool onWindowScaleChanged(Window& window, Event::WindowScaleChanged& event) noexcept = 0;
-        virtual bool onFramebufferResized(Window& window, Event::FramebufferResized& event) noexcept = 0;
-        virtual bool onButtonPressed     (Window& window, Event::ButtonPressed&      event) noexcept = 0;
-        virtual bool onCursorMoved       (Window& window, Event::CursorMoved&        event) noexcept = 0;
-        virtual bool onCursorEntered     (Window& window, Event::CursorEntered&      event) noexcept = 0;
-        virtual bool onScrolled          (Window& window, Event::Scrolled&           event) noexcept = 0;
-        virtual bool onKeyPressed        (Window& window, Event::KeyPressed&         event) noexcept = 0;
-        virtual bool onCharInput         (Window& window, Event::CharInput&          event) noexcept = 0;
-        virtual bool onFileDropped       (Window& window, Event::FileDropped&        event) noexcept = 0;
+        virtual bool on_window_moved        (Window& window, Event::WindowMoved&        event) noexcept = 0;
+        virtual bool on_window_resized      (Window& window, Event::WindowResized&      event) noexcept = 0;
+        virtual bool on_window_closed       (Window& window, Event::WindowClosed&       event) noexcept = 0;
+        virtual bool on_window_refreshed    (Window& window, Event::WindowRefreshed&    event) noexcept = 0;
+        virtual bool on_window_focused      (Window& window, Event::WindowFocused&      event) noexcept = 0;
+        virtual bool on_window_iconified    (Window& window, Event::WindowIconified&    event) noexcept = 0;
+        virtual bool on_window_maximized    (Window& window, Event::WindowMaximized&    event) noexcept = 0;
+        virtual bool on_window_scale_changed(Window& window, Event::WindowScaleChanged& event) noexcept = 0;
+        virtual bool on_framebuffer_resized (Window& window, Event::FramebufferResized& event) noexcept = 0;
+        virtual bool on_button_pressed      (Window& window, Event::ButtonPressed&      event) noexcept = 0;
+        virtual bool on_cursor_moved        (Window& window, Event::CursorMoved&        event) noexcept = 0;
+        virtual bool on_cursor_entered      (Window& window, Event::CursorEntered&      event) noexcept = 0;
+        virtual bool on_scrolled            (Window& window, Event::Scrolled&           event) noexcept = 0;
+        virtual bool on_key_pressed         (Window& window, Event::KeyPressed&         event) noexcept = 0;
+        virtual bool on_char_input          (Window& window, Event::CharInput&          event) noexcept = 0;
+        virtual bool on_file_dropped        (Window& window, Event::FileDropped&        event) noexcept = 0;
         // clang-format on
 
     protected:
-        // destructor is protected to prevent deletion through this interface
+        // destructor is protected to prevent deletion through this interface, a.k.a, a pointer of this
+        // interface can't own its derivative.
         ~IEventInterceptor() = default;
     };
 
@@ -448,22 +449,22 @@ namespace glfw_cpp
     struct DefaultEventInterceptor : public IEventInterceptor
     {
         // clang-format off
-        virtual bool onWindowMoved       (Window&, Event::WindowMoved&)        noexcept { return true; }
-        virtual bool onWindowResized     (Window&, Event::WindowResized&)      noexcept { return true; }
-        virtual bool onWindowClosed      (Window&, Event::WindowClosed&)       noexcept { return true; }
-        virtual bool onWindowRefreshed   (Window&, Event::WindowRefreshed&)    noexcept { return true; }
-        virtual bool onWindowFocused     (Window&, Event::WindowFocused&)      noexcept { return true; }
-        virtual bool onWindowIconified   (Window&, Event::WindowIconified&)    noexcept { return true; }
-        virtual bool onWindowMaximized   (Window&, Event::WindowMaximized&)    noexcept { return true; }
-        virtual bool onWindowScaleChanged(Window&, Event::WindowScaleChanged&) noexcept { return true; }
-        virtual bool onFramebufferResized(Window&, Event::FramebufferResized&) noexcept { return true; }
-        virtual bool onButtonPressed     (Window&, Event::ButtonPressed&)      noexcept { return true; }
-        virtual bool onCursorMoved       (Window&, Event::CursorMoved&)        noexcept { return true; }
-        virtual bool onCursorEntered     (Window&, Event::CursorEntered&)      noexcept { return true; }
-        virtual bool onScrolled          (Window&, Event::Scrolled&)           noexcept { return true; }
-        virtual bool onKeyPressed        (Window&, Event::KeyPressed&)         noexcept { return true; }
-        virtual bool onCharInput         (Window&, Event::CharInput&)          noexcept { return true; }
-        virtual bool onFileDropped       (Window&, Event::FileDropped&)        noexcept { return true; }
+        virtual bool on_window_moved        (Window&, Event::WindowMoved&)        noexcept { return true; }
+        virtual bool on_window_resized      (Window&, Event::WindowResized&)      noexcept { return true; }
+        virtual bool on_window_closed       (Window&, Event::WindowClosed&)       noexcept { return true; }
+        virtual bool on_window_refreshed    (Window&, Event::WindowRefreshed&)    noexcept { return true; }
+        virtual bool on_window_focused      (Window&, Event::WindowFocused&)      noexcept { return true; }
+        virtual bool on_window_iconified    (Window&, Event::WindowIconified&)    noexcept { return true; }
+        virtual bool on_window_maximized    (Window&, Event::WindowMaximized&)    noexcept { return true; }
+        virtual bool on_window_scale_changed(Window&, Event::WindowScaleChanged&) noexcept { return true; }
+        virtual bool on_framebuffer_resized (Window&, Event::FramebufferResized&) noexcept { return true; }
+        virtual bool on_button_pressed      (Window&, Event::ButtonPressed&)      noexcept { return true; }
+        virtual bool on_cursor_moved        (Window&, Event::CursorMoved&)        noexcept { return true; }
+        virtual bool on_cursor_entered      (Window&, Event::CursorEntered&)      noexcept { return true; }
+        virtual bool on_scrolled            (Window&, Event::Scrolled&)           noexcept { return true; }
+        virtual bool on_key_pressed         (Window&, Event::KeyPressed&)         noexcept { return true; }
+        virtual bool on_char_input          (Window&, Event::CharInput&)          noexcept { return true; }
+        virtual bool on_file_dropped        (Window&, Event::FileDropped&)        noexcept { return true; }
         // clang-format on
     };
 
@@ -475,7 +476,7 @@ namespace glfw_cpp
     class EventQueue
     {
     public:
-        template <bool isConst = false>
+        template <bool IsConst = false>
         class Iterator;
 
         friend class Iterator<false>;
@@ -574,10 +575,10 @@ namespace glfw_cpp
         /**
          * @brief Resize the queue to the specified capacity
          *
-         * @param newCapacity New capacity of the queue
+         * @param new_capacity New capacity of the queue
          * @param policy Resize policy to use
          */
-        void resize(std::size_t newCapacity, ResizePolicy policy = ResizePolicy::DiscardOld) noexcept;
+        void resize(std::size_t new_capacity, ResizePolicy policy = ResizePolicy::DiscardOld) noexcept;
 
         Iterator<>     begin() noexcept;
         Iterator<>     end() noexcept;
@@ -610,8 +611,8 @@ namespace glfw_cpp
         using Buffer = std::conditional_t<IsConst, const EventQueue, EventQueue>;
         using Value  = std::conditional_t<IsConst, const Event, Event>;
 
-        Iterator(Buffer* bufferPtr, std::size_t index) noexcept
-            : m_bufferPtr{ bufferPtr }
+        Iterator(Buffer* buffer_ptr, std::size_t index) noexcept
+            : m_buffer_ptr{ buffer_ptr }
             , m_index{ index }
         {
         }
@@ -619,7 +620,7 @@ namespace glfw_cpp
         // special constructor for const iterator from non-const iterator
         Iterator(Iterator<false>& other) noexcept
             requires IsConst
-            : m_bufferPtr{ other.m_bufferPtr }
+            : m_buffer_ptr{ other.m_buffer_ptr }
             , m_index{ other.m_index }
         {
         }
@@ -636,7 +637,7 @@ namespace glfw_cpp
                 return *this;
             }
 
-            if (++m_index == m_bufferPtr->capacity()) {
+            if (++m_index == m_buffer_ptr->capacity()) {
                 m_index = 0;
             }
 
@@ -654,22 +655,22 @@ namespace glfw_cpp
             return tmp;
         }
 
-        Value& operator*() const noexcept { return m_bufferPtr->m_buffer[m_index]; };
-        Value* operator->() const noexcept { return &m_bufferPtr->m_buffer[m_index]; };
+        Value& operator*() const noexcept { return m_buffer_ptr->m_buffer[m_index]; };
+        Value* operator->() const noexcept { return &m_buffer_ptr->m_buffer[m_index]; };
 
         template <bool IsConst2>
         bool operator==(const Iterator<IsConst2>& other) const noexcept
         {
-            return m_bufferPtr == other.m_bufferPtr && m_index == other.m_index;
+            return m_buffer_ptr == other.m_buffer_ptr && m_index == other.m_index;
         }
 
         operator std::size_t() noexcept { return m_index; };
 
     private:
-        Buffer*     m_bufferPtr = nullptr;
-        std::size_t m_index     = npos;
+        Buffer*     m_buffer_ptr = nullptr;
+        std::size_t m_index      = npos;
 
-        // workaround for when m_bufferPtr->m_begin == m_bufferPtr->m_end && size() == capacity()
+        // workaround for when m_buffer_ptr->m_begin == m_buffer_ptr->m_end && size() == capacity()
         std::size_t m_index_original = m_index;
     };
 

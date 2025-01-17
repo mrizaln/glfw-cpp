@@ -9,7 +9,7 @@
 
 namespace glfw = glfw_cpp;
 
-void windowThread(glfw::Window&& window)
+void window_thread(glfw::Window&& window)
 {
     window.bind();
 
@@ -17,15 +17,15 @@ void windowThread(glfw::Window&& window)
 
     window.run([&, elapsed = 0.0F](const auto& events) mutable {
         for (const glfw::Event& event : events) {
-            if (auto e = event.getIf<glfw::Event::KeyPressed>()) {
+            if (auto e = event.get_if<glfw::Event::KeyPressed>()) {
                 if (e->m_key == glfw::KeyCode::Q) {
-                    window.requestClose();
+                    window.request_close();
                 }
-            } else if (auto e = event.getIf<glfw::Event::FramebufferResized>()) {
+            } else if (auto e = event.get_if<glfw::Event::FramebufferResized>()) {
                 glViewport(0, 0, e->m_width, e->m_height);
             }
         }
-        elapsed += (float)window.deltaTime();
+        elapsed += (float)window.delta_time();
 
         // funny color cycle
         const auto r = (std::sin(mul * 23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
@@ -52,22 +52,22 @@ int main()
     // WindowManager does not have a restriction like Instance. It can be instantiated more than
     // once, but most WindowManager operations still must be called from main thread. You can think
     // of WindowManager as an orchestrator of multiple Windows created by itself.
-    auto wm1 = instance->createWindowManager();
-    auto wm2 = instance->createWindowManager();
+    auto wm1 = instance->create_window_manager();
+    auto wm2 = instance->create_window_manager();
 
-    auto window11 = wm1->createWindow({}, "Learn glfw-cpp 11", 800, 600, false);
-    auto window12 = wm1->createWindow({}, "Learn glfw-cpp 12", 800, 600, false);
-    auto window21 = wm2->createWindow({}, "Learn glfw-cpp 21", 800, 600, false);
-    auto window22 = wm2->createWindow({}, "Learn glfw-cpp 22", 800, 600, false);
+    auto window11 = wm1->create_window({}, "Learn glfw-cpp 11", 800, 600, false);
+    auto window12 = wm1->create_window({}, "Learn glfw-cpp 12", 800, 600, false);
+    auto window21 = wm2->create_window({}, "Learn glfw-cpp 21", 800, 600, false);
+    auto window22 = wm2->create_window({}, "Learn glfw-cpp 22", 800, 600, false);
 
-    auto thread11 = std::jthread{ windowThread, std::move(window11) };
-    auto thread12 = std::jthread{ windowThread, std::move(window12) };
-    auto thread21 = std::jthread{ windowThread, std::move(window21) };
-    auto thread22 = std::jthread{ windowThread, std::move(window22) };
+    auto thread11 = std::jthread{ window_thread, std::move(window11) };
+    auto thread12 = std::jthread{ window_thread, std::move(window12) };
+    auto thread21 = std::jthread{ window_thread, std::move(window21) };
+    auto thread22 = std::jthread{ window_thread, std::move(window22) };
 
-    while (wm1->hasWindowOpened() || wm2->hasWindowOpened()) {
-        wm1->pollEvents();
-        wm2->pollEvents();
+    while (wm1->has_window_opened() || wm2->has_window_opened()) {
+        wm1->poll_events();
+        wm2->poll_events();
 
         using glfw::operator""_fps;
         std::this_thread::sleep_for(120_fps);

@@ -11,9 +11,6 @@ struct GLFWmonitor;
 
 namespace glfw_cpp
 {
-    using VideoMode = GLFWvidmode;
-    using GammaRamp = GLFWgammaramp;
-
     // Monitor is not a RAII class as it's not managing any resource. It's a simple wrapper of the
     // underlying GLFWmonitor.
     class Monitor
@@ -37,14 +34,32 @@ namespace glfw_cpp
 
         struct PhysicalSize
         {
-            int m_widthMM;
-            int m_heightMM;
+            int m_width_mm;
+            int m_height_mm;
         };
 
         struct ContentScale
         {
-            float m_xScale;
-            float m_yScale;
+            float m_x;
+            float m_y;
+        };
+
+        struct VideoMode
+        {
+            int m_width;
+            int m_height;
+            int m_red_bits;
+            int m_green_bits;
+            int m_blue_bits;
+            int m_refresh_rate;
+        };
+
+        struct GammaRamp
+        {
+            std::span<const unsigned short> m_red;
+            std::span<const unsigned short> m_green;
+            std::span<const unsigned short> m_blue;
+            std::size_t                     m_size;
         };
 
         Monitor() = default;
@@ -58,23 +73,23 @@ namespace glfw_cpp
 
         std::string_view name() const noexcept;
         Position         position() const noexcept;
-        WorkArea         workArea() const noexcept;
-        PhysicalSize     physicalSize() const noexcept;
-        ContentScale     contentScale() const noexcept;
+        WorkArea         work_area() const noexcept;
+        PhysicalSize     physical_size() const noexcept;
+        ContentScale     content_scale() const noexcept;
 
-        const VideoMode*           currentVideoMode() const noexcept;
-        std::span<const VideoMode> availableVideoModes() const noexcept;
+        VideoMode              current_video_mode() const noexcept;
+        std::vector<VideoMode> available_video_modes() const noexcept;
 
-        void      setGamma(float gamma) noexcept;
-        void      setGammaRamp(const GammaRamp& ramp) noexcept;
-        GammaRamp getGammaRamp() const noexcept;
+        void      set_gamma(float gamma) noexcept;
+        void      set_gamma_ramp(const GammaRamp& ramp) noexcept;
+        GammaRamp get_gamma_ramp() const noexcept;
 
     private:
         Handle m_handle;
     };
 
-    std::vector<Monitor> getMonitors();
-    Monitor              getPrimaryMonitor();
+    std::vector<Monitor> get_monitors();
+    Monitor              get_primary_monitor();
 }
 
 #endif /* end of include guard: MONITOR_HPP_F6RT4YUXEJ38H */

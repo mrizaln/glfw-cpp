@@ -7,14 +7,14 @@
 
 namespace glfw_cpp
 {
-    std::vector<Monitor> getMonitors()
+    std::vector<Monitor> get_monitors()
     {
-        int  count;
+        auto count   = 0;
         auto handles = glfwGetMonitors(&count);
 
-        util::checkGlfwError();
+        util::check_glfw_error();
 
-        std::vector<Monitor> monitors;
+        auto monitors = std::vector<Monitor>{};
         monitors.reserve(static_cast<std::size_t>(count));
         for (int i = 0; i < count; ++i) {
             monitors.emplace_back(handles[i]);
@@ -23,10 +23,10 @@ namespace glfw_cpp
         return monitors;
     }
 
-    Monitor getPrimaryMonitor()
+    Monitor get_primary_monitor()
     {
         auto monitor = Monitor{ glfwGetPrimaryMonitor() };
-        util::checkGlfwError();
+        util::check_glfw_error();
         return monitor;
     }
 
@@ -37,56 +37,101 @@ namespace glfw_cpp
 
     Monitor::Position Monitor::position() const noexcept
     {
-        Position position;
+        auto position = Position{};
         glfwGetMonitorPos(m_handle, &position.m_x, &position.m_y);
         return position;
     }
 
-    Monitor::WorkArea Monitor::workArea() const noexcept
+    Monitor::WorkArea Monitor::work_area() const noexcept
     {
-        WorkArea workArea;
-        glfwGetMonitorWorkarea(m_handle, &workArea.m_x, &workArea.m_y, &workArea.m_width, &workArea.m_height);
-        return workArea;
+        auto area = WorkArea{};
+        glfwGetMonitorWorkarea(m_handle, &area.m_x, &area.m_y, &area.m_width, &area.m_height);
+        return area;
     }
 
-    Monitor::PhysicalSize Monitor::physicalSize() const noexcept
+    Monitor::PhysicalSize Monitor::physical_size() const noexcept
     {
-        PhysicalSize physicalSize;
-        glfwGetMonitorPhysicalSize(m_handle, &physicalSize.m_widthMM, &physicalSize.m_heightMM);
-        return physicalSize;
+        auto phys_size = PhysicalSize{};
+        glfwGetMonitorPhysicalSize(m_handle, &phys_size.m_width_mm, &phys_size.m_height_mm);
+        return phys_size;
     }
 
-    Monitor::ContentScale Monitor::contentScale() const noexcept
+    Monitor::ContentScale Monitor::content_scale() const noexcept
     {
-        ContentScale contentScale;
-        glfwGetMonitorContentScale(m_handle, &contentScale.m_xScale, &contentScale.m_yScale);
-        return contentScale;
+        auto scale = ContentScale{};
+        glfwGetMonitorContentScale(m_handle, &scale.m_x, &scale.m_y);
+        return scale;
     }
 
-    const VideoMode* Monitor::currentVideoMode() const noexcept
+    Monitor::VideoMode Monitor::current_video_mode() const noexcept
     {
-        return glfwGetVideoMode(m_handle);
+        auto* vid_mode = glfwGetVideoMode(m_handle);
+        assert(vid_mode != nullptr && "video mode should not be empty");
+        return {
+            .m_width        = vid_mode->width,
+            .m_height       = vid_mode->height,
+            .m_red_bits     = vid_mode->redBits,
+            .m_green_bits   = vid_mode->greenBits,
+            .m_blue_bits    = vid_mode->blueBits,
+            .m_refresh_rate = vid_mode->refreshRate,
+        };
     }
 
-    std::span<const VideoMode> Monitor::availableVideoModes() const noexcept
+    std::vector<Monitor::VideoMode> Monitor::available_video_modes() const noexcept
     {
-        int  count;
-        auto modes = glfwGetVideoModes(m_handle, &count);
-        return { modes, static_cast<std::size_t>(count) };
+        auto count     = 0;
+        auto modes_ptr = glfwGetVideoModes(m_handle, &count);
+        assert(modes_ptr != nullptr && "video modes should not be empty");
+
+        auto modes = std::vector<Monitor::VideoMode>{};
+        modes.reserve(static_cast<std::size_t>(count));
+        for (auto i = 0; i < count; ++i) {
+            auto mode = VideoMode{
+                .m_width        = modes_ptr[i].width,
+                .m_height       = modes_ptr[i].height,
+                .m_red_bits     = modes_ptr[i].redBits,
+                .m_green_bits   = modes_ptr[i].greenBits,
+                .m_blue_bits    = modes_ptr[i].blueBits,
+                .m_refresh_rate = modes_ptr[i].refreshRate,
+            };
+            modes.push_back(mode);
+        }
+
+        return modes;
     }
 
-    void Monitor::setGamma(float gamma) noexcept
+    void Monitor::set_gamma(float gamma) noexcept
     {
         glfwSetGamma(glfwGetPrimaryMonitor(), gamma);
     }
 
-    void Monitor::setGammaRamp(const GammaRamp& gammaRamp) noexcept
+    void Monitor::set_gamma_ramp(const GammaRamp& ramp) noexcept
     {
-        glfwSetGammaRamp(m_handle, &gammaRamp);
+        assert(ramp.m_red.size() == ramp.m_size);
+        assert(ramp.m_green.size() == ramp.m_size);
+        assert(ramp.m_blue.size() == ramp.m_size);
+
+        // NOTE: const cast should be fine here since the data later will be copied by GLFW
+        auto gamma = GLFWgammaramp{
+            .red   = const_cast<unsigned short*>(ramp.m_red.data()),
+            .green = const_cast<unsigned short*>(ramp.m_green.data()),
+            .blue  = const_cast<unsigned short*>(ramp.m_blue.data()),
+            .size  = static_cast<unsigned int>(ramp.m_size),
+        };
+
+        glfwSetGammaRamp(m_handle, &gamma);
     }
 
-    GammaRamp Monitor::getGammaRamp() const noexcept
+    Monitor::GammaRamp Monitor::get_gamma_ramp() const noexcept
     {
-        return *glfwGetGammaRamp(m_handle);
+        auto ramp_ptr = glfwGetGammaRamp(m_handle);
+        assert(ramp_ptr != nullptr && "gamma ramp should not be empty");
+
+        return {
+            .m_red   = { ramp_ptr->red, ramp_ptr->size },
+            .m_green = { ramp_ptr->green, ramp_ptr->size },
+            .m_blue  = { ramp_ptr->blue, ramp_ptr->size },
+            .m_size  = ramp_ptr->size,
+        };
     }
 }

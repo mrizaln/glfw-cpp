@@ -48,9 +48,9 @@ int main()
             }
         }
     );
-    auto wm = glfw->createWindowManager();
+    auto wm = glfw->create_window_manager();
 
-    auto [xpos, ypos, width, height] = glfw_cpp::getPrimaryMonitor().workArea();
+    auto [xpos, ypos, width, height] = glfw_cpp::get_primary_monitor().work_area();
 
     std::array<glfw_cpp::Window, 4> windows;
     for (int i = 0; i < 4; i++) {
@@ -72,31 +72,31 @@ int main()
             hint.m_flags &= ~glfw_cpp::WindowHint::FocusOnShow;
         }
 
-        windows[i] = wm->createWindow(hint, "Learn Multi-Window Example", size, size);
+        windows[i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
 
         // set window pos will be queued inside WindowManager
-        windows[i].setWindowPos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
+        windows[i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
 
         glClearColor(colors[i].r, colors[i].g, colors[i].b, 1.f);
     }
 
     // process queued tasks
-    wm->pollEvents();
+    wm->poll_events();
 
-    while (wm->hasWindowOpened()) {
+    while (wm->has_window_opened()) {
         for (int i = 0; i < 4; i++) {
             windows[i].bind();
 
             glClear(GL_COLOR_BUFFER_BIT);
 
-            if (windows[i].properties().m_keyState.isPressed(glfw_cpp::KeyCode::Escape)) {
-                std::ranges::for_each(windows, &glfw_cpp::Window::requestClose);
+            if (windows[i].properties().m_key_state.is_pressed(glfw_cpp::KeyCode::Escape)) {
+                std::ranges::for_each(windows, &glfw_cpp::Window::request_close);
             }
 
             windows[i].display();
             windows[i].unbind();
         }
 
-        wm->waitEvents();
+        wm->wait_events();
     }
 }

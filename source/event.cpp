@@ -93,51 +93,51 @@ namespace glfw_cpp
         return value;
     }
 
-    void EventQueue::resize(std::size_t newCapacity, ResizePolicy policy) noexcept
+    void EventQueue::resize(std::size_t new_capacity, ResizePolicy policy) noexcept
     {
-        if (newCapacity == capacity()) {
+        if (new_capacity == capacity()) {
             return;
         }
 
         if (empty()) {
-            m_buffer   = std::make_unique<Event[]>(newCapacity);
-            m_capacity = newCapacity;
+            m_buffer   = std::make_unique<Event[]>(new_capacity);
+            m_capacity = new_capacity;
             m_begin    = 0;
             m_end      = 0;
 
             return;
         }
 
-        if (newCapacity > capacity()) {
+        if (new_capacity > capacity()) {
             const auto b = [buf = m_buffer.get()](std::size_t offset) {
                 return std::move_iterator{ buf + offset };
             };
 
-            auto buffer = std::make_unique<Event[]>(newCapacity);
+            auto buffer = std::make_unique<Event[]>(new_capacity);
             std::rotate_copy(b(0), b(m_begin), b(capacity()), buffer.get());
             m_buffer   = std::move(buffer);
             m_end      = m_end == npos ? capacity() : (m_end + capacity() - m_begin) % capacity();
             m_begin    = 0;
-            m_capacity = newCapacity;
+            m_capacity = new_capacity;
 
             return;
         }
 
-        auto buffer = std::make_unique<Event[]>(newCapacity);
+        auto buffer = std::make_unique<Event[]>(new_capacity);
         auto count  = size();
-        auto offset = count <= newCapacity ? 0ul : count - newCapacity;
+        auto offset = count <= new_capacity ? 0ul : count - new_capacity;
 
         switch (policy) {
         case ResizePolicy::DiscardOld: {
             auto begin = (m_begin + offset) % capacity();
-            for (std::size_t i = 0; i < std::min(newCapacity, count); ++i) {
+            for (std::size_t i = 0; i < std::min(new_capacity, count); ++i) {
                 buffer[i] = std::move(m_buffer[(begin + i) % capacity()]);
             }
         } break;
         case ResizePolicy::DiscardNew: {
             auto end = m_end == npos ? m_begin : m_end;
             end      = (end + capacity() - offset) % capacity();
-            for (std::size_t i = std::min(newCapacity, count); i-- > 0;) {
+            for (std::size_t i = std::min(new_capacity, count); i-- > 0;) {
                 end       = (end + capacity() - 1) % capacity();
                 buffer[i] = std::move(m_buffer[end]);
             }
@@ -145,9 +145,9 @@ namespace glfw_cpp
         }
 
         m_buffer   = std::move(buffer);
-        m_capacity = newCapacity;
+        m_capacity = new_capacity;
         m_begin    = 0;
-        m_end      = count <= newCapacity ? count : npos;
+        m_end      = count <= new_capacity ? count : npos;
     }
 
     EventQueue::Iterator<> EventQueue::begin() noexcept
