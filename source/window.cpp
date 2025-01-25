@@ -495,7 +495,7 @@ namespace glfw_cpp
         return m_delta_time;
     }
 
-    void Window::enqueue_task(Fun<void()>&& func) noexcept
+    void Window::enqueue_task(Fun<void(Window&)>&& func) noexcept
     {
         std::scoped_lock lock{ m_queue_mutex };
         m_task_queue.push_back(std::move(func));
@@ -565,7 +565,7 @@ namespace glfw_cpp
         }();
 
         for (auto& func : queue) {
-            func();
+            func(*this);
         }
     }
 

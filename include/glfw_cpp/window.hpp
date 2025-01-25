@@ -86,7 +86,7 @@ namespace glfw_cpp
             Monitor                m_monitor            = {};
         };
 
-        static constexpr std::size_t s_defaultEventQueueSize = 128;
+        static constexpr std::size_t s_default_eventqueue_size = 128;
 
         template <typename Sig>
         using Fun    = std::function<Sig>;    // use std::move_only_function in the future
@@ -168,8 +168,17 @@ namespace glfw_cpp
          * @brief Set window vertical sync (vsync).
          *
          * @param value True to enable vsync, false to disable.
+         *
+         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
          */
         void set_vsync(bool value);
+
+        /**
+         * @brief Toggle window vertical sync (vsync).
+         *
+         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
+         */
+        void toggle_vsync() { set_vsync(!is_vsync_enabled()); }
 
         /**
          * @brief Set window size.
@@ -323,7 +332,7 @@ namespace glfw_cpp
          *
          * The function will be ran at the time `poll()` is called.
          */
-        void enqueue_task(Fun<void()>&& func) noexcept;
+        void enqueue_task(Fun<void(Window&)>&& func) noexcept;
 
         /**
          * @brief Request the window to close.
@@ -340,11 +349,16 @@ namespace glfw_cpp
         void set_capture_mouse(bool value) noexcept;
 
         /**
+         * @brief Toggle the mouse capture state.
+         */
+        void toggle_capture_mouse() noexcept { set_capture_mouse(!is_mouse_captured()); }
+
+        /**
          * @brief Resize the event queue to the new size.
          *
          * @param new_size The new size of the event queue.
          *
-         * Every EventQueue in each Window has a fized size. The default size is `s_defaultEventQueueSize`.
+         * Every EventQueue in each Window has a fized size. The default size is `s_default_eventqueue_size`.
          */
         void resize_event_queue(std::size_t new_size) noexcept;
 
@@ -411,6 +425,7 @@ namespace glfw_cpp
         // NOTE: These two callbacks are beyond glfw_cpp::Window control alone, maybe setting it in
         //       the glfw_cpp::Instance makes more sense. But then, there's the problem of how to
         //       'broadcast' the event to all opened windows...
+        // TODO: Implement these two callbacks
         /*
             static void monitor_callback(GLFWmonitor* monitor, int action);
             static void joystick_callback(int jid, int action);
@@ -434,10 +449,10 @@ namespace glfw_cpp
         bool            m_capture_mouse      = false;
 
         // queues
-        EventQueue               m_event_queue_front{ s_defaultEventQueueSize };
-        EventQueue               m_event_queue_back{ s_defaultEventQueueSize };
-        std::vector<Fun<void()>> m_task_queue;
-        mutable std::mutex       m_queue_mutex;
+        EventQueue                      m_event_queue_front = EventQueue{ s_default_eventqueue_size };
+        EventQueue                      m_event_queue_back  = EventQueue{ s_default_eventqueue_size };
+        std::vector<Fun<void(Window&)>> m_task_queue;
+        mutable std::mutex              m_queue_mutex;
     };
 }
 

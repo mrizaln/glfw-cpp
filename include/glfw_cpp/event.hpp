@@ -451,8 +451,8 @@ namespace glfw_cpp
         // clang-format on
 
     protected:
-        // destructor is protected to prevent deletion through this interface, a.k.a, a pointer of this
-        // interface can't own its derivative.
+        // destructor is protected to prevent deletion through this interface; a pointer of this interface
+        // can't own its derivative.
         ~IEventInterceptor() = default;
     };
 
@@ -461,7 +461,8 @@ namespace glfw_cpp
      * @brief Default implementation of `IEventInterceptor` that does nothing.
      *
      * This class can be used as a base class for custom event interceptors. You can override only the
-     * functions you need to intercept.
+     * functions you need to intercept. The return value of each function determines whether the event should
+     * be forwarded to the `Window` or not.
      */
     struct DefaultEventInterceptor : public IEventInterceptor
     {
