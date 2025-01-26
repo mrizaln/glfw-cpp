@@ -130,9 +130,12 @@ namespace glfw_cpp
         /**
          * @brief Set an event interceptor.
          *
-         * @param event_interceptor The event interceptor.
+         * @param event_interceptor The event interceptor (nullptr to remove).
          *
          * @return The old event interceptor.
+         *
+         * The interceptor should have a longer lifetime than this `WindowManager` and the memory management
+         * of it is the responsibility of the caller.
          */
         IEventInterceptor* set_event_interceptor(IEventInterceptor* event_interceptor) noexcept
         {
@@ -220,7 +223,7 @@ namespace glfw_cpp
             Fun<void()>    m_task;
         };
 
-        WindowManager(std::thread::id thread_id) noexcept;
+        WindowManager(std::thread::id thread_id, IEventInterceptor* event_interceptor) noexcept;
 
         // send event to interceptor, returns the value the interceptor returns. but if there is not
         // interceptor, the returned value will always be true.

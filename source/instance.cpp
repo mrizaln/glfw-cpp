@@ -147,10 +147,10 @@ namespace glfw_cpp
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
 
-    WindowManager::Shared Instance::create_window_manager() noexcept
+    WindowManager::Shared Instance::create_window_manager(IEventInterceptor* event_interceptor) noexcept
     {
         // using new here instead of `std::make_shared` since `WindowManager` constructor is private and can
         // only be seen by itself and its friends (`Instance` is one of it, but `std::make_shared` is not).
-        return WindowManager::Shared{ new WindowManager{ std::this_thread::get_id() } };
+        return WindowManager::Shared{ new WindowManager{ std::this_thread::get_id(), event_interceptor } };
     }
 }

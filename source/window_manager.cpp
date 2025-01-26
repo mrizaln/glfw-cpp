@@ -58,8 +58,9 @@ namespace glfw_cpp
         glfwDestroyWindow(handle);
     };
 
-    WindowManager::WindowManager(std::thread::id thread_id) noexcept
+    WindowManager::WindowManager(std::thread::id thread_id, IEventInterceptor* event_interceptor) noexcept
         : m_attached_thread_id{ thread_id }
+        , m_event_interceptor{ event_interceptor }
     {
         // yeah, that's it.
         // attached thread id will not be changed for the lifetime of this class instance.

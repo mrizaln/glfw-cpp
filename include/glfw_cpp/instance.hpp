@@ -13,6 +13,7 @@ namespace glfw_cpp
 {
     class Window;
     class WindowManager;
+    class IEventInterceptor;
 
     /**
      * @struct Api
@@ -101,10 +102,18 @@ namespace glfw_cpp
         friend Unique init(Api::Variant&&, Instance::LogFun&&);
 
         /**
-         * @brief Create a WindowManager instance.
-         * @return A shared pointer to the WindowManager instance.
+         * @brief Create a `WindowManager` instance.
+         *
+         * @param event_interceptor The event interceptor (can be nullptr).
+         *
+         * @return A shared pointer to the `WindowManager` instance.
+         *
+         * The interceptor should have a longer lifetime than this `WindowManager` and the memory management
+         * of it is the responsibility of the caller.
          */
-        std::shared_ptr<WindowManager> create_window_manager() noexcept;
+        std::shared_ptr<WindowManager> create_window_manager(
+            IEventInterceptor* event_interceptor = nullptr
+        ) noexcept;
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
