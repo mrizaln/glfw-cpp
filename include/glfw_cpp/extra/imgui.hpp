@@ -250,7 +250,7 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    ImguiContext init_imgui_for_opengl(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiContext init_imgui_for_opengl(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
         return { ImguiContext::Api::OpenGL, &interceptor, window };
@@ -267,7 +267,7 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    ImguiContext init_imgui_for_vulkan(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiContext init_imgui_for_vulkan(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
         return { ImguiContext::Api::Vulkan, &interceptor, window };
@@ -284,7 +284,7 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    ImguiContext init_imgui_for_other(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiContext init_imgui_for_other(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
         return { ImguiContext::Api::Other, &interceptor, window };
