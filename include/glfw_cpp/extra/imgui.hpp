@@ -141,13 +141,6 @@ namespace glfw_cpp::extra
         std::unordered_set<Window::Handle> m_windows;
     };
 
-    enum class Api
-    {
-        OpenGL,
-        Vulkan,
-        Other,
-    };
-
     /**
      * @class ImguiContext
      * @brief RAII wrapper for ImGui context for GLFW.
@@ -187,7 +180,8 @@ namespace glfw_cpp::extra
         ImguiContext& operator=(const ImguiContext&) = delete;
 
         ImguiContext(ImguiContext&& other) noexcept
-            : m_initialized{ std::exchange(other.m_initialized, false) }
+            : m_interceptor{ std::exchange(other.m_interceptor, nullptr) }
+            , m_window{ std::exchange(other.m_window, nullptr) }
         {
         }
 
@@ -198,11 +192,14 @@ namespace glfw_cpp::extra
             }
 
             shutdown();
-            m_initialized = std::exchange(other.m_initialized, false);
+
+            m_interceptor = std::exchange(other.m_interceptor, nullptr);
+            m_window      = std::exchange(other.m_window, nullptr);
+
             return *this;
         }
 
-        bool is_initialized() const noexcept { return m_initialized; }
+        bool is_initialized() const noexcept { return m_interceptor != nullptr and m_window != nullptr; }
 
         /**
          * @brief Shutdown the imgui context.
@@ -211,23 +208,34 @@ namespace glfw_cpp::extra
          */
         void shutdown() noexcept
         {
-            if (m_initialized) {
+            if (is_initialized()) {
                 ImGui_ImplGlfw_Shutdown();
-                m_initialized = false;
+                m_interceptor->remove_window(m_window);
+                m_interceptor = nullptr;
+                m_window      = nullptr;
             }
         }
 
     private:
-        bool m_initialized = false;
+        enum class Api : std::uint8_t
+        {
+            OpenGL,
+            Vulkan,
+            Other,
+        };
 
-        ImguiContext(Api api, Window::Handle window) noexcept
+        ImguiInterceptor* m_interceptor = nullptr;
+        Window::Handle    m_window      = nullptr;
+
+        ImguiContext(Api api, ImguiInterceptor* interceptor, Window::Handle window) noexcept
+            : m_interceptor{ interceptor }
+            , m_window{ window }
         {
             switch (api) {
             case Api::OpenGL: ImGui_ImplGlfw_InitForOpenGL(window, false); break;
             case Api::Vulkan: ImGui_ImplGlfw_InitForVulkan(window, false); break;
             case Api::Other: ImGui_ImplGlfw_InitForOther(window, false); break;
             }
-            m_initialized = true;
         }
     };
 
@@ -245,7 +253,7 @@ namespace glfw_cpp::extra
     ImguiContext init_imgui_for_opengl(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { Api::OpenGL, window };
+        return { ImguiContext::Api::OpenGL, &interceptor, window };
     }
 
     /**
@@ -262,7 +270,7 @@ namespace glfw_cpp::extra
     ImguiContext init_imgui_for_vulkan(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { Api::Vulkan, window };
+        return { ImguiContext::Api::Vulkan, &interceptor, window };
     }
 
     /**
@@ -279,7 +287,7 @@ namespace glfw_cpp::extra
     ImguiContext init_imgui_for_other(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { Api::Other, window };
+        return { ImguiContext::Api::Other, &interceptor, window };
     }
 }
 
