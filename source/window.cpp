@@ -109,7 +109,7 @@ namespace glfw_cpp
             Event::ButtonPressed{
                 .m_button = static_cast<MouseButton>(button),
                 .m_state  = static_cast<MouseButtonState>(action),
-                .m_mods   = static_cast<ModifierKey::Base>(mods),
+                .m_mods   = ModifierKey{ mods },
             }
         );
     }
@@ -161,7 +161,7 @@ namespace glfw_cpp
                 .m_key      = static_cast<KeyCode>(key),
                 .m_scancode = scancode,
                 .m_state    = static_cast<KeyState>(action),
-                .m_mods     = static_cast<ModifierKey::Base>(mods),
+                .m_mods     = ModifierKey{ mods },
             }
         );
     }

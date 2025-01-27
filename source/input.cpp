@@ -168,10 +168,10 @@ namespace glfw_cpp
 
     std::vector<KeyCode> KeyStateRecord::pressed_keys() const noexcept
     {
-        std::vector<KeyCode> keys;
+        auto keys = std::vector<KeyCode>{};
 
         // kinda unsafe
-        for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
+        for (int k = 0; k <= static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
             if (bit_pos(static_cast<KeyCode>(k)) == 0) {
                 continue;
@@ -186,10 +186,10 @@ namespace glfw_cpp
 
     std::vector<KeyCode> KeyStateRecord::released_keys() const noexcept
     {
-        std::vector<KeyCode> keys;
+        auto keys = std::vector<KeyCode>{};
 
         // kinda unsafe
-        for (int k = 0; k < static_cast<int>(KeyCode::MaxValue); ++k) {
+        for (int k = 0; k <= static_cast<int>(KeyCode::MaxValue); ++k) {
             // eliminate integer values that are not KeyCode and KeyCode::UNKNOWN
             if (bit_pos(static_cast<KeyCode>(k)) == 0) {
                 continue;
@@ -227,8 +227,8 @@ namespace glfw_cpp
 
     std::vector<MouseButton> MouseButtonStateRecord::pressed_buttons() const
     {
-        std::vector<MouseButton> buttons;
-        for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
+        auto buttons = std::vector<MouseButton>{};
+        for (int b = 0; b <= static_cast<int>(MouseButton::MaxValue); ++b) {
             if (is_pressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }
@@ -238,8 +238,8 @@ namespace glfw_cpp
 
     std::vector<MouseButton> MouseButtonStateRecord::released_buttons() const
     {
-        std::vector<MouseButton> buttons;
-        for (int b = 0; b < static_cast<int>(MouseButton::MaxValue); ++b) {
+        auto buttons = std::vector<MouseButton>{};
+        for (int b = 0; b <= static_cast<int>(MouseButton::MaxValue); ++b) {
             if (!is_pressed(static_cast<MouseButton>(b))) {
                 buttons.push_back(static_cast<MouseButton>(b));
             }

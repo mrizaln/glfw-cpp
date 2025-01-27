@@ -231,6 +231,8 @@ namespace glfw_cpp
             NumLock  = 0x20,
         };
 
+        ModifierKey() = default;
+
         /**
          * @brief Construct a new Modifier Key object from a list of modifier keys.
          * @param mods A list of modifier keys to set.
@@ -261,7 +263,7 @@ namespace glfw_cpp
          *
          * This constructor will ignore any invalid bits from the value.
          */
-        ModifierKey(Base mods) noexcept
+        explicit ModifierKey(Base mods) noexcept
             : m_mods{ mods }
         {
             // remove any invalid bits
@@ -368,6 +370,11 @@ namespace glfw_cpp
                 return unset(mods);
             }
         }
+
+        /**
+         * @brief Check if none of the modifier keys are set.
+         */
+        bool none() const noexcept { return m_mods == 0; }
 
         /**
          * @brief Test if the modifier key is set.
@@ -511,9 +518,24 @@ namespace glfw_cpp
         using State   = std::array<Element, 2>;
 
         // for friends
-        void set_value(KeyCode key_code, bool value) noexcept { set_bit(bit_pos(key_code), value); }
-        void set(KeyCode key_code) noexcept { set_value(key_code, true); }
-        void unset(KeyCode key_code) noexcept { set_value(key_code, false); }
+        KeyStateRecord& set_value(KeyCode key_code, bool value) noexcept
+        {
+            set_bit(bit_pos(key_code), value);
+            return *this;
+        }
+
+        KeyStateRecord& set(KeyCode key_code) noexcept
+        {
+            set_value(key_code, true);
+            return *this;
+        }
+
+        KeyStateRecord& unset(KeyCode key_code) noexcept
+        {
+            set_value(key_code, false);
+            return *this;
+        }
+
         void clear() noexcept { m_state.fill(0); };
 
         // impl detail
@@ -597,9 +619,24 @@ namespace glfw_cpp
         using State = std::uint8_t;
 
         // for friends
-        void set_value(MouseButton button, bool value) noexcept { set_bit(bit_pos(button), value); }
-        void set(MouseButton button) noexcept { set_value(button, true); }
-        void unset(MouseButton button) noexcept { set_value(button, false); }
+        MouseButtonStateRecord& set_value(MouseButton button, bool value) noexcept
+        {
+            set_bit(bit_pos(button), value);
+            return *this;
+        }
+
+        MouseButtonStateRecord& set(MouseButton button) noexcept
+        {
+            set_value(button, true);
+            return *this;
+        }
+
+        MouseButtonStateRecord& unset(MouseButton button) noexcept
+        {
+            set_value(button, false);
+            return *this;
+        }
+
         void clear() noexcept { m_state = 0; };
 
         // impl detail
