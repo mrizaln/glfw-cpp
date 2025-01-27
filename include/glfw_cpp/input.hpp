@@ -231,92 +231,188 @@ namespace glfw_cpp
             NumLock  = 0x20,
         };
 
-        ModifierKey(std::convertible_to<Bit> auto... e) noexcept
-            : m_mods{ static_cast<Base>((0 | ... | e)) }
+        /**
+         * @brief Construct a new Modifier Key object from a list of modifier keys.
+         * @param mods A list of modifier keys to set.
+         */
+        ModifierKey(std::initializer_list<Bit> mods) noexcept
+            : m_mods{ 0 }
         {
+            for (auto mod : mods) {
+                m_mods |= mod;
+            }
         }
 
+        /**
+         * @brief Construct a new Modifier Key object from a span of modifier keys.
+         * @param mods A span of modifier keys to set.
+         */
+        ModifierKey(std::span<const Bit> mods) noexcept
+            : m_mods{ 0 }
+        {
+            for (auto mod : mods) {
+                m_mods |= mod;
+            }
+        }
+
+        /**
+         * @brief Construct a new Modifier Key object from an underlying integer value.
+         * @param mods The underlying integer value to set.
+         *
+         * This constructor will ignore any invalid bits from the value.
+         */
         ModifierKey(Base mods) noexcept
             : m_mods{ mods }
         {
+            // remove any invalid bits
+            constexpr auto valid  = Shift | Control | Alt | Super | CapsLock | NumLock;
+            m_mods               &= valid;
         }
 
         /**
          * @brief Set the modifier key(s).
-         * @param e The modifier key(s) to set.
+         * @param mods The modifier key(s) to set.
          */
-        auto& set(std::convertible_to<Bit> auto... e) noexcept
-            requires (sizeof...(e) > 0)
+        auto& set(std::initializer_list<Bit> mods) noexcept
         {
-            m_mods |= (None | ... | e);
+            for (auto mod : mods) {
+                m_mods |= mod;
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Set the modifier key(s).
+         * @param mods The modifier key(s) to set.
+         */
+        auto& set(std::span<const Bit> mods) noexcept
+        {
+            for (auto mod : mods) {
+                m_mods |= mod;
+            }
             return *this;
         }
 
         /**
          * @brief Unset the modifier key(s).
-         * @param e The modifier key(s) to unset.
+         * @param mods The modifier key(s) to unset.
          */
-        auto& unset(std::convertible_to<Bit> auto... e) noexcept
-            requires (sizeof...(e) > 0)
+        auto& unset(std::initializer_list<Bit> mods) noexcept
         {
-            m_mods &= ~(None | ... | e);
+            for (auto mod : mods) {
+                m_mods &= ~mod;
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Unset the modifier key(s).
+         * @param mods The modifier key(s) to unset.
+         */
+        auto& unset(std::span<const Bit> mods) noexcept
+        {
+            for (auto mod : mods) {
+                m_mods &= ~mod;
+            }
             return *this;
         }
 
         /**
          * @brief Toggle the modifier key(s).
-         * @param e The modifier key(s) to toggle.
+         * @param mods The modifier key(s) to toggle.
          */
-        auto& toggle(std::convertible_to<Bit> auto... e) noexcept
-            requires (sizeof...(e) > 0)
+        auto& toggle(std::initializer_list<Bit> mods) noexcept
         {
-            m_mods ^= (None | ... | e);
+            for (auto mod : mods) {
+                m_mods ^= mod;
+            }
+            return *this;
+        }
+
+        /**
+         * @brief Toggle the modifier key(s).
+         * @param mods The modifier key(s) to toggle.
+         */
+        auto& toggle(std::span<const Bit> mods) noexcept
+        {
+            for (auto mod : mods) {
+                m_mods ^= mod;
+            }
             return *this;
         }
 
         /**
          * @brief Set the modifier key(s) to a specific value.
          * @param value The value to set the modifier key(s) to.
-         * @param e The modifier key(s) to be set.
+         * @param mods The modifier key(s) to be set.
          */
-        auto& set_to_value(bool value, std::convertible_to<Bit> auto... e) noexcept
-            requires (sizeof...(e) > 0)
+        auto& set_to_value(bool value, std::initializer_list<Bit> mods) noexcept
         {
             if (value) {
-                return set(std::forward<Bit>(e)...);
+                return set(mods);
             } else {
-                return unset(std::forward<Bit>(e)...);
+                return unset(mods);
             }
+        }
+
+        /**
+         * @brief Set the modifier key(s) to a specific value.
+         * @param value The value to set the modifier key(s) to.
+         * @param mods The modifier key(s) to be set.
+         */
+        auto& set_to_value(bool value, std::span<const Bit> mods) noexcept
+        {
+            if (value) {
+                return set(mods);
+            } else {
+                return unset(mods);
+            }
+        }
+
+        /**
+         * @brief Test if the modifier key is set.
+         * @param mod The modifier key to test.
+         */
+        bool test(Bit mod) const noexcept { return (m_mods & mod) == mod; }
+
+        /**
+         * @brief Test if the modifier key(s) are set.
+         * @param mods The modifier key(s) to test.
+         */
+        bool test_all(std::initializer_list<Bit> mods) const noexcept
+        {
+            auto flags = ModifierKey{ mods };
+            return (m_mods & flags.m_mods) == flags.m_mods;
         }
 
         /**
          * @brief Test if the modifier key(s) are set.
-         * @param e The modifier key(s) to test.
+         * @param mods The modifier key(s) to test.
          */
-        bool test(std::convertible_to<Bit> auto... e) const noexcept
-            requires (sizeof...(e) > 0)
+        bool test_all(std::span<const Bit> mods) const noexcept
         {
-            auto flags{ static_cast<Base>((None | ... | e)) };
-            if (flags == None) {
-                return m_mods == None;
-            } else {
-                return (m_mods & flags) == flags;
-            }
+            auto flags = ModifierKey{ mods };
+            return (m_mods & flags.m_mods) == flags.m_mods;
         }
 
         /**
          * @brief Test if any of the modifier key(s) are set.
-         * @param e The modifier key(s) to test.
+         * @param mods The modifier key(s) to test.
          */
-        bool test_some(std::convertible_to<Bit> auto... e) const noexcept
-            requires (sizeof...(e) > 0)
+        bool test_any(std::initializer_list<Bit> mods) const noexcept
         {
-            auto flags{ static_cast<Base>((None | ... | e)) };
-            if (flags == None) {
-                return test(static_cast<Bit>(flags));
-            } else {
-                return (m_mods & flags) != None;
-            }
+            auto flags = ModifierKey{ mods };
+            return (m_mods & flags.m_mods) != 0;
+        }
+
+        /**
+         * @brief Test if any of the modifier key(s) are set.
+         * @param mods The modifier key(s) to test.
+         */
+        bool test_any(std::span<const Bit> mods) const noexcept
+        {
+            auto flags = ModifierKey{ mods };
+            return (m_mods & flags.m_mods) != 0;
         }
 
         /**
