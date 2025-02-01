@@ -13,10 +13,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `ModifierKey::test_any` and `ModifierKey::test_all` member functions.
 - Proper unit tests for inputs functionalities.
 - New changelog file.
+- Error handling for `GLFW_INVALID_VALUE` and `GLFW_INVALID_ENUM` adding `InvalidValue` and `InvalidEnum` class respectively.
 
 ### Fixed
 
 - Fix off-by-one error on `pressed_buttons` and `released_button` member functions for both `KeyStateRecord` and `MouseButtonStateRecord`.
+- Incorrect logger formatting for internal error.
+- Missing `error.hpp` include in `glfw_cpp.hpp` header.
 
 ### Changed
 
@@ -25,6 +28,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make ModifierKey constructor explicit.
 - Make `ModifierKey::test` function take only single parameter.
 - Make `set_value`, `set`, and `unset` member functions of `KeyStateRecord` and `MouseButtonStateRecord` return its instance to allow chaining.
+- Make `IEventInterceptor` and its derivatives a class.
+- Promote the severity of internal error from Error to Critical.
+- Add `ErrorCode` enumeration as an alternative type safe GLFW error code.
+- Add `ErrorCode` information inside the `glfw_cpp::Error` class that can be queried with `code()` member function.
 
 ## [0.9.0] - 2025-01-26
 
