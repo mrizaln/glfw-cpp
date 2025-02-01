@@ -92,7 +92,7 @@ namespace glfw_cpp
         instance.m_initialized = true;
 
         glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::log_e("(Internal error [{}|{:#8x}]) {}", error_to_string(err), err, msg);
+            Instance::log_c("(Internal error [{}|{:#010x}]) {}", error_to_string(err), err, msg);
         });
 
         if (glfwInit() != GLFW_TRUE) {
@@ -102,10 +102,6 @@ namespace glfw_cpp
 
         const auto&& configure_api = util::VisitOverloaded{
             [](Api::OpenGL& api) {
-                if (api.m_major < 0 || api.m_minor < 0) {
-                    throw VersionUnavailable{};
-                }
-
                 if (api.m_loader == nullptr) {
                     throw EmptyLoader{};
                 }
