@@ -1,8 +1,8 @@
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 int main()
 {
@@ -18,7 +18,7 @@ int main()
     });
 
     // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
-    // it is through this `glfw_cpp::Instance::createWindowManager()` function which returns a
+    // it is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
     // `std::shared_ptr<WindowManager>`. Each window created with this instance claims ownership of it (hence
     // the shared_ptr).
     auto wm = instance->create_window_manager();
@@ -29,19 +29,22 @@ int main()
     auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
 
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
-        // events
-        using E = glfw_cpp::Event;
-        using K = glfw_cpp::KeyCode;
+        // handling events
+        {
+            using E = glfw_cpp::Event;
+            using K = glfw_cpp::KeyCode;
 
-        // clang-format off
-        events.visit(E::Overloaded{
-            [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close(); },
-            [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);    },
-            [&](const auto&                  e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
-        });
-        // clang-format on
+            // clang-format off
+            events.visit(E::Overloaded{
+                [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close();         },
+                [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);             },
+                [&](const auto&                  e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
+            });
+            // clang-format on
+        }
 
-        // continuous key input (for movement for example)
+        // `glfw_cpp::Window` keep a copy of (almost) every properties of the window (like pressed keys) in
+        // itself. You can query it for continuous key input (for movement) for example.
         {
             using K          = glfw_cpp::KeyCode;
             const auto& keys = window.properties().m_key_state;

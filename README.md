@@ -25,7 +25,7 @@ include(FetchContent)
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
-  GIT_TAG main)
+  GIT_TAG v0.10.0)
 
 # set this variable to ON to enable Vulkan support (requires Vulkan loader and headers)
 option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)
@@ -52,71 +52,76 @@ Using this library is as simple as
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
 
 int main()
 {
-    // Graphics API can't be changed. You can recreate the glfw instance (basically resetting glfw)
-    // to use other graphics API. This is a design choice.
-    auto api = glfw_cpp::Api::OpenGL{
+    // `glfw_cpp::init()` calls `glfwInit()` internally and returns an `glfw_cpp::Instance::Unique` that will
+    // call `glfwTerminate()` on dtor. Note that the graphics API can't be changed later, this is a design
+    // choice.
+    auto instance = glfw_cpp::init(glfw_cpp::Api::OpenGL{
         .m_major   = 3,
         .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::CORE,
-        .m_loader  = [](glfw_cpp::Api::GlContext /* context */, glfw_cpp::Api::GlGetProc proc) {
-            // glad does not use the context, but other loader might be
-            gladLoadGLLoader((GLADloadproc)proc);
-        },
-    };
+        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
+        .m_loader  = [](glfw_cpp::Api::GlContext /* handle */,
+                       glfw_cpp::Api::GlGetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    });
 
-    // All types are RAII, there's no need to manage them manually
-    auto instance = glfw_cpp::init(api);
-    auto wm       = instance->createWindowManager();
-    auto window   = wm->createWindow({}, "Learn glfw-cpp", 800, 600);
+    // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
+    // it is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
+    // `std::shared_ptr<WindowManager>`. Each window created with this instance claims ownership of it (hence
+    // the shared_ptr).
+    auto wm = instance->create_window_manager();
 
-    // window loop (v-sync enabled by default and polls events from WindowManager automatically)
+    // graphics API hints are omitted from the `WindowHint`, only other relevant hints are included.
+    auto hint = glfw_cpp::WindowHint{};    // use default hint
+
+    auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
+
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
-        // events
-        for (const auto& event : events) {
+        // handling events
+        {
             using E = glfw_cpp::Event;
             using K = glfw_cpp::KeyCode;
 
-            // using visitor pattern and overload set to visit each event
-            event.visit(E::Overloaded{
-                [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.requestClose(); },
-                [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);    },
-                [&](const auto&) {},  // catch-all case
+            // clang-format off
+            events.visit(E::Overloaded{
+                [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close();         },
+                [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);             },
+                [&](const auto&                  e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
             });
+            // clang-format on
         }
 
-        // continuous key input (for movement for example)
+        // `glfw_cpp::Window` keep a copy of (almost) every properties of the window (like pressed keys) in
+        // itself. You can query it for continuous key input (for movement) for example.
         {
             using K          = glfw_cpp::KeyCode;
-            const auto& keys = window.properties().m_keyState;
+            const auto& keys = window.properties().m_key_state;
 
-            if (keys.allPressed({ K::H, K::J, K::L, K::K })) {
+            if (keys.all_pressed({ K::H, K::J, K::L, K::K })) {
                 std::cout << "HJKL key pressed all at once\n";
             }
 
-            if (keys.isPressed(K::LEFT_SHIFT) && keys.anyPressed({ K::W, K::A, K::S, K::D })) {
+            if (keys.is_pressed(K::LeftShift) && keys.any_pressed({ K::W, K::A, K::S, K::D })) {
                 std::cout << "WASD key pressed with shift key being held\n";
-            } else if (keys.anyPressed({ K::W, K::A, K::S, K::D })) {
+            } else if (keys.any_pressed({ K::W, K::A, K::S, K::D })) {
                 std::cout << "WASD key pressed\n";
             }
         }
 
-        elapsed += static_cast<float>(window.deltaTime());
+        elapsed += static_cast<float>(window.delta_time());
 
         // funny color cycle
-        const auto r = (std::sin(23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
-        const auto g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
-        const auto b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
+        const float r = (std::sin(23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
+        const float g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
+        const float b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
 
         glClearColor(r, g, b, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // WindowManager still need to poll the events from the OS though
-        wm->pollEvents();
+        wm->poll_events();
     });
 }
 ```
