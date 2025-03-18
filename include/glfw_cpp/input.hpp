@@ -7,7 +7,6 @@
 #include <initializer_list>
 #include <span>
 #include <string_view>
-#include <utility>
 #include <vector>
 
 namespace glfw_cpp
