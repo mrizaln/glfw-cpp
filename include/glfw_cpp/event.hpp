@@ -428,7 +428,7 @@ namespace glfw_cpp
      * before any `Window::Properties` is updated. The return value of each function determines whether the
      * event should be forwarded to the `Window` or not.
      */
-    struct IEventInterceptor
+    class IEventInterceptor
     {
     public:
         // allow deletion of derived class through this pointer
@@ -462,7 +462,7 @@ namespace glfw_cpp
      * functions you need to intercept. The return value of each function determines whether the event should
      * be forwarded to the `Window` or not.
      */
-    struct DefaultEventInterceptor : public IEventInterceptor
+    class DefaultEventInterceptor : public IEventInterceptor
     {
         // clang-format off
         bool on_window_moved        (Window&, Event::WindowMoved&)        noexcept override { return true; }

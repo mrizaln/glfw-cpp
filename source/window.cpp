@@ -317,7 +317,7 @@ namespace glfw_cpp
             if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
             } else {
-                throw NoWindowContext{};
+                throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
             }
 
         } else if (m_attached_thread_id == std::this_thread::get_id()) {
@@ -347,7 +347,7 @@ namespace glfw_cpp
         if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
             glfwMakeContextCurrent(nullptr);
         } else {
-            throw NoWindowContext{};
+            throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
         }
 
         if (m_attached_thread_id != std::thread::id{}) {
@@ -399,7 +399,7 @@ namespace glfw_cpp
             // 0 = immediate updates, 1 = update synchronized with vertical retrace
             glfwSwapInterval(value ? 1 : 0);
         } else {
-            throw NoWindowContext{};
+            throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
         }
     }
 

@@ -28,7 +28,7 @@ namespace glfw_cpp::extra
      * properly without any data races. The intercepted events then forwarded to the usual `glfw_cpp` event
      * handling mechanism without any modification to the event.
      */
-    struct ImguiInterceptor : public DefaultEventInterceptor
+    class ImguiInterceptor : public DefaultEventInterceptor
     {
     public:
         /**

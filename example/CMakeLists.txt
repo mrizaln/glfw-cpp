@@ -7,7 +7,6 @@ include(cmake/mold.cmake)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_COLOR_DIAGNOSTICS ON) # You might want to enable this (CMake 3.24+)
 
 find_package(fmt REQUIRED)
 find_package(glbinding REQUIRED)
