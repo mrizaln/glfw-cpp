@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.0] - 2025-03-18
+
 ### Added
 
 - New `dev` branch for active development.
@@ -193,7 +195,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New examples code.
 - New README.md.
 
-[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.9.0...HEAD
+[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.7.1...v0.8.0
 [0.7.1]: https://github.com/mrizaln/glfw-cpp/compare/v0.7.0...v0.7.1
