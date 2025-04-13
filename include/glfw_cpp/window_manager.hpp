@@ -54,17 +54,17 @@ namespace glfw_cpp
     };
 
     template <>
-    struct detail::enum_helper::EnableOperators<Flag> : std::true_type
+    struct detail::enums::EnableOperators<Flag> : std::true_type
     {
     };
 
-    using detail::enum_helper::operators::operator~;
-    using detail::enum_helper::operators::operator|;
-    using detail::enum_helper::operators::operator&;
-    using detail::enum_helper::operators::operator^;
-    using detail::enum_helper::operators::operator|=;
-    using detail::enum_helper::operators::operator&=;
-    using detail::enum_helper::operators::operator^=;
+    using detail::enums::operators::operator~;
+    using detail::enums::operators::operator|;
+    using detail::enums::operators::operator&;
+    using detail::enums::operators::operator^;
+    using detail::enums::operators::operator|=;
+    using detail::enums::operators::operator&=;
+    using detail::enums::operators::operator^=;
 
     /**
      * @struct Hint
@@ -75,8 +75,8 @@ namespace glfw_cpp
      */
     struct Hint
     {
-        Monitor* monitor = nullptr;
-        Window*  share   = nullptr;
+        Monitor::Handle monitor = nullptr;
+        Window::Handle  share   = nullptr;
 
         Flag flags = Flag::Default;
 

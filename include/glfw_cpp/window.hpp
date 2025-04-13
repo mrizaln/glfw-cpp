@@ -97,6 +97,8 @@ namespace glfw_cpp
         Window(const Window&)           = delete;
         Window operator=(const Window&) = delete;
 
+        explicit operator bool() const noexcept { return m_handle != nullptr; }
+
         /**
          * @brief Bind window context to current thread (only makes sense for OpenGL and OpenGLES).
          *

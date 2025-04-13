@@ -100,7 +100,7 @@ namespace glfw_cpp
             util::throw_glfw_error();
         }
 
-        const auto&& configure_api = util::VisitOverloaded{
+        instance.m_api.visit(util::VisitOverloaded{
             [](api::OpenGL& api) {
                 if (api.loader == nullptr) {
                     throw EmptyLoader{};
@@ -137,8 +137,7 @@ namespace glfw_cpp
             [](api::NoApi&) {
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
             },
-        };
-        std::visit(configure_api, instance.m_api);
+        });
 
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }

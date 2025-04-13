@@ -224,24 +224,21 @@ namespace glfw_cpp
         , m_attached_thread_id{}
         , m_properties{ std::move(properties) }
     {
-        auto init = [&](auto* api) {
+        auto init = [&](auto& api) {
             bind();
             set_vsync(m_vsync);
             glfwSetWindowUserPointer(m_handle, this);
-            api->loader(handle, glfwGetProcAddress);
-            if (!bind_immediately) {
+            api.loader(handle, glfwGetProcAddress);
+            if (not bind_immediately) {
                 unbind();
             }
         };
 
-        if (auto* api = std::get_if<api::OpenGL>(&Instance::get().m_api)) {
-            init(api);
-        } else if (auto* api = std::get_if<api::OpenGLES>(&Instance::get().m_api)) {
-            init(api);
-        } else {
-            glfwSetWindowUserPointer(m_handle, this);
-            // don't need to do anything for NoApi
-        }
+        Instance::get().m_api.visit(util::VisitOverloaded{
+            [&](api::OpenGL& api) { init(api); },
+            [&](api::OpenGLES& api) { init(api); },
+            [&](api::NoApi&) { glfwSetWindowUserPointer(m_handle, this); },
+        });
     }
 
     // clang-format off
@@ -296,7 +293,7 @@ namespace glfw_cpp
     Window::~Window()
     {
         if (m_handle != nullptr) {
-            if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
+            if (not Instance::get().m_api.is<api::NoApi>()) {
                 unbind();
             }
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
@@ -314,7 +311,7 @@ namespace glfw_cpp
             m_attached_thread_id = std::this_thread::get_id();
             Instance::log_d("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
-            if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
+            if (not Instance::get().m_api.is<api::NoApi>()) {
                 glfwMakeContextCurrent(m_handle);
             } else {
                 throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
@@ -344,7 +341,7 @@ namespace glfw_cpp
 
     void Window::unbind()
     {
-        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
+        if (not Instance::get().m_api.is<api::NoApi>()) {
             glfwMakeContextCurrent(nullptr);
         } else {
             throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
@@ -395,7 +392,7 @@ namespace glfw_cpp
     {
         m_vsync = value;
 
-        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
+        if (not Instance::get().m_api.is<api::NoApi>()) {
             // 0 = immediate updates, 1 = update synchronized with vertical retrace
             glfwSwapInterval(value ? 1 : 0);
         } else {
@@ -482,7 +479,7 @@ namespace glfw_cpp
 
     double Window::display()
     {
-        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
+        if (not Instance::get().m_api.is<api::NoApi>()) {
             glfwSwapBuffers(m_handle);
         } else {
             util::check_glfw_error();

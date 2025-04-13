@@ -269,19 +269,7 @@ namespace glfw_cpp
          * @brief Check whether a type is part of event types
          */
         template <typename T>
-        concept Event = detail::VarTrait<Variant>::template is_elem<T>();
-
-        /**
-         * @brief Check the exhaustiveness of a visitor for events
-         */
-        template <typename T>
-        concept EventVisitor = detail::VarTrait<event::Variant>::template overload_exhaustive<T>();
-
-        /**
-         * @brief Check the exhaustiveness of a visitor for events
-         */
-        template <typename T>
-        concept ConstEventVisitor = detail::VarTrait<event::Variant>::template const_overload_exhaustive<T>();
+        concept Event = detail::traits::VarTrait<Variant>::template is_elem<T>();
 
         /**
          * @struct Overload
@@ -305,140 +293,16 @@ namespace glfw_cpp
      * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
      * each Window.
      */
-    class Event
+    class Event : public detail::variants::VariantBase<event::Variant>
     {
     public:
-#undef GLFW_CPP_EVENT_TYPE_LIST
+        Event() = default;
 
-        Event() noexcept
-            : m_event{ event::Empty{} }
+        template <typename T>
+        Event(T&& t) noexcept
+            : VariantBase{ std::forward<T>(t) }
         {
         }
-
-        template <event::Event E>
-        Event(E&& event) noexcept
-            : m_event{ std::move(event) }
-        {
-        }
-
-        /**
-         * @brief Visit the event with the given visitor
-         *
-         * @param visitor Visitor to visit the event with (must comply with `std::visit` requirements)
-         * @return The return value of the visitor
-         *
-         * @throw <exception> If the visitor throws an exception, the exception is propagated
-         *
-         * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
-         */
-        template <event::EventVisitor T>
-        decltype(auto) visit(T&& visitor)
-        {
-            // Unbounded visitor, I'm too tired trying to get the bound right...
-            return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
-        }
-
-        /**
-         * @brief Visit the event with the given visitor
-         *
-         * @param visitor Visitor to visit the event with (must comply with `std::visit` requirements)
-         * @return The return value of the visitor
-         *
-         * @throw <exception> If the visitor throws an exception, the exception is propagated
-         *
-         * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
-         */
-        template <event::EventVisitor T>
-        decltype(auto) visit(T&& visitor) const
-        {
-            // Unbounded visitor, I'm too tired trying to get the bound right...
-            return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
-        }
-
-        /**
-         * @brief Get the event as the specified type
-         *
-         * @tparam T Type of the event to get
-         * @return Reference to the event
-         *
-         * @throw std::bad_variant_access If the event is not of the specified type
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        T& get()
-        {
-            return std::get<T>(m_event);
-        }
-
-        /**
-         * @brief Get the event as the specified type
-         *
-         * @tparam T Type of the event to get
-         * @return Reference to the event
-         *
-         * @throw std::bad_variant_access If the event is not of the specified type
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        const T& get() const
-        {
-            return std::get<T>(m_event);
-        }
-
-        /**
-         * @brief Get the event as the specified type
-         *
-         * @tparam T Type of the event to get
-         * @return Pointer to the event, or nullptr if the event is not of the specified type
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        T* get_if() noexcept
-        {
-            return std::get_if<T>(&m_event);
-        }
-
-        /**
-         * @brief Get the event as the specified type
-         *
-         * @tparam T Type of the event to get
-         * @return Pointer to the event, or nullptr if the event is not of the specified type
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        const T* get_if() const noexcept
-        {
-            return std::get_if<T>(&m_event);
-        }
-
-        /**
-         * @brief Set the event to the specified value
-         *
-         * @tparam T Type of the event to set
-         * @param event Event to set
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        void set(T&& event) noexcept
-        {
-            m_event = std::forward<T>(event);
-        }
-
-        /**
-         * @brief Check if the event holds the specified type
-         *
-         * @tparam T Type to check
-         * @return true If the event holds the specified type
-         */
-        template <event::Event T>
-            requires (not std::is_pointer_v<T>)
-        bool holds() const noexcept
-        {
-            return std::holds_alternative<T>(m_event);
-        }
-
-    private:
-        event::Variant m_event;
     };
 
     /**
@@ -551,7 +415,8 @@ namespace glfw_cpp
          * want to break from the loop or want the visitor to return something, then you better off writing
          * the loop yourself and use `Event::visit` traditionally.
          */
-        template <event::EventVisitor T>
+        template <typename T>
+            requires (detail::traits::VarTrait<event::Variant>::template const_overload_exhaustive<T>())
         void visit(T&& visitor) const;
 
         /**
@@ -717,7 +582,8 @@ namespace glfw_cpp
     static_assert(std::forward_iterator<EventQueue::Iterator<true>>);
 
     // NOTE: the visit function must be defined in the header since it's a template
-    template <event::EventVisitor T>
+    template <typename T>
+        requires (detail::traits::VarTrait<event::Variant>::template const_overload_exhaustive<T>())
     void EventQueue::visit(T&& visitor) const
     {
         for (const auto& event : *this) {

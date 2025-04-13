@@ -1,6 +1,8 @@
 #ifndef INSTANCE_HPP_AO39EW8FOEW
 #define INSTANCE_HPP_AO39EW8FOEW
 
+#include "glfw_cpp/detail/helper.hpp"
+
 #include <format>
 #include <functional>
 #include <memory>
@@ -69,13 +71,26 @@ namespace glfw_cpp
         };
 
         using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
+
+        template <typename T>
+        concept Api = detail::traits::VarTrait<Variant>::template is_elem<T>();
     }
 
     /**
      * @struct Api
      * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no API).
      */
-    using Api = api::Variant;
+    class Api : public detail::variants::VariantBase<api::Variant>
+    {
+    public:
+        Api() = default;
+
+        template <typename T>
+        Api(T&& t)
+            : VariantBase{ std::forward<T>(t) }
+        {
+        }
+    };
 
     /**
      * @enum LogLevel

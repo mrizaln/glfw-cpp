@@ -76,13 +76,7 @@ namespace glfw_cpp
         configure_hints(hint);
         util::check_glfw_error();
 
-        const auto handle = glfwCreateWindow(
-            width,
-            height,
-            title.data(),
-            hint.monitor ? hint.monitor->handle() : nullptr,
-            hint.share ? hint.share->handle() : nullptr
-        );
+        const auto handle = glfwCreateWindow(width, height, title.data(), hint.monitor, hint.share);
         if (handle == nullptr) {
             Instance::log_c("(WindowManager) Window creation failed");
             util::throw_glfw_error();
@@ -136,7 +130,7 @@ namespace glfw_cpp
             },
             .mouse_button_state = {},
             .key_state          = {},
-            .monitor            = *hint.monitor,        // copy since Monitor is just a wrapper to GlfwMonitor*
+            .monitor            = hint.monitor,
         }, bind_immediately };
     }
 
