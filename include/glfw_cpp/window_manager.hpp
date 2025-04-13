@@ -1,6 +1,8 @@
 #ifndef WINDOW_MANAGER_HPP_OR5VIUQW
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
+#include "glfw_cpp/detail/helper.hpp"
+
 #include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window.hpp"
 
@@ -33,37 +35,50 @@ namespace glfw_cpp
     class Monitor;
     class IEventInterceptor;
 
+    enum class Flag : std::uint32_t
+    {
+        None                   = 0,
+        Resizable              = 1 << 0,
+        Visible                = 1 << 1,
+        Decorated              = 1 << 2,
+        Focused                = 1 << 3,
+        AutoIconify            = 1 << 4,
+        Floating               = 1 << 5,
+        Maximized              = 1 << 6,
+        CenterCursor           = 1 << 7,
+        TransparentFramebuffer = 1 << 8,
+        FocusOnShow            = 1 << 9,
+        ScaleToMonitor         = 1 << 10,
+
+        Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
+    };
+
+    template <>
+    struct detail::enum_helper::EnableOperators<Flag> : std::true_type
+    {
+    };
+
+    using detail::enum_helper::operators::operator~;
+    using detail::enum_helper::operators::operator|;
+    using detail::enum_helper::operators::operator&;
+    using detail::enum_helper::operators::operator^;
+    using detail::enum_helper::operators::operator|=;
+    using detail::enum_helper::operators::operator&=;
+    using detail::enum_helper::operators::operator^=;
+
     /**
-     * @struct WindowHint
+     * @struct Hint
      * @brief A struct that holds window hints.
      *
      * The window hints included here are only the relevant ones. Graphics API is omitted since the API is not
      * allowed to change at runtime (my design choice).
      */
-    struct WindowHint
+    struct Hint
     {
-        using Flag = std::int32_t;
-        enum FlagBit : Flag
-        {
-            Resizable              = 1 << 0,
-            Visible                = 1 << 1,
-            Decorated              = 1 << 2,
-            Focused                = 1 << 3,
-            AutoIconify            = 1 << 4,
-            Floating               = 1 << 5,
-            Maximized              = 1 << 6,
-            CenterCursor           = 1 << 7,
-            TransparentFramebuffer = 1 << 8,
-            FocusOnShow            = 1 << 9,
-            ScaleToMonitor         = 1 << 10,
-
-            Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
-        };
-
         Monitor* monitor = nullptr;
         Window*  share   = nullptr;
 
-        Flag flags = FlagBit::Default;
+        Flag flags = Flag::Default;
 
         int red_bits     = 8;
         int green_bits   = 8;
@@ -73,7 +88,7 @@ namespace glfw_cpp
         int stencil_bits = 8;
 
         int samples      = 0;
-        int refresh_rate = -1;
+        int refresh_rate = -1;    // -1 means don't care
     };
 
     /**
@@ -120,11 +135,11 @@ namespace glfw_cpp
          * @throw glfw_cpp::PlatformError A platform-specific error occurred.
          */
         Window create_window(
-            const WindowHint& hint,
-            std::string_view  title,
-            int               width,
-            int               height,
-            bool              bind_immediately = true
+            const Hint&      hint,
+            std::string_view title,
+            int              width,
+            int              height,
+            bool             bind_immediately = true
         );
 
         /**

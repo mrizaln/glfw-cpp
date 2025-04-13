@@ -11,62 +11,62 @@ struct GLFWmonitor;
 
 namespace glfw_cpp
 {
+    struct Position
+    {
+        int  x;
+        int  y;
+        auto operator<=>(const Position&) const = default;
+    };
+
+    struct WorkArea
+    {
+        int  x;
+        int  y;
+        int  width;
+        int  height;
+        auto operator<=>(const WorkArea&) const = default;
+    };
+
+    struct PhysicalSize
+    {
+        int  width_mm;
+        int  height_mm;
+        auto operator<=>(const PhysicalSize&) const = default;
+    };
+
+    struct ContentScale
+    {
+        float x;
+        float y;
+        auto  operator<=>(const ContentScale&) const = default;
+    };
+
+    struct VideoMode
+    {
+        int width;
+        int height;
+        int red_bits;
+        int green_bits;
+        int blue_bits;
+        int refresh_rate;
+
+        auto operator<=>(const VideoMode&) const = default;
+    };
+
+    struct GammaRamp
+    {
+        std::span<const unsigned short> red;
+        std::span<const unsigned short> green;
+        std::span<const unsigned short> blue;
+        std::size_t                     size;
+    };
+
     // Monitor is not a RAII class as it's not managing any resource. It's a simple wrapper of the
     // underlying GLFWmonitor.
     class Monitor
     {
     public:
         using Handle = GLFWmonitor*;
-
-        struct Position
-        {
-            int  x;
-            int  y;
-            auto operator<=>(const Position&) const = default;
-        };
-
-        struct WorkArea
-        {
-            int  x;
-            int  y;
-            int  width;
-            int  height;
-            auto operator<=>(const WorkArea&) const = default;
-        };
-
-        struct PhysicalSize
-        {
-            int  width_mm;
-            int  height_mm;
-            auto operator<=>(const PhysicalSize&) const = default;
-        };
-
-        struct ContentScale
-        {
-            float x;
-            float y;
-            auto  operator<=>(const ContentScale&) const = default;
-        };
-
-        struct VideoMode
-        {
-            int width;
-            int height;
-            int red_bits;
-            int green_bits;
-            int blue_bits;
-            int refresh_rate;
-
-            auto operator<=>(const VideoMode&) const = default;
-        };
-
-        struct GammaRamp
-        {
-            std::span<const unsigned short> red;
-            std::span<const unsigned short> green;
-            std::span<const unsigned short> blue;
-            std::size_t                     size;
-        };
 
         Monitor() = default;
         Monitor(Handle handle)

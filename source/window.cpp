@@ -48,8 +48,8 @@ namespace glfw_cpp
             event::WindowResized{
                 .width         = width,
                 .height        = height,
-                .width_change  = width - w->properties().dimension.width,
-                .height_change = height - w->properties().dimension.height,
+                .width_change  = width - w->properties().dimensions.width,
+                .height_change = height - w->properties().dimensions.height,
             }
         );
     }
@@ -405,7 +405,7 @@ namespace glfw_cpp
 
     void Window::set_window_size(int width, int height) noexcept
     {
-        m_properties.dimension = {
+        m_properties.dimensions = {
             .width  = width,
             .height = height,
         };
@@ -423,7 +423,7 @@ namespace glfw_cpp
 
     float Window::aspect_ratio() const noexcept
     {
-        auto [width, height] = m_properties.dimension;
+        auto [width, height] = m_properties.dimensions;
         return (float)width / (float)height;
     }
 
@@ -435,7 +435,7 @@ namespace glfw_cpp
         }
 
         m_manager->enqueue_window_task(m_handle, [=, this] {
-            auto width  = m_properties.dimension.width;
+            auto width  = m_properties.dimensions.width;
             auto height = int((float)width / ratio);
             glfwSetWindowAspectRatio(m_handle, width, height);
         });
@@ -444,7 +444,7 @@ namespace glfw_cpp
     void Window::lock_current_aspect_ratio() noexcept
     {
         m_manager->enqueue_window_task(m_handle, [this] {
-            auto [width, height] = m_properties.dimension;
+            auto [width, height] = m_properties.dimensions;
             glfwSetWindowAspectRatio(m_handle, width, height);
         });
     }

@@ -18,6 +18,55 @@ namespace glfw_cpp
 {
     class WindowManager;
 
+    struct Dimensions
+    {
+        int  width;
+        int  height;
+        auto operator<=>(const Dimensions&) const = default;
+    };
+
+    struct FramebufferSize
+    {
+        int  width;
+        int  height;
+        auto operator<=>(const FramebufferSize&) const = default;
+    };
+
+    struct CursorPosition
+    {
+        double x;
+        double y;
+        auto   operator<=>(const CursorPosition&) const = default;
+    };
+
+    struct Atrributes
+    {
+        unsigned int iconified     : 1 = 0;
+        unsigned int maximized     : 1 = 0;
+        unsigned int focused       : 1 = 0;
+        unsigned int visible       : 1 = 0;
+        unsigned int hovered       : 1 = 0;
+        unsigned int resizable     : 1 = 0;
+        unsigned int floating      : 1 = 0;
+        unsigned int auto_iconify  : 1 = 0;
+        unsigned int focus_on_show : 1 = 0;
+
+        bool operator==(const Atrributes&) const = default;
+    };
+
+    struct Properties
+    {
+        std::string            title;
+        Position               pos;
+        Dimensions             dimensions;
+        FramebufferSize        framebuffer_size;
+        CursorPosition         cursor;
+        Atrributes             attribute;
+        MouseButtonStateRecord mouse_button_state;
+        KeyStateRecord         key_state;
+        Monitor                monitor;
+    };
+
     /**
      * @class Window
      * @brief Wrapper class for `GLFWwindow`.
@@ -33,59 +82,6 @@ namespace glfw_cpp
     {
     public:
         friend WindowManager;
-
-        struct Properties
-        {
-            std::string title;
-
-            struct Position
-            {
-                int  x;
-                int  y;
-                auto operator<=>(const Position&) const = default;
-            } pos;
-
-            // TODO: rename to Dimensions for correct english
-            struct Dimension
-            {
-                int  width;
-                int  height;
-                auto operator<=>(const Dimension&) const = default;
-            } dimension;
-
-            struct FramebufferSize
-            {
-                int  width;
-                int  height;
-                auto operator<=>(const FramebufferSize&) const = default;
-            } framebuffer_size;
-
-            struct CursorPos
-            {
-                double x;
-                double y;
-                auto   operator<=>(const CursorPos&) const = default;
-            } cursor;
-
-            struct Atrribute
-            {
-                unsigned int iconified     : 1 = 0;
-                unsigned int maximized     : 1 = 0;
-                unsigned int focused       : 1 = 0;
-                unsigned int visible       : 1 = 0;
-                unsigned int hovered       : 1 = 0;
-                unsigned int resizable     : 1 = 0;
-                unsigned int floating      : 1 = 0;
-                unsigned int auto_iconify  : 1 = 0;
-                unsigned int focus_on_show : 1 = 0;
-
-                bool operator==(const Atrribute&) const = default;
-            } attribute;
-
-            MouseButtonStateRecord mouse_button_state = {};
-            KeyStateRecord         key_state          = {};
-            Monitor                monitor            = {};
-        };
 
         static constexpr std::size_t s_default_eventqueue_size = 128;
 

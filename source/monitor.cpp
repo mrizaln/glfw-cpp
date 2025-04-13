@@ -35,35 +35,35 @@ namespace glfw_cpp
         return glfwGetMonitorName(m_handle);
     }
 
-    Monitor::Position Monitor::position() const noexcept
+    Position Monitor::position() const noexcept
     {
         auto position = Position{};
         glfwGetMonitorPos(m_handle, &position.x, &position.y);
         return position;
     }
 
-    Monitor::WorkArea Monitor::work_area() const noexcept
+    WorkArea Monitor::work_area() const noexcept
     {
         auto area = WorkArea{};
         glfwGetMonitorWorkarea(m_handle, &area.x, &area.y, &area.width, &area.height);
         return area;
     }
 
-    Monitor::PhysicalSize Monitor::physical_size() const noexcept
+    PhysicalSize Monitor::physical_size() const noexcept
     {
         auto phys_size = PhysicalSize{};
         glfwGetMonitorPhysicalSize(m_handle, &phys_size.width_mm, &phys_size.height_mm);
         return phys_size;
     }
 
-    Monitor::ContentScale Monitor::content_scale() const noexcept
+    ContentScale Monitor::content_scale() const noexcept
     {
         auto scale = ContentScale{};
         glfwGetMonitorContentScale(m_handle, &scale.x, &scale.y);
         return scale;
     }
 
-    Monitor::VideoMode Monitor::current_video_mode() const noexcept
+    VideoMode Monitor::current_video_mode() const noexcept
     {
         auto* vid_mode = glfwGetVideoMode(m_handle);
         assert(vid_mode != nullptr && "video mode should not be empty");
@@ -77,13 +77,13 @@ namespace glfw_cpp
         };
     }
 
-    std::vector<Monitor::VideoMode> Monitor::available_video_modes() const noexcept
+    std::vector<VideoMode> Monitor::available_video_modes() const noexcept
     {
         auto count     = 0;
         auto modes_ptr = glfwGetVideoModes(m_handle, &count);
         assert(modes_ptr != nullptr && "video modes should not be empty");
 
-        auto modes = std::vector<Monitor::VideoMode>{};
+        auto modes = std::vector<VideoMode>{};
         modes.reserve(static_cast<std::size_t>(count));
         for (auto i = 0; i < count; ++i) {
             auto mode = VideoMode{
@@ -122,7 +122,7 @@ namespace glfw_cpp
         glfwSetGammaRamp(m_handle, &gamma);
     }
 
-    Monitor::GammaRamp Monitor::get_gamma_ramp() const noexcept
+    GammaRamp Monitor::get_gamma_ramp() const noexcept
     {
         auto ramp_ptr = glfwGetGammaRamp(m_handle);
         assert(ramp_ptr != nullptr && "gamma ramp should not be empty");

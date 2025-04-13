@@ -17,12 +17,12 @@
 
 namespace
 {
-    void configure_hints(const glfw_cpp::WindowHint& hint) noexcept
+    void configure_hints(const glfw_cpp::Hint& hint) noexcept
     {
-        using F = glfw_cpp::WindowHint::FlagBit;
+        using F = glfw_cpp::Flag;
 
         const auto set_flag = [&](int flag, F bit) {
-            glfwWindowHint(flag, (hint.flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
+            glfwWindowHint(flag, (hint.flags & bit) == bit ? GLFW_TRUE : GLFW_FALSE);
         };
 
         set_flag(GLFW_RESIZABLE, F::Resizable);
@@ -65,15 +65,16 @@ namespace glfw_cpp
     }
 
     Window WindowManager::create_window(
-        const WindowHint& hint,
-        std::string_view  title,
-        int               width,
-        int               height,
-        bool              bind_immediately
+        const Hint&      hint,
+        std::string_view title,
+        int              width,
+        int              height,
+        bool             bind_immediately
     )
     {
         validate_access();
         configure_hints(hint);
+        util::check_glfw_error();
 
         const auto handle = glfwCreateWindow(
             width,
@@ -116,23 +117,26 @@ namespace glfw_cpp
 
         auto wm_copy = std::enable_shared_from_this<WindowManager>::shared_from_this();
 
-        return Window{ wm_copy, handle, Window::Properties{
-            .title             = { title.begin(), title.end() },
-            .pos               = { x_pos, y_pos },
-            .dimension         = { real_width, real_height },
-            .framebuffer_size  = { fb_width, fb_height },
-            .cursor            = { x_cursor, y_cursor },
-            .attribute         = {
-                .iconified     = 0,
-                .maximized     = (hint.flags & WindowHint::Maximized) != 0,
-                .focused       = (hint.flags & WindowHint::Focused) != 0,
-                .visible       = (hint.flags & WindowHint::Visible) != 0,
-                .hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .resizable     = (hint.flags & WindowHint::Resizable) != 0,
-                .floating      = (hint.flags & WindowHint::Floating) != 0,
-                .auto_iconify  = (hint.flags & WindowHint::AutoIconify) != 0,
-                .focus_on_show = (hint.flags & WindowHint::FocusOnShow) != 0,
+        return Window{ wm_copy, handle, Properties{
+            .title              = { title.begin(), title.end() },
+            .pos                = { x_pos, y_pos },
+            .dimensions         = { real_width, real_height },
+            .framebuffer_size   = { fb_width, fb_height },
+            .cursor             = { x_cursor, y_cursor },
+            .attribute          = {
+                .iconified      = 0,
+                .maximized      = (hint.flags & Flag::Maximized) == Flag::Maximized,
+                .focused        = (hint.flags & Flag::Focused) == Flag::Focused,
+                .visible        = (hint.flags & Flag::Visible) == Flag::Visible,
+                .hovered        = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .resizable      = (hint.flags & Flag::Resizable) == Flag::Resizable,
+                .floating       = (hint.flags & Flag::Floating) == Flag::Floating,
+                .auto_iconify   = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
+                .focus_on_show  = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
             },
+            .mouse_button_state = {},
+            .key_state          = {},
+            .monitor            = *hint.monitor,        // copy since Monitor is just a wrapper to GlfwMonitor*
         }, bind_immediately };
     }
 
