@@ -38,28 +38,28 @@ namespace glfw_cpp
     Monitor::Position Monitor::position() const noexcept
     {
         auto position = Position{};
-        glfwGetMonitorPos(m_handle, &position.m_x, &position.m_y);
+        glfwGetMonitorPos(m_handle, &position.x, &position.y);
         return position;
     }
 
     Monitor::WorkArea Monitor::work_area() const noexcept
     {
         auto area = WorkArea{};
-        glfwGetMonitorWorkarea(m_handle, &area.m_x, &area.m_y, &area.m_width, &area.m_height);
+        glfwGetMonitorWorkarea(m_handle, &area.x, &area.y, &area.width, &area.height);
         return area;
     }
 
     Monitor::PhysicalSize Monitor::physical_size() const noexcept
     {
         auto phys_size = PhysicalSize{};
-        glfwGetMonitorPhysicalSize(m_handle, &phys_size.m_width_mm, &phys_size.m_height_mm);
+        glfwGetMonitorPhysicalSize(m_handle, &phys_size.width_mm, &phys_size.height_mm);
         return phys_size;
     }
 
     Monitor::ContentScale Monitor::content_scale() const noexcept
     {
         auto scale = ContentScale{};
-        glfwGetMonitorContentScale(m_handle, &scale.m_x, &scale.m_y);
+        glfwGetMonitorContentScale(m_handle, &scale.x, &scale.y);
         return scale;
     }
 
@@ -68,12 +68,12 @@ namespace glfw_cpp
         auto* vid_mode = glfwGetVideoMode(m_handle);
         assert(vid_mode != nullptr && "video mode should not be empty");
         return {
-            .m_width        = vid_mode->width,
-            .m_height       = vid_mode->height,
-            .m_red_bits     = vid_mode->redBits,
-            .m_green_bits   = vid_mode->greenBits,
-            .m_blue_bits    = vid_mode->blueBits,
-            .m_refresh_rate = vid_mode->refreshRate,
+            .width        = vid_mode->width,
+            .height       = vid_mode->height,
+            .red_bits     = vid_mode->redBits,
+            .green_bits   = vid_mode->greenBits,
+            .blue_bits    = vid_mode->blueBits,
+            .refresh_rate = vid_mode->refreshRate,
         };
     }
 
@@ -87,12 +87,12 @@ namespace glfw_cpp
         modes.reserve(static_cast<std::size_t>(count));
         for (auto i = 0; i < count; ++i) {
             auto mode = VideoMode{
-                .m_width        = modes_ptr[i].width,
-                .m_height       = modes_ptr[i].height,
-                .m_red_bits     = modes_ptr[i].redBits,
-                .m_green_bits   = modes_ptr[i].greenBits,
-                .m_blue_bits    = modes_ptr[i].blueBits,
-                .m_refresh_rate = modes_ptr[i].refreshRate,
+                .width        = modes_ptr[i].width,
+                .height       = modes_ptr[i].height,
+                .red_bits     = modes_ptr[i].redBits,
+                .green_bits   = modes_ptr[i].greenBits,
+                .blue_bits    = modes_ptr[i].blueBits,
+                .refresh_rate = modes_ptr[i].refreshRate,
             };
             modes.push_back(mode);
         }
@@ -107,16 +107,16 @@ namespace glfw_cpp
 
     void Monitor::set_gamma_ramp(const GammaRamp& ramp) noexcept
     {
-        assert(ramp.m_red.size() == ramp.m_size);
-        assert(ramp.m_green.size() == ramp.m_size);
-        assert(ramp.m_blue.size() == ramp.m_size);
+        assert(ramp.red.size() == ramp.size);
+        assert(ramp.green.size() == ramp.size);
+        assert(ramp.blue.size() == ramp.size);
 
         // NOTE: const cast should be fine here since the data later will be copied by GLFW
         auto gamma = GLFWgammaramp{
-            .red   = const_cast<unsigned short*>(ramp.m_red.data()),
-            .green = const_cast<unsigned short*>(ramp.m_green.data()),
-            .blue  = const_cast<unsigned short*>(ramp.m_blue.data()),
-            .size  = static_cast<unsigned int>(ramp.m_size),
+            .red   = const_cast<unsigned short*>(ramp.red.data()),
+            .green = const_cast<unsigned short*>(ramp.green.data()),
+            .blue  = const_cast<unsigned short*>(ramp.blue.data()),
+            .size  = static_cast<unsigned int>(ramp.size),
         };
 
         glfwSetGammaRamp(m_handle, &gamma);
@@ -128,10 +128,10 @@ namespace glfw_cpp
         assert(ramp_ptr != nullptr && "gamma ramp should not be empty");
 
         return {
-            .m_red   = { ramp_ptr->red, ramp_ptr->size },
-            .m_green = { ramp_ptr->green, ramp_ptr->size },
-            .m_blue  = { ramp_ptr->blue, ramp_ptr->size },
-            .m_size  = ramp_ptr->size,
+            .red   = { ramp_ptr->red, ramp_ptr->size },
+            .green = { ramp_ptr->green, ramp_ptr->size },
+            .blue  = { ramp_ptr->blue, ramp_ptr->size },
+            .size  = ramp_ptr->size,
         };
     }
 }

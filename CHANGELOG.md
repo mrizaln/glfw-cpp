@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Move Event variants into `glfw_cpp::event` namespace.
+- Drop `m_*` prefix from public facing fields name.
+
 ## [0.10.0] - 2025-03-18
 
 ### Added

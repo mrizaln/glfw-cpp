@@ -36,54 +36,55 @@ namespace glfw_cpp
 
         struct Properties
         {
-            std::string m_title;
+            std::string title;
 
             struct Position
             {
-                int  m_x;
-                int  m_y;
+                int  x;
+                int  y;
                 auto operator<=>(const Position&) const = default;
-            } m_pos;
+            } pos;
 
+            // TODO: rename to Dimensions for correct english
             struct Dimension
             {
-                int  m_width;
-                int  m_height;
+                int  width;
+                int  height;
                 auto operator<=>(const Dimension&) const = default;
-            } m_dimension;
+            } dimension;
 
             struct FramebufferSize
             {
-                int  m_width;
-                int  m_height;
+                int  width;
+                int  height;
                 auto operator<=>(const FramebufferSize&) const = default;
-            } m_framebuffer_size;
+            } framebuffer_size;
 
             struct CursorPos
             {
-                double m_x;
-                double m_y;
+                double x;
+                double y;
                 auto   operator<=>(const CursorPos&) const = default;
-            } m_cursor;
+            } cursor;
 
             struct Atrribute
             {
-                unsigned int m_iconified     : 1 = 0;
-                unsigned int m_maximized     : 1 = 0;
-                unsigned int m_focused       : 1 = 0;
-                unsigned int m_visible       : 1 = 0;
-                unsigned int m_hovered       : 1 = 0;
-                unsigned int m_resizable     : 1 = 0;
-                unsigned int m_floating      : 1 = 0;
-                unsigned int m_auto_iconify  : 1 = 0;
-                unsigned int m_focus_on_show : 1 = 0;
+                unsigned int iconified     : 1 = 0;
+                unsigned int maximized     : 1 = 0;
+                unsigned int focused       : 1 = 0;
+                unsigned int visible       : 1 = 0;
+                unsigned int hovered       : 1 = 0;
+                unsigned int resizable     : 1 = 0;
+                unsigned int floating      : 1 = 0;
+                unsigned int auto_iconify  : 1 = 0;
+                unsigned int focus_on_show : 1 = 0;
 
                 bool operator==(const Atrribute&) const = default;
-            } m_attribute;
+            } attribute;
 
-            MouseButtonStateRecord m_mouse_button_state = {};
-            KeyStateRecord         m_key_state          = {};
-            Monitor                m_monitor            = {};
+            MouseButtonStateRecord mouse_button_state = {};
+            KeyStateRecord         key_state          = {};
+            Monitor                monitor            = {};
         };
 
         static constexpr std::size_t s_default_eventqueue_size = 128;

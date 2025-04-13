@@ -60,20 +60,20 @@ namespace glfw_cpp
             Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
         };
 
-        Monitor* m_monitor = nullptr;
-        Window*  m_share   = nullptr;
+        Monitor* monitor = nullptr;
+        Window*  share   = nullptr;
 
-        Flag m_flags = FlagBit::Default;
+        Flag flags = FlagBit::Default;
 
-        int m_red_bits     = 8;
-        int m_green_bits   = 8;
-        int m_blue_bits    = 8;
-        int m_alpha_bits   = 8;
-        int m_depth_bits   = 24;
-        int m_stencil_bits = 8;
+        int red_bits     = 8;
+        int green_bits   = 8;
+        int blue_bits    = 8;
+        int alpha_bits   = 8;
+        int depth_bits   = 24;
+        int stencil_bits = 8;
 
-        int m_samples      = 0;
-        int m_refresh_rate = -1;
+        int samples      = 0;
+        int refresh_rate = -1;
     };
 
     /**
@@ -219,8 +219,8 @@ namespace glfw_cpp
 
         struct WindowTask
         {
-            Window::Handle m_handle;
-            Fun<void()>    m_task;
+            Window::Handle handle;
+            Fun<void()>    task;
         };
 
         WindowManager(std::thread::id thread_id, IEventInterceptor* event_interceptor) noexcept;

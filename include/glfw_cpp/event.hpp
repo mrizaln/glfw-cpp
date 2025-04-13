@@ -33,10 +33,10 @@ namespace glfw_cpp
          */
         struct WindowMoved
         {
-            int  m_x;
-            int  m_y;
-            int  m_dx;
-            int  m_dy;
+            int  x;
+            int  y;
+            int  dx;
+            int  dy;
             auto operator<=>(const WindowMoved&) const = default;
         };
 
@@ -47,10 +47,10 @@ namespace glfw_cpp
          */
         struct WindowResized
         {
-            int  m_width;
-            int  m_height;
-            int  m_width_change;
-            int  m_height_change;
+            int  width;
+            int  height;
+            int  width_change;
+            int  height_change;
             auto operator<=>(const WindowResized&) const = default;
         };
 
@@ -81,7 +81,7 @@ namespace glfw_cpp
          */
         struct WindowFocused
         {
-            bool m_focused;
+            bool focused;
             auto operator<=>(const WindowFocused&) const = default;
         };
 
@@ -92,7 +92,7 @@ namespace glfw_cpp
          */
         struct WindowIconified
         {
-            bool m_iconified;
+            bool iconified;
             auto operator<=>(const WindowIconified&) const = default;
         };
 
@@ -103,10 +103,10 @@ namespace glfw_cpp
          */
         struct FramebufferResized
         {
-            int  m_width;
-            int  m_height;
-            int  m_width_change;
-            int  m_height_change;
+            int  width;
+            int  height;
+            int  width_change;
+            int  height_change;
             auto operator<=>(const FramebufferResized&) const = default;
         };
 
@@ -117,9 +117,9 @@ namespace glfw_cpp
          */
         struct ButtonPressed
         {
-            MouseButton      m_button;
-            MouseButtonState m_state;
-            ModifierKey      m_mods;
+            MouseButton      button;
+            MouseButtonState state;
+            ModifierKey      mods;
             bool             operator==(const ButtonPressed&) const = default;
         };
 
@@ -130,10 +130,10 @@ namespace glfw_cpp
          */
         struct CursorMoved
         {
-            double m_x;
-            double m_y;
-            double m_dx;
-            double m_dy;
+            double x;
+            double y;
+            double dx;
+            double dy;
             auto   operator<=>(const CursorMoved&) const = default;
         };
 
@@ -144,7 +144,7 @@ namespace glfw_cpp
          */
         struct CursorEntered
         {
-            bool m_entered;
+            bool entered;
             auto operator<=>(const CursorEntered&) const = default;
         };
 
@@ -155,8 +155,8 @@ namespace glfw_cpp
          */
         struct Scrolled
         {
-            double m_dx;
-            double m_dy;
+            double dx;
+            double dy;
             auto   operator<=>(const Scrolled&) const = default;
         };
 
@@ -167,10 +167,10 @@ namespace glfw_cpp
          */
         struct KeyPressed
         {
-            KeyCode     m_key;
-            int         m_scancode;
-            KeyState    m_state;
-            ModifierKey m_mods;
+            KeyCode     key;
+            int         scancode;
+            KeyState    state;
+            ModifierKey mods;
             bool        operator==(const KeyPressed&) const = default;
         };
 
@@ -181,7 +181,7 @@ namespace glfw_cpp
          */
         struct CharInput
         {
-            unsigned int m_codepoint;
+            unsigned int codepoint;
             auto         operator<=>(const CharInput&) const = default;
         };
 
@@ -191,7 +191,7 @@ namespace glfw_cpp
          */
         struct FileDropped
         {
-            std::vector<std::filesystem::path> m_files;
+            std::vector<std::filesystem::path> files;
             bool                               operator==(const FileDropped&) const = default;
         };
 
@@ -202,7 +202,7 @@ namespace glfw_cpp
          */
         struct WindowMaximized
         {
-            bool m_maximized;
+            bool maximized;
             auto operator<=>(const WindowMaximized&) const = default;
         };
 
@@ -213,8 +213,8 @@ namespace glfw_cpp
          */
         struct WindowScaleChanged
         {
-            float m_x;
-            float m_y;
+            float x;
+            float y;
             auto  operator<=>(const WindowScaleChanged&) const = default;
         };
 
@@ -227,8 +227,8 @@ namespace glfw_cpp
          */
         struct MonitorConnected
         {
-            Monitor m_monitor;
-            bool    m_connected;
+            Monitor monitor;
+            bool    connected;
         };
 
         /**
@@ -240,8 +240,8 @@ namespace glfw_cpp
          */
         struct JoystickConnected
         {
-            int  m_joystick_id;    // No dedicated wrapper class for joystick for now
-            bool m_connected;
+            int  joystick_id;    // No dedicated wrapper class for joystick for now
+            bool connected;
         };
 
         // NOTE: MonitorConnected and JoystickConnected events are not window events but global one, I still

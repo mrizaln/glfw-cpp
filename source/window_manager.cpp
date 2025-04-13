@@ -24,7 +24,7 @@ namespace
         using F = glfw_cpp::WindowHint::FlagBit;
 
         const auto set_flag = [&](int flag, F bit) {
-            glfwWindowHint(flag, (hint.m_flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
+            glfwWindowHint(flag, (hint.flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
         };
 
         set_flag(GLFW_RESIZABLE, F::Resizable);
@@ -39,15 +39,15 @@ namespace
         set_flag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
         set_flag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
 
-        glfwWindowHint(GLFW_RED_BITS, hint.m_red_bits);
-        glfwWindowHint(GLFW_GREEN_BITS, hint.m_green_bits);
-        glfwWindowHint(GLFW_BLUE_BITS, hint.m_blue_bits);
-        glfwWindowHint(GLFW_ALPHA_BITS, hint.m_alpha_bits);
-        glfwWindowHint(GLFW_DEPTH_BITS, hint.m_depth_bits);
-        glfwWindowHint(GLFW_STENCIL_BITS, hint.m_stencil_bits);
+        glfwWindowHint(GLFW_RED_BITS, hint.red_bits);
+        glfwWindowHint(GLFW_GREEN_BITS, hint.green_bits);
+        glfwWindowHint(GLFW_BLUE_BITS, hint.blue_bits);
+        glfwWindowHint(GLFW_ALPHA_BITS, hint.alpha_bits);
+        glfwWindowHint(GLFW_DEPTH_BITS, hint.depth_bits);
+        glfwWindowHint(GLFW_STENCIL_BITS, hint.stencil_bits);
 
-        glfwWindowHint(GLFW_SAMPLES, hint.m_samples);
-        glfwWindowHint(GLFW_REFRESH_RATE, hint.m_refresh_rate);
+        glfwWindowHint(GLFW_SAMPLES, hint.samples);
+        glfwWindowHint(GLFW_REFRESH_RATE, hint.refresh_rate);
     }
 }
 
@@ -81,8 +81,8 @@ namespace glfw_cpp
             width,
             height,
             title.data(),
-            hint.m_monitor ? hint.m_monitor->handle() : nullptr,
-            hint.m_share ? hint.m_share->handle() : nullptr
+            hint.monitor ? hint.monitor->handle() : nullptr,
+            hint.share ? hint.share->handle() : nullptr
         );
         if (handle == nullptr) {
             Instance::log_c("(WindowManager) Window creation failed");
@@ -119,21 +119,21 @@ namespace glfw_cpp
         auto wm_copy = std::enable_shared_from_this<WindowManager>::shared_from_this();
 
         return Window{ wm_copy, handle, Window::Properties{
-            .m_title             = { title.begin(), title.end() },
-            .m_pos               = { x_pos, y_pos },
-            .m_dimension         = { real_width, real_height },
-            .m_framebuffer_size  = { fb_width, fb_height },
-            .m_cursor            = { x_cursor, y_cursor },
-            .m_attribute         = {
-                .m_iconified     = 0,
-                .m_maximized     = (hint.m_flags & WindowHint::Maximized) != 0,
-                .m_focused       = (hint.m_flags & WindowHint::Focused) != 0,
-                .m_visible       = (hint.m_flags & WindowHint::Visible) != 0,
-                .m_hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .m_resizable     = (hint.m_flags & WindowHint::Resizable) != 0,
-                .m_floating      = (hint.m_flags & WindowHint::Floating) != 0,
-                .m_auto_iconify  = (hint.m_flags & WindowHint::AutoIconify) != 0,
-                .m_focus_on_show = (hint.m_flags & WindowHint::FocusOnShow) != 0,
+            .title             = { title.begin(), title.end() },
+            .pos               = { x_pos, y_pos },
+            .dimension         = { real_width, real_height },
+            .framebuffer_size  = { fb_width, fb_height },
+            .cursor            = { x_cursor, y_cursor },
+            .attribute         = {
+                .iconified     = 0,
+                .maximized     = (hint.flags & WindowHint::Maximized) != 0,
+                .focused       = (hint.flags & WindowHint::Focused) != 0,
+                .visible       = (hint.flags & WindowHint::Visible) != 0,
+                .hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .resizable     = (hint.flags & WindowHint::Resizable) != 0,
+                .floating      = (hint.flags & WindowHint::Floating) != 0,
+                .auto_iconify  = (hint.flags & WindowHint::AutoIconify) != 0,
+                .focus_on_show = (hint.flags & WindowHint::FocusOnShow) != 0,
             },
         }, bind_immediately };
     }

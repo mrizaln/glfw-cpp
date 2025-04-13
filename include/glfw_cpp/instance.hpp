@@ -32,9 +32,9 @@ namespace glfw_cpp
          */
         struct OpenGLES
         {
-            int         m_major = 2;
-            int         m_minor = 0;
-            GlLoaderFun m_loader;
+            int         major = 2;
+            int         minor = 0;
+            GlLoaderFun loader;
         };
 
         /**
@@ -54,11 +54,11 @@ namespace glfw_cpp
                 Any,
             };
 
-            int         m_major          = 1;
-            int         m_minor          = 0;
-            Profile     m_profile        = Profile::Core;    // only makes sense for OpenGL 3.2 above
-            bool        m_forward_compat = true;             // only makes sense for OpenGL 3.0 above
-            GlLoaderFun m_loader;
+            int         major          = 1;
+            int         minor          = 0;
+            Profile     profile        = Profile::Core;    // only makes sense for OpenGL 3.2 above
+            bool        forward_compat = true;             // only makes sense for OpenGL 3.0 above
+            GlLoaderFun loader;
         };
 
         /**

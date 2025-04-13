@@ -29,10 +29,10 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowMoved{
-                .m_x  = x,
-                .m_y  = y,
-                .m_dx = x - w->properties().m_pos.m_x,
-                .m_dy = y - w->properties().m_pos.m_y,
+                .x  = x,
+                .y  = y,
+                .dx = x - w->properties().pos.x,
+                .dy = y - w->properties().pos.y,
             }
         );
     }
@@ -46,10 +46,10 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowResized{
-                .m_width         = width,
-                .m_height        = height,
-                .m_width_change  = width - w->properties().m_dimension.m_width,
-                .m_height_change = height - w->properties().m_dimension.m_height,
+                .width         = width,
+                .height        = height,
+                .width_change  = width - w->properties().dimension.width,
+                .height_change = height - w->properties().dimension.height,
             }
         );
     }
@@ -69,7 +69,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowFocused{
-                .m_focused = focused == GLFW_TRUE,
+                .focused = focused == GLFW_TRUE,
             }
         );
     }
@@ -79,7 +79,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowIconified{
-                .m_iconified = iconified == GLFW_TRUE,
+                .iconified = iconified == GLFW_TRUE,
             }
         );
     }
@@ -94,10 +94,10 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::FramebufferResized{
-                .m_width         = width,
-                .m_height        = height,
-                .m_width_change  = width - w->properties().m_framebuffer_size.m_width,
-                .m_height_change = height - w->properties().m_framebuffer_size.m_height,
+                .width         = width,
+                .height        = height,
+                .width_change  = width - w->properties().framebuffer_size.width,
+                .height_change = height - w->properties().framebuffer_size.height,
             }
         );
     }
@@ -107,9 +107,9 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::ButtonPressed{
-                .m_button = static_cast<MouseButton>(button),
-                .m_state  = static_cast<MouseButtonState>(action),
-                .m_mods   = ModifierKey{ mods },
+                .button = static_cast<MouseButton>(button),
+                .state  = static_cast<MouseButtonState>(action),
+                .mods   = ModifierKey{ mods },
             }
         );
     }
@@ -124,10 +124,10 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::CursorMoved{
-                .m_x  = x,
-                .m_y  = y,
-                .m_dx = x - w->properties().m_cursor.m_x,
-                .m_dy = y - w->properties().m_cursor.m_y,
+                .x  = x,
+                .y  = y,
+                .dx = x - w->properties().cursor.x,
+                .dy = y - w->properties().cursor.y,
             }
         );
     }
@@ -137,7 +137,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::CursorEntered{
-                .m_entered = entered == GLFW_TRUE,
+                .entered = entered == GLFW_TRUE,
             }
         );
     }
@@ -147,8 +147,8 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::Scrolled{
-                .m_dx = x,
-                .m_dy = y,
+                .dx = x,
+                .dy = y,
             }
         );
     }
@@ -158,10 +158,10 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::KeyPressed{
-                .m_key      = static_cast<KeyCode>(key),
-                .m_scancode = scancode,
-                .m_state    = static_cast<KeyState>(action),
-                .m_mods     = ModifierKey{ mods },
+                .key      = static_cast<KeyCode>(key),
+                .scancode = scancode,
+                .state    = static_cast<KeyState>(action),
+                .mods     = ModifierKey{ mods },
             }
         );
     }
@@ -171,7 +171,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::CharInput{
-                .m_codepoint = codepoint,
+                .codepoint = codepoint,
             }
         );
     }
@@ -186,7 +186,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::FileDropped{
-                .m_files = std::move(paths_vec),
+                .files = std::move(paths_vec),
             }
         );
     }
@@ -196,7 +196,7 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowMaximized{
-                .m_maximized = maximized == GLFW_TRUE,
+                .maximized = maximized == GLFW_TRUE,
             }
         );
     }
@@ -206,8 +206,8 @@ namespace glfw_cpp
         window_callback_helper(
             window,
             event::WindowScaleChanged{
-                .m_x = xscale,
-                .m_y = yscale,
+                .x = xscale,
+                .y = yscale,
             }
         );
     }
@@ -228,7 +228,7 @@ namespace glfw_cpp
             bind();
             set_vsync(m_vsync);
             glfwSetWindowUserPointer(m_handle, this);
-            api->m_loader(handle, glfwGetProcAddress);
+            api->loader(handle, glfwGetProcAddress);
             if (!bind_immediately) {
                 unbind();
             }
@@ -405,9 +405,9 @@ namespace glfw_cpp
 
     void Window::set_window_size(int width, int height) noexcept
     {
-        m_properties.m_dimension = {
-            .m_width  = width,
-            .m_height = height,
+        m_properties.dimension = {
+            .width  = width,
+            .height = height,
         };
 
         m_manager->enqueue_window_task(m_handle, [this, width, height] {
@@ -417,17 +417,13 @@ namespace glfw_cpp
 
     void Window::set_window_pos(int x, int y) noexcept
     {
-        m_properties.m_pos = {
-            .m_x = x,
-            .m_y = y,
-        };
-
+        m_properties.pos = { .x = x, .y = y };
         m_manager->enqueue_window_task(m_handle, [this, x, y] { glfwSetWindowPos(m_handle, x, y); });
     }
 
     float Window::aspect_ratio() const noexcept
     {
-        auto [width, height] = m_properties.m_dimension;
+        auto [width, height] = m_properties.dimension;
         return (float)width / (float)height;
     }
 
@@ -439,7 +435,7 @@ namespace glfw_cpp
         }
 
         m_manager->enqueue_window_task(m_handle, [=, this] {
-            auto width  = m_properties.m_dimension.m_width;
+            auto width  = m_properties.dimension.width;
             auto height = int((float)width / ratio);
             glfwSetWindowAspectRatio(m_handle, width, height);
         });
@@ -448,7 +444,7 @@ namespace glfw_cpp
     void Window::lock_current_aspect_ratio() noexcept
     {
         m_manager->enqueue_window_task(m_handle, [this] {
-            auto [width, height] = m_properties.m_dimension;
+            auto [width, height] = m_properties.dimension;
             glfwSetWindowAspectRatio(m_handle, width, height);
         });
     }
@@ -462,9 +458,9 @@ namespace glfw_cpp
 
     void Window::update_title(std::string_view title) noexcept
     {
-        m_properties.m_title = title;
+        m_properties.title = title;
         m_manager->enqueue_window_task(m_handle, [this] {
-            glfwSetWindowTitle(m_handle, m_properties.m_title.c_str());
+            glfwSetWindowTitle(m_handle, m_properties.title.c_str());
         });
     }
 
@@ -512,7 +508,7 @@ namespace glfw_cpp
         m_capture_mouse = value;
         m_manager->enqueue_task([this] {
             if (m_capture_mouse) {
-                auto& [x, y] = m_properties.m_cursor;
+                auto& [x, y] = m_properties.cursor;
                 glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
@@ -539,16 +535,16 @@ namespace glfw_cpp
         auto& [_, pos, dim, frame, cursor, attr, btns, keys, __] = m_properties;
         event.visit(util::VisitOverloaded{
             // clang-format off
-            [&](event::WindowMoved&        e) { pos    = { .m_x     = e.m_x,     .m_y      = e.m_y   }; },
-            [&](event::WindowResized&      e) { dim    = { .m_width = e.m_width, .m_height = e.m_height }; },
-            [&](event::FramebufferResized& e) { frame  = { .m_width = e.m_width, .m_height = e.m_height }; },
-            [&](event::CursorMoved&        e) { cursor = { .m_x     = e.m_x,     .m_y      = e.m_y      }; },
-            [&](event::CursorEntered&      e) { attr.m_hovered   = e.m_entered;   },
-            [&](event::WindowFocused&      e) { attr.m_focused   = e.m_focused;   },
-            [&](event::WindowIconified&    e) { attr.m_iconified = e.m_iconified; },
-            [&](event::WindowMaximized&    e) { attr.m_maximized = e.m_maximized; },
-            [&](event::KeyPressed&         e) { keys.set_value(e.m_key,    e.m_state != KS::Release); },
-            [&](event::ButtonPressed&      e) { btns.set_value(e.m_button, e.m_state != MS::Release); },
+            [&](event::WindowMoved&        e) { pos    = { .x     = e.x,     .y      = e.y   }; },
+            [&](event::WindowResized&      e) { dim    = { .width = e.width, .height = e.height }; },
+            [&](event::FramebufferResized& e) { frame  = { .width = e.width, .height = e.height }; },
+            [&](event::CursorMoved&        e) { cursor = { .x     = e.x,     .y      = e.y      }; },
+            [&](event::CursorEntered&      e) { attr.hovered   = e.entered;   },
+            [&](event::WindowFocused&      e) { attr.focused   = e.focused;   },
+            [&](event::WindowIconified&    e) { attr.iconified = e.iconified; },
+            [&](event::WindowMaximized&    e) { attr.maximized = e.maximized; },
+            [&](event::KeyPressed&         e) { keys.set_value(e.key,    e.state != KS::Release); },
+            [&](event::ButtonPressed&      e) { btns.set_value(e.button, e.state != MS::Release); },
             [&] /* else */ (auto&)         { /* do nothing */ }
             // clang-format on
         });
