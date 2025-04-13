@@ -15,8 +15,6 @@
 #include <thread>
 #include <utility>
 
-using LogLevel = glfw_cpp::Instance::LogLevel;
-
 namespace
 {
     void configure_hints(const glfw_cpp::WindowHint& hint) noexcept

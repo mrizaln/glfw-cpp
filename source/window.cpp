@@ -234,9 +234,9 @@ namespace glfw_cpp
             }
         };
 
-        if (auto* api = std::get_if<Api::OpenGL>(&Instance::get().m_api)) {
+        if (auto* api = std::get_if<api::OpenGL>(&Instance::get().m_api)) {
             init(api);
-        } else if (auto* api = std::get_if<Api::OpenGLES>(&Instance::get().m_api)) {
+        } else if (auto* api = std::get_if<api::OpenGLES>(&Instance::get().m_api)) {
             init(api);
         } else {
             glfwSetWindowUserPointer(m_handle, this);
@@ -296,7 +296,7 @@ namespace glfw_cpp
     Window::~Window()
     {
         if (m_handle != nullptr) {
-            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+            if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
                 unbind();
             }
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
@@ -314,7 +314,7 @@ namespace glfw_cpp
             m_attached_thread_id = std::this_thread::get_id();
             Instance::log_d("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
 
-            if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+            if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
                 glfwMakeContextCurrent(m_handle);
             } else {
                 throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
@@ -344,7 +344,7 @@ namespace glfw_cpp
 
     void Window::unbind()
     {
-        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
             glfwMakeContextCurrent(nullptr);
         } else {
             throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
@@ -395,7 +395,7 @@ namespace glfw_cpp
     {
         m_vsync = value;
 
-        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
             // 0 = immediate updates, 1 = update synchronized with vertical retrace
             glfwSwapInterval(value ? 1 : 0);
         } else {
@@ -482,7 +482,7 @@ namespace glfw_cpp
 
     double Window::display()
     {
-        if (!std::holds_alternative<Api::NoApi>(Instance::get().m_api)) {
+        if (!std::holds_alternative<api::NoApi>(Instance::get().m_api)) {
             glfwSwapBuffers(m_handle);
         } else {
             util::check_glfw_error();

@@ -79,7 +79,7 @@ namespace glfw_cpp
         }
     }
 
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger)
+    Instance::Unique init(Api&& api, Instance::LogFun&& logger)
     {
         auto& instance = Instance::get();
 
@@ -101,13 +101,13 @@ namespace glfw_cpp
         }
 
         const auto&& configure_api = util::VisitOverloaded{
-            [](Api::OpenGL& api) {
+            [](api::OpenGL& api) {
                 if (api.loader == nullptr) {
                     throw EmptyLoader{};
                 }
 
                 auto gl_profile = [&] {
-                    using P = glfw_cpp::Api::OpenGL::Profile;
+                    using P = glfw_cpp::api::gl::Profile;
                     switch (api.profile) {
                     case P::Core: return GLFW_OPENGL_CORE_PROFILE;
                     case P::Compat: return GLFW_OPENGL_COMPAT_PROFILE;
@@ -128,13 +128,13 @@ namespace glfw_cpp
                     glfwWindowHint(GLFW_OPENGL_PROFILE, gl_profile);
                 }
             },
-            [](Api::OpenGLES& api) {
+            [](api::OpenGLES& api) {
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.major);
                 glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.minor);
                 glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
             },
-            [](Api::NoApi&) {
+            [](api::NoApi&) {
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
             },
         };
