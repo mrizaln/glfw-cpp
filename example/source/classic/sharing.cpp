@@ -29,6 +29,7 @@
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
+
 #include <getopt.h>
 #include <linmath.h>
 
@@ -105,7 +106,7 @@ int main()
 
         for (y = 0; y < 16; y++) {
             for (x = 0; x < 16; x++) {
-                pixels[y * 16 + x] = rand() % 256;
+                pixels[y * 16 + x] = (char)(rand() % 256);
             }
         }
 
@@ -181,11 +182,11 @@ int main()
             windows[i].bind();
 
             for (const auto& event : windows[i].poll()) {
-                using EV = glfw_cpp::Event;
-                using KC = glfw_cpp::KeyCode;
-                using KS = glfw_cpp::KeyState;
+                namespace ev = glfw_cpp::event;
+                using KC     = glfw_cpp::KeyCode;
+                using KS     = glfw_cpp::KeyState;
 
-                if (auto* e = event.get_if<EV::KeyPressed>()) {
+                if (auto* e = event.get_if<ev::KeyPressed>()) {
                     if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                         // close both
                         windows[0].request_close();

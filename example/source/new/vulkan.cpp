@@ -1,7 +1,8 @@
+#define VULKAN_HPP_NO_CONSTRUCTORS
+#include <vulkan/vulkan.hpp>    // you need to include the vulkan header first
+
 #include <fmt/core.h>
 #include <glfw_cpp/glfw_cpp.hpp>
-#define VULKAN_HPP_NO_CONSTRUCTORS
-#include <vulkan/vulkan.hpp>      // you need to include the vulkan header first
 #include <glfw_cpp/vulkan.hpp>    // vulkan functionality for glfw_cpp is separated
 
 #include <algorithm>
@@ -1160,7 +1161,7 @@ int main()
     while (not window.should_close()) {
         const auto& events = window.poll();
         for (const glfw_cpp::Event& event : events) {
-            if (auto* e = event.get_if<glfw_cpp::Event::KeyPressed>()) {
+            if (auto* e = event.get_if<glfw_cpp::event::KeyPressed>()) {
                 if (e->m_key == glfw_cpp::KeyCode::Q) {
                     window.request_close();
                 }

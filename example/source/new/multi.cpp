@@ -1,10 +1,10 @@
-#include "shader.hpp"
 #include "plane.hpp"
+#include "shader.hpp"
 
 #include <fmt/core.h>
 #include <fmt/std.h>
-#include <glbinding/glbinding.h>
 #include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <filesystem>
@@ -31,13 +31,12 @@ void handle_events(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
     // Not the best looking code IMO compared to unsafe manual tagged union (use get_if instead
     // if you think it would be better or use an overloaded set)
 
-    events.visit([&](auto& e) {
-        using E  = glfw_cpp::Event;
-        using Ev = std::decay_t<decltype(e)>;
+    events.visit([&]<typename E>(const E& e) {
+        namespace ev = glfw_cpp::event;
 
-        if constexpr (std::same_as<Ev, E::WindowResized>) {
+        if constexpr (std::same_as<E, ev::WindowResized>) {
             gl::glViewport(0, 0, e.m_width, e.m_height);
-        } else if constexpr (std::same_as<Ev, E::KeyPressed>) {
+        } else if constexpr (std::same_as<E, ev::KeyPressed>) {
             using K = glfw_cpp::KeyCode;
             if (e.m_state != glfw_cpp::KeyState::Press) {
                 return;

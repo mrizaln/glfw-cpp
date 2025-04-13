@@ -1,5 +1,5 @@
-#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window_manager.hpp"
+#include "glfw_cpp/instance.hpp"
 
 #include "util.hpp"
 
@@ -243,25 +243,25 @@ namespace glfw_cpp
         }
 
         auto& intr = *m_event_interceptor;
-        return event.visit(Event::Overloaded{
+        return event.visit(event::Overload{
             // clang-format off
-            [&](Event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
-            [&](Event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
-            [&](Event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
-            [&](Event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
-            [&](Event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
-            [&](Event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
-            [&](Event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
-            [&](Event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
-            [&](Event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
-            [&](Event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
-            [&](Event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
-            [&](Event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
-            [&](Event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
-            [&](Event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
-            [&](Event::CharInput&          event) { return intr.on_char_input          (window, event); },
-            [&](Event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
-            [&](Event::Empty&                   ) { return true; /* always true                   */ },
+            [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
+            [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
+            [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
+            [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
+            [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
+            [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
+            [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
+            [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
+            [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
+            [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
+            [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
+            [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
+            [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
+            [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
+            [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
+            [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
+            [&](event::Empty&                   ) { return true; /* always true                   */ },
             // clang-format on
         });
     }

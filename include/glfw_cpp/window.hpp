@@ -5,12 +5,12 @@
 #include "glfw_cpp/input.hpp"
 #include "glfw_cpp/monitor.hpp"
 
-#include <vector>
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <thread>
+#include <vector>
 
 struct GLFWwindow;
 

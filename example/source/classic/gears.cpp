@@ -24,9 +24,9 @@
  *   - Convert to glfw-cpp (and C++)
  */
 
+#include <cmath>
 #include <exception>
 #include <iostream>
-#include <cmath>
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -54,7 +54,7 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
     r1 = outer_radius - tooth_depth / 2.f;
     r2 = outer_radius + tooth_depth / 2.f;
 
-    da = 2.f * (float)M_PI / teeth / 4.f;
+    da = 2.f * (float)M_PI / (float)teeth / 4.f;
 
     glShadeModel(GL_FLAT);
 
@@ -63,7 +63,7 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
     /* draw front face */
     glBegin(GL_QUAD_STRIP);
     for (i = 0; i <= teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = static_cast<float>(i) * 2.f * (float)M_PI / (float)teeth;
         glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), width * 0.5f);
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), width * 0.5f);
         if (i < teeth) {
@@ -75,9 +75,9 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
 
     /* draw front sides of teeth */
     glBegin(GL_QUADS);
-    da = 2.f * (float)M_PI / teeth / 4.f;
+    da = 2.f * (float)M_PI / (float)teeth / 4.f;
     for (i = 0; i < teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = static_cast<float>(i) * 2.f * (float)M_PI / (float)teeth;
 
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), width * 0.5f);
         glVertex3f(r2 * (float)cos(angle + da), r2 * (float)sin(angle + da), width * 0.5f);
@@ -91,7 +91,7 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
     /* draw back face */
     glBegin(GL_QUAD_STRIP);
     for (i = 0; i <= teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = static_cast<float>(i) * 2.f * (float)M_PI / (float)teeth;
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), -width * 0.5f);
         glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), -width * 0.5f);
         if (i < teeth) {
@@ -103,9 +103,9 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
 
     /* draw back sides of teeth */
     glBegin(GL_QUADS);
-    da = 2.f * (float)M_PI / teeth / 4.f;
+    da = 2.f * (float)M_PI / (float)teeth / 4.f;
     for (i = 0; i < teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = (float)i * 2.f * (float)M_PI / (float)teeth;
 
         glVertex3f(r1 * (float)cos(angle + 3 * da), r1 * (float)sin(angle + 3 * da), -width * 0.5f);
         glVertex3f(r2 * (float)cos(angle + 2 * da), r2 * (float)sin(angle + 2 * da), -width * 0.5f);
@@ -117,7 +117,7 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
     /* draw outward faces of teeth */
     glBegin(GL_QUAD_STRIP);
     for (i = 0; i < teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = (float)i * 2.f * (float)M_PI / (float)teeth;
 
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), width * 0.5f);
         glVertex3f(r1 * (float)cos(angle), r1 * (float)sin(angle), -width * 0.5f);
@@ -150,7 +150,7 @@ static void gear(GLfloat inner_radius, GLfloat outer_radius, GLfloat width, GLin
     /* draw inside radius cylinder */
     glBegin(GL_QUAD_STRIP);
     for (i = 0; i <= teeth; i++) {
-        angle = i * 2.f * (float)M_PI / teeth;
+        angle = (float)i * 2.f * (float)M_PI / (float)teeth;
         glNormal3f(-(float)cos(angle), -(float)sin(angle), 0.f);
         glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), -width * 0.5f);
         glVertex3f(r0 * (float)cos(angle), r0 * (float)sin(angle), width * 0.5f);
@@ -201,7 +201,7 @@ static void animate()
 }
 
 /* change view angle, exit upon ESC */
-void key(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
+void key(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed& event)
 {
     using K = glfw_cpp::KeyCode;
     using M = glfw_cpp::ModifierKey;
@@ -221,7 +221,7 @@ void key(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
             view_rotz += 5.0f;
         }
         break;
-    case K::Escape: window.request_close();
+    case K::Escape: window.request_close(); break;
     case K::Up: view_rotx += 5.0f; break;
     case K::Down: view_rotx -= 5.0f; break;
     case K::Left: view_roty += 5.0f; break;
@@ -307,11 +307,11 @@ int main()
         init();
 
         window.run([&](auto&& events) {
-            using EV = glfw_cpp::Event;
-            for (const EV& event : events) {
-                if (auto* e = event.get_if<EV::FramebufferResized>()) {
+            namespace ev = glfw_cpp::event;
+            for (const glfw_cpp::Event& event : events) {
+                if (auto* e = event.get_if<ev::FramebufferResized>()) {
                     reshape(e->m_width, e->m_height);
-                } else if (auto* e = event.get_if<EV::KeyPressed>()) {
+                } else if (auto* e = event.get_if<ev::KeyPressed>()) {
                     key(window, *e);
                 }
             }

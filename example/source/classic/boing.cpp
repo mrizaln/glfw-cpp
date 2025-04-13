@@ -233,7 +233,7 @@ void reshape(int w, int h)
     glLoadMatrixf((const GLfloat*)view);
 }
 
-void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
+void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed& event)
 {
     using K = glfw_cpp::KeyCode;
     using M = glfw_cpp::ModifierKey;
@@ -264,11 +264,11 @@ void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed&
 
 static void setBallPos(GLfloat x, GLfloat y)
 {
-    ball_x = (width / 2) - x;
-    ball_y = y - (height / 2);
+    ball_x = ((float)width / 2) - x;
+    ball_y = y - ((float)height / 2);
 }
 
-void handleMouseButtonEvent(const glfw_cpp::Event::ButtonPressed& event)
+void handleMouseButtonEvent(const glfw_cpp::event::ButtonPressed& event)
 {
     using B = glfw_cpp::MouseButton;
     using S = glfw_cpp::MouseButtonState;
@@ -287,7 +287,7 @@ void handleMouseButtonEvent(const glfw_cpp::Event::ButtonPressed& event)
     }
 }
 
-void handleCursorEvent(const glfw_cpp::Event::CursorMoved& event)
+void handleCursorEvent(const glfw_cpp::event::CursorMoved& event)
 {
     auto& [x, y, dx, dy] = event;
 
@@ -560,7 +560,7 @@ void drawGrid(void)
         /*
          * Compute co-ords of line.
          */
-        xl = -GRID_SIZE / 2 + col * sizeCell;
+        xl = -GRID_SIZE / 2 + (float)col * sizeCell;
         xr = xl + widthLine;
 
         yt = GRID_SIZE / 2;
@@ -585,7 +585,7 @@ void drawGrid(void)
         /*
          * Compute co-ords of line.
          */
-        yt = GRID_SIZE / 2 - row * sizeCell;
+        yt = GRID_SIZE / 2 - (float)row * sizeCell;
         yb = yt - widthLine;
 
         xl = -GRID_SIZE / 2;
@@ -636,12 +636,12 @@ int main(void)
             dt    = t - t_old;
             t_old = t;
 
-            using EV = glfw_cpp::Event;
-            events.visit(EV::Overloaded{
-                [&](const EV::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
-                [&](const EV::KeyPressed& e) { handleKeyEvent(window, e); },
-                [&](const EV::CursorMoved& e) { handleCursorEvent(e); },
-                [&](const EV::ButtonPressed& e) { handleMouseButtonEvent(e); },
+            namespace ev = glfw_cpp::event;
+            events.visit(ev::Overload{
+                [&](const ev::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
+                [&](const ev::KeyPressed& e) { handleKeyEvent(window, e); },
+                [&](const ev::CursorMoved& e) { handleCursorEvent(e); },
+                [&](const ev::ButtonPressed& e) { handleMouseButtonEvent(e); },
                 [](auto&) {},
             });
 

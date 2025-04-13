@@ -9,10 +9,10 @@
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <utility>
-#include <vector>
 #include <string_view>
 #include <thread>
+#include <utility>
+#include <vector>
 
 struct GLFWwindow;
 
@@ -31,7 +31,7 @@ namespace glfw_cpp
     class Instance;
     class Window;
     class Monitor;
-    struct IEventInterceptor;
+    class IEventInterceptor;
 
     /**
      * @struct WindowHint

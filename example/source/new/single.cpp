@@ -31,14 +31,14 @@ int main()
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
         // handling events
         {
-            using E = glfw_cpp::Event;
-            using K = glfw_cpp::KeyCode;
+            using K      = glfw_cpp::KeyCode;
+            namespace ev = glfw_cpp::event;
 
             // clang-format off
-            events.visit(E::Overloaded{
-                [&](const E::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close();         },
-                [&](const E::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);             },
-                [&](const auto&                  e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
+            events.visit(ev::Overload{
+                [&](const ev::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close();         },
+                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);             },
+                [&](const auto&                   e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
             });
             // clang-format on
         }

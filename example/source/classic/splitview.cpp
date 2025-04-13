@@ -388,7 +388,7 @@ static void windowRefreshFun(glfw_cpp::Window& window)
 // Mouse position callback function
 //========================================================================
 
-static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::Event::CursorMoved& event)
+static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::event::CursorMoved& event)
 {
     auto [x, y, dx, dy]          = event;
     auto [wnd_width, wnd_height] = window.properties().m_dimension;
@@ -430,7 +430,7 @@ static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::Event::Cursor
 // Mouse button callback function
 //========================================================================
 
-static void mouseButtonFun(const glfw_cpp::Event::ButtonPressed& event)
+static void mouseButtonFun(const glfw_cpp::event::ButtonPressed& event)
 {
     using MB = glfw_cpp::MouseButton;
     using MS = glfw_cpp::MouseButtonState;
@@ -440,10 +440,10 @@ static void mouseButtonFun(const glfw_cpp::Event::ButtonPressed& event)
     if ((button == MB::Left) && action == MS::Press) {
         // Detect which of the four views was clicked
         active_view = 1;
-        if (xpos >= width / 2) {
+        if ((int)xpos >= width / 2) {
             active_view += 1;
         }
-        if (ypos >= height / 2) {
+        if ((int)ypos >= height / 2) {
             active_view += 2;
         }
     } else if (button == MB::Left) {
@@ -454,7 +454,7 @@ static void mouseButtonFun(const glfw_cpp::Event::ButtonPressed& event)
     do_redraw = 1;
 }
 
-static void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
+static void key_callback(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed& event)
 {
     using KC = glfw_cpp::KeyCode;
     using KS = glfw_cpp::KeyState;
@@ -492,14 +492,14 @@ int main()
     framebufferSizeFun(width, height);
 
     while (wm->has_window_opened()) {
-        using EV = glfw_cpp::Event;
-        window.poll().visit(EV::Overloaded{
+        namespace ev = glfw_cpp::event;
+        window.poll().visit(ev::Overload{
             // clang-format off
-            [&](const EV::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
-            [&](const EV::WindowRefreshed&      ) { windowRefreshFun(window); },
-            [&](const EV::CursorMoved&        ev) { cursorPosFun(window, ev); },
-            [&](const EV::ButtonPressed&      ev) { mouseButtonFun(ev); },
-            [&](const EV::KeyPressed&         ev) { key_callback(window, ev); },
+            [&](const ev::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
+            [&](const ev::WindowRefreshed&      ) { windowRefreshFun(window); },
+            [&](const ev::CursorMoved&        ev) { cursorPosFun(window, ev); },
+            [&](const ev::ButtonPressed&      ev) { mouseButtonFun(ev); },
+            [&](const ev::KeyPressed&         ev) { key_callback(window, ev); },
             [](auto&) { /* ignore */ },
             // clang-format on
         });

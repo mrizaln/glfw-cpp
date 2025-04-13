@@ -44,7 +44,7 @@ int main()
         for (auto& win : windows) {
             auto delta = win.use([&](const auto& events) {
                 std::ranges::for_each(events, [&](const glfw_cpp::Event& ev) {
-                    if (auto* e = ev.get_if<glfw_cpp::Event::KeyPressed>()) {
+                    if (auto* e = ev.get_if<glfw_cpp::event::KeyPressed>()) {
                         if (e->m_key == glfw_cpp::KeyCode::Q) {
                             win.request_close();
                         }

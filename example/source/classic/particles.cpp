@@ -33,17 +33,18 @@
 #    define _USE_MATH_DEFINES
 #endif
 
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
 #include <cmath>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <ctime>
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
+
+#include <getopt.h>
 #include <linmath.h>
 #include <tinycthread.h>
-#include <getopt.h>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>    // some operations require this to be included
@@ -941,7 +942,7 @@ int main(int argc, char** argv)
     }
 
     glViewport(0, 0, width, height);
-    aspect_ratio = height ? width / (float)height : 1.f;
+    aspect_ratio = height ? (float)width / (float)height : 1.f;
 
     // Upload particle texture
     glGenTextures(1, &particle_tex_id);
@@ -1016,15 +1017,15 @@ int main(int argc, char** argv)
 
         // this poll returns the events from the queue
         for (const auto& event : window.poll()) {
-            using EV = glfw_cpp::Event;
-            using KC = glfw_cpp::KeyCode;
-            using KS = glfw_cpp::KeyState;
+            namespace ev = glfw_cpp::event;
+            using KC     = glfw_cpp::KeyCode;
+            using KS     = glfw_cpp::KeyState;
 
-            if (auto* e = event.get_if<EV::FramebufferResized>()) {
+            if (auto* e = event.get_if<ev::FramebufferResized>()) {
                 auto [width, height, _dw, _dh] = *e;
                 glViewport(0, 0, width, height);
-                aspect_ratio = height ? width / (float)height : 1.f;
-            } else if (auto* e = event.get_if<EV::KeyPressed>()) {
+                aspect_ratio = height ? (float)width / (float)height : 1.f;
+            } else if (auto* e = event.get_if<ev::KeyPressed>()) {
                 if (e->m_state == KS::Press) {
                     switch (e->m_key) {
                     case KC::Escape: window.request_close(); break;

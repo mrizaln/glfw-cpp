@@ -26,11 +26,11 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <exception>
 
 #include <glad/glad.h>
@@ -233,26 +233,26 @@ static void init_map()
     /* close the top of the square */
     k = 0;
     for (i = 0; i < MAP_NUM_VERTICES - 1; ++i) {
-        map_line_indices[k++] = (i + 1) * MAP_NUM_VERTICES - 1;
-        map_line_indices[k++] = (i + 2) * MAP_NUM_VERTICES - 1;
+        map_line_indices[k++] = (unsigned)(i + 1) * MAP_NUM_VERTICES - 1;
+        map_line_indices[k++] = (unsigned)(i + 2) * MAP_NUM_VERTICES - 1;
     }
     /* close the right of the square */
     for (i = 0; i < MAP_NUM_VERTICES - 1; ++i) {
-        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + i;
-        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + i + 1;
+        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + (unsigned)i;
+        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + (unsigned)i + 1;
     }
 
     for (i = 0; i < (MAP_NUM_VERTICES - 1); ++i) {
         for (j = 0; j < (MAP_NUM_VERTICES - 1); ++j) {
             int ref               = i * (MAP_NUM_VERTICES) + j;
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + 1;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + 1;
 
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + MAP_NUM_VERTICES;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + MAP_NUM_VERTICES;
 
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + MAP_NUM_VERTICES + 1;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + MAP_NUM_VERTICES + 1;
         }
     }
 
@@ -281,12 +281,12 @@ static void generate_heightmap__circle(float* center_x, float* center_y, float* 
 {
     float sign;
     /* random value for element in between [0-1.0] */
-    *center_x     = (MAP_SIZE * rand()) / (float)RAND_MAX;
-    *center_y     = (MAP_SIZE * rand()) / (float)RAND_MAX;
-    *size         = (MAX_CIRCLE_SIZE * rand()) / (float)RAND_MAX;
-    sign          = (1.0f * rand()) / (float)RAND_MAX;
+    *center_x     = (MAP_SIZE * (float)rand()) / (float)RAND_MAX;
+    *center_y     = (MAP_SIZE * (float)rand()) / (float)RAND_MAX;
+    *size         = (MAX_CIRCLE_SIZE * (float)rand()) / (float)RAND_MAX;
+    sign          = (1.0f * (float)rand()) / (float)RAND_MAX;
     sign          = (sign < DISPLACEMENT_SIGN_LIMIT) ? -1.0f : 1.0f;
-    *displacement = (sign * (MAX_DISPLACEMENT * rand())) / (float)RAND_MAX;
+    *displacement = (sign * (MAX_DISPLACEMENT * (float)rand())) / (float)RAND_MAX;
 }
 
 /* Run the specified number of iterations of the generation process for the
@@ -438,12 +438,12 @@ int main()
         double last_update_time = glfw_cpp::get_time();
 
         while (!window.should_close()) {
-            using EV = glfw_cpp::Event;
-            using KC = glfw_cpp::KeyCode;
-            using KS = glfw_cpp::KeyState;
+            namespace ev = glfw_cpp::event;
+            using KC     = glfw_cpp::KeyCode;
+            using KS     = glfw_cpp::KeyState;
 
-            for (const EV& event : window.poll()) {
-                if (auto* e = event.get_if<EV::KeyPressed>()) {
+            for (const auto& event : window.poll()) {
+                if (auto* e = event.get_if<ev::KeyPressed>()) {
                     if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                         window.request_close();
                     }

@@ -26,9 +26,9 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
-#include <cstdlib>
 #include <cstddef>
 #include <cstdio>
+#include <cstdlib>
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -132,12 +132,12 @@ int main()
     glVertexAttribPointer(vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, col));
 
     window.run([&](const auto& events) {
-        using EV = glfw_cpp::Event;
-        using KC = glfw_cpp::KeyCode;
-        using KS = glfw_cpp::KeyState;
+        namespace ev = glfw_cpp::event;
+        using KC     = glfw_cpp::KeyCode;
+        using KS     = glfw_cpp::KeyState;
 
-        for (const EV& event : events) {
-            if (auto* e = event.get_if<EV::KeyPressed>()) {
+        for (const glfw_cpp::Event& event : events) {
+            if (auto* e = event.get_if<ev::KeyPressed>()) {
                 if (e->m_key == KC::Escape && e->m_state == KS::Press) {
                     window.request_close();
                 }
@@ -145,7 +145,7 @@ int main()
         }
 
         const auto [width, height] = window.properties().m_framebuffer_size;
-        const float ratio          = width / (float)height;
+        const float ratio          = (float)width / (float)height;
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);

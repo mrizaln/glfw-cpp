@@ -27,8 +27,8 @@
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
 #include <exception>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -136,7 +136,7 @@ int main()
         );
 
         auto [width, height] = window.properties().m_framebuffer_size;
-        float ratio          = width / (float)height;
+        float ratio          = (float)width / (float)height;
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -149,7 +149,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glFinish();
 
-        auto buffer = std::make_unique<unsigned char[]>(4 * width * height);
+        auto buffer = std::make_unique<unsigned char[]>((std::size_t)(4 * width * height));
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
 
         // Write image Y-flipped because OpenGL

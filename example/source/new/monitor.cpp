@@ -7,16 +7,6 @@
 #include <glfw_cpp/instance.hpp>
 #include <glfw_cpp/monitor.hpp>
 
-auto operator==(const glfw_cpp::Monitor::VideoMode& lhs, const glfw_cpp::Monitor::VideoMode& rhs) -> bool
-{
-    return lhs.m_width == rhs.m_width              //
-        && lhs.m_height == rhs.m_height            //
-        && lhs.m_red_bits == rhs.m_red_bits        //
-        && lhs.m_green_bits == rhs.m_green_bits    //
-        && lhs.m_blue_bits == rhs.m_blue_bits      //
-        && lhs.m_refresh_rate == rhs.m_refresh_rate;
-}
-
 int main()
 {
     auto instance = glfw_cpp::init(glfw_cpp::Api::NoApi{});
@@ -43,7 +33,7 @@ int main()
         fmt::println("available video modes:");
 
         bool isCurrent = false;
-        for (auto& mode : videoModes) {
+        for (const auto& mode : videoModes) {
             fmt::print("\t\t{}x{} \tat {}Hz", mode.m_width, mode.m_height, mode.m_refresh_rate);
             if (isCurrent = (mode == currentMode); isCurrent) {
                 fmt::println("\t(current)");

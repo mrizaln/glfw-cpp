@@ -1,9 +1,10 @@
 #ifndef EVENT_HPP_Q439GUKLHFWE
 #define EVENT_HPP_Q439GUKLHFWE
 
+#include "glfw_cpp/detail/helper.hpp"
+
 #include "glfw_cpp/input.hpp"
 #include "glfw_cpp/monitor.hpp"
-#include "glfw_cpp/detail/helper.hpp"
 
 #include <cstddef>
 #include <filesystem>
@@ -14,29 +15,8 @@
 
 namespace glfw_cpp
 {
-    /**
-     * @class Event
-     * @brief Window events wrapper (a variant).
-     *
-     * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
-     * each Window.
-     */
-    class Event
+    namespace event
     {
-    public:
-        /**
-         * @struct Overloaded Struct for overloading operator() for multiple event types, can be used with to
-         * visit `Event` through its `Event::visit` method
-         *
-         * @tparam Ts List of types or lambdas that have `operator()` defined for each event variant in
-         * `Event::Variant`
-         */
-        template <typename... Ts>
-        struct Overloaded : Ts...
-        {
-            using Ts::operator()...;
-        };
-
         /**
          * @struct Empty
          * @brief Empty event, currently unused
@@ -241,7 +221,9 @@ namespace glfw_cpp
         /**
          * @struct MonitorConnected
          * @brief Monitor connect event, corresponds to event handled by callback sets by
-         * `glfwSetMonitorCallback` (not implemented yet)
+         * `glfwSetMonitorCallback`
+         *
+         * TODO: implement logic surrounding this event
          */
         struct MonitorConnected
         {
@@ -252,7 +234,9 @@ namespace glfw_cpp
         /**
          * @struct JoystickConnected
          * @brief Joystick connect event, corresponds to event handled by callback sets by
-         * `glfwSetJoystickCallback` (not implemented yet)
+         * `glfwSetJoystickCallback`
+         *
+         * TODO: implement logic surrounding this event
          */
         struct JoystickConnected
         {
@@ -260,43 +244,78 @@ namespace glfw_cpp
             bool m_connected;
         };
 
-        // Normally I don't want to use macro, but this is a last resort (I hate repeating things)
-        // clang-format off
-#define GLFW_CPP_EVENT_TYPE_LIST    \
-        Empty               , \
-        WindowMoved         , \
-        WindowResized       , \
-        WindowClosed        , \
-        WindowRefreshed     , \
-        WindowFocused       , \
-        WindowIconified     , \
-        FramebufferResized  , \
-        ButtonPressed       , \
-        CursorMoved         , \
-        CursorEntered       , \
-        Scrolled            , \
-        KeyPressed          , \
-        CharInput           , \
-        FileDropped         , \
-        WindowMaximized     , \
-        WindowScaleChanged
+        // NOTE: MonitorConnected and JoystickConnected events are not window events but global one, I still
+        // don't know how to implement it yet, so I omit them from event list for now
+        using Variant = std::variant<
+            Empty,
+            WindowMoved,
+            WindowResized,
+            WindowClosed,
+            WindowRefreshed,
+            WindowFocused,
+            WindowIconified,
+            FramebufferResized,
+            ButtonPressed,
+            CursorMoved,
+            CursorEntered,
+            Scrolled,
+            KeyPressed,
+            CharInput,
+            FileDropped,
+            WindowMaximized,
+            WindowScaleChanged>;
 
-        // clang-format on
-
-        using Variant = std::variant<GLFW_CPP_EVENT_TYPE_LIST>;
-
+        /**
+         * @brief Check whether a type is part of event types
+         */
         template <typename T>
-        static constexpr bool is_event_type = detail::IsAnyOf<T, GLFW_CPP_EVENT_TYPE_LIST>;
+        concept Event = detail::VarTrait<Variant>::template is_elem<T>();
 
+        /**
+         * @brief Check the exhaustiveness of a visitor for events
+         */
+        template <typename T>
+        concept EventVisitor = detail::VarTrait<event::Variant>::template overload_exhaustive<T>();
+
+        /**
+         * @brief Check the exhaustiveness of a visitor for events
+         */
+        template <typename T>
+        concept ConstEventVisitor = detail::VarTrait<event::Variant>::template const_overload_exhaustive<T>();
+
+        /**
+         * @struct Overload
+         * @tparam Ts List of types or lambdas that have `operator()` defined for each event variant in
+         * `Event::Variant`
+         *
+         * Helper struct for overloading operator() for multiple event types, can be used to visit `Event`
+         * through its `Event::visit` method
+         */
+        template <typename... Ts>
+        struct Overload : Ts...
+        {
+            using Ts::operator()...;
+        };
+    }
+
+    /**
+     * @class Event
+     * @brief Window events wrapper (a variant).
+     *
+     * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
+     * each Window.
+     */
+    class Event
+    {
+    public:
 #undef GLFW_CPP_EVENT_TYPE_LIST
 
         Event() noexcept
-            : m_event{ Empty{} }
+            : m_event{ event::Empty{} }
         {
         }
 
-        template <typename E>
-            requires is_event_type<E>
+        template <event::Event E>
         Event(E&& event) noexcept
             : m_event{ std::move(event) }
         {
@@ -312,7 +331,8 @@ namespace glfw_cpp
          *
          * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
          */
-        decltype(auto) visit(auto&& visitor)
+        template <event::EventVisitor T>
+        decltype(auto) visit(T&& visitor)
         {
             // Unbounded visitor, I'm too tired trying to get the bound right...
             return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
@@ -328,7 +348,8 @@ namespace glfw_cpp
          *
          * See `EventQueue::visit` for a more convenient way to visit all events in `EventQueue`.
          */
-        decltype(auto) visit(auto&& visitor) const
+        template <event::EventVisitor T>
+        decltype(auto) visit(T&& visitor) const
         {
             // Unbounded visitor, I'm too tired trying to get the bound right...
             return std::visit(std::forward<decltype(visitor)>(visitor), m_event);
@@ -342,8 +363,8 @@ namespace glfw_cpp
          *
          * @throw std::bad_variant_access If the event is not of the specified type
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T>) and is_event_type<T>
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         T& get()
         {
             return std::get<T>(m_event);
@@ -357,8 +378,8 @@ namespace glfw_cpp
          *
          * @throw std::bad_variant_access If the event is not of the specified type
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         const T& get() const
         {
             return std::get<T>(m_event);
@@ -370,8 +391,8 @@ namespace glfw_cpp
          * @tparam T Type of the event to get
          * @return Pointer to the event, or nullptr if the event is not of the specified type
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         T* get_if() noexcept
         {
             return std::get_if<T>(&m_event);
@@ -383,8 +404,8 @@ namespace glfw_cpp
          * @tparam T Type of the event to get
          * @return Pointer to the event, or nullptr if the event is not of the specified type
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         const T* get_if() const noexcept
         {
             return std::get_if<T>(&m_event);
@@ -396,8 +417,8 @@ namespace glfw_cpp
          * @tparam T Type of the event to set
          * @param event Event to set
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         void set(T&& event) noexcept
         {
             m_event = std::forward<T>(event);
@@ -409,15 +430,15 @@ namespace glfw_cpp
          * @tparam T Type to check
          * @return true If the event holds the specified type
          */
-        template <typename T>
-            requires (not std::is_pointer_v<T> and is_event_type<T>)
+        template <event::Event T>
+            requires (not std::is_pointer_v<T>)
         bool holds() const noexcept
         {
             return std::holds_alternative<T>(m_event);
         }
 
     private:
-        Variant m_event;
+        event::Variant m_event;
     };
 
     /**
@@ -435,22 +456,22 @@ namespace glfw_cpp
         virtual ~IEventInterceptor() = default;
 
         // clang-format off
-        virtual bool on_window_moved        (Window& window, Event::WindowMoved&        event) noexcept = 0;
-        virtual bool on_window_resized      (Window& window, Event::WindowResized&      event) noexcept = 0;
-        virtual bool on_window_closed       (Window& window, Event::WindowClosed&       event) noexcept = 0;
-        virtual bool on_window_refreshed    (Window& window, Event::WindowRefreshed&    event) noexcept = 0;
-        virtual bool on_window_focused      (Window& window, Event::WindowFocused&      event) noexcept = 0;
-        virtual bool on_window_iconified    (Window& window, Event::WindowIconified&    event) noexcept = 0;
-        virtual bool on_window_maximized    (Window& window, Event::WindowMaximized&    event) noexcept = 0;
-        virtual bool on_window_scale_changed(Window& window, Event::WindowScaleChanged& event) noexcept = 0;
-        virtual bool on_framebuffer_resized (Window& window, Event::FramebufferResized& event) noexcept = 0;
-        virtual bool on_button_pressed      (Window& window, Event::ButtonPressed&      event) noexcept = 0;
-        virtual bool on_cursor_moved        (Window& window, Event::CursorMoved&        event) noexcept = 0;
-        virtual bool on_cursor_entered      (Window& window, Event::CursorEntered&      event) noexcept = 0;
-        virtual bool on_scrolled            (Window& window, Event::Scrolled&           event) noexcept = 0;
-        virtual bool on_key_pressed         (Window& window, Event::KeyPressed&         event) noexcept = 0;
-        virtual bool on_char_input          (Window& window, Event::CharInput&          event) noexcept = 0;
-        virtual bool on_file_dropped        (Window& window, Event::FileDropped&        event) noexcept = 0;
+        virtual bool on_window_moved        (Window& window, event::WindowMoved&        event) noexcept = 0;
+        virtual bool on_window_resized      (Window& window, event::WindowResized&      event) noexcept = 0;
+        virtual bool on_window_closed       (Window& window, event::WindowClosed&       event) noexcept = 0;
+        virtual bool on_window_refreshed    (Window& window, event::WindowRefreshed&    event) noexcept = 0;
+        virtual bool on_window_focused      (Window& window, event::WindowFocused&      event) noexcept = 0;
+        virtual bool on_window_iconified    (Window& window, event::WindowIconified&    event) noexcept = 0;
+        virtual bool on_window_maximized    (Window& window, event::WindowMaximized&    event) noexcept = 0;
+        virtual bool on_window_scale_changed(Window& window, event::WindowScaleChanged& event) noexcept = 0;
+        virtual bool on_framebuffer_resized (Window& window, event::FramebufferResized& event) noexcept = 0;
+        virtual bool on_button_pressed      (Window& window, event::ButtonPressed&      event) noexcept = 0;
+        virtual bool on_cursor_moved        (Window& window, event::CursorMoved&        event) noexcept = 0;
+        virtual bool on_cursor_entered      (Window& window, event::CursorEntered&      event) noexcept = 0;
+        virtual bool on_scrolled            (Window& window, event::Scrolled&           event) noexcept = 0;
+        virtual bool on_key_pressed         (Window& window, event::KeyPressed&         event) noexcept = 0;
+        virtual bool on_char_input          (Window& window, event::CharInput&          event) noexcept = 0;
+        virtual bool on_file_dropped        (Window& window, event::FileDropped&        event) noexcept = 0;
         // clang-format on
     };
 
@@ -464,23 +485,24 @@ namespace glfw_cpp
      */
     class DefaultEventInterceptor : public IEventInterceptor
     {
+    public:
         // clang-format off
-        bool on_window_moved        (Window&, Event::WindowMoved&)        noexcept override { return true; }
-        bool on_window_resized      (Window&, Event::WindowResized&)      noexcept override { return true; }
-        bool on_window_closed       (Window&, Event::WindowClosed&)       noexcept override { return true; }
-        bool on_window_refreshed    (Window&, Event::WindowRefreshed&)    noexcept override { return true; }
-        bool on_window_focused      (Window&, Event::WindowFocused&)      noexcept override { return true; }
-        bool on_window_iconified    (Window&, Event::WindowIconified&)    noexcept override { return true; }
-        bool on_window_maximized    (Window&, Event::WindowMaximized&)    noexcept override { return true; }
-        bool on_window_scale_changed(Window&, Event::WindowScaleChanged&) noexcept override { return true; }
-        bool on_framebuffer_resized (Window&, Event::FramebufferResized&) noexcept override { return true; }
-        bool on_button_pressed      (Window&, Event::ButtonPressed&)      noexcept override { return true; }
-        bool on_cursor_moved        (Window&, Event::CursorMoved&)        noexcept override { return true; }
-        bool on_cursor_entered      (Window&, Event::CursorEntered&)      noexcept override { return true; }
-        bool on_scrolled            (Window&, Event::Scrolled&)           noexcept override { return true; }
-        bool on_key_pressed         (Window&, Event::KeyPressed&)         noexcept override { return true; }
-        bool on_char_input          (Window&, Event::CharInput&)          noexcept override { return true; }
-        bool on_file_dropped        (Window&, Event::FileDropped&)        noexcept override { return true; }
+        bool on_window_moved        (Window&, event::WindowMoved&)        noexcept override { return true; }
+        bool on_window_resized      (Window&, event::WindowResized&)      noexcept override { return true; }
+        bool on_window_closed       (Window&, event::WindowClosed&)       noexcept override { return true; }
+        bool on_window_refreshed    (Window&, event::WindowRefreshed&)    noexcept override { return true; }
+        bool on_window_focused      (Window&, event::WindowFocused&)      noexcept override { return true; }
+        bool on_window_iconified    (Window&, event::WindowIconified&)    noexcept override { return true; }
+        bool on_window_maximized    (Window&, event::WindowMaximized&)    noexcept override { return true; }
+        bool on_window_scale_changed(Window&, event::WindowScaleChanged&) noexcept override { return true; }
+        bool on_framebuffer_resized (Window&, event::FramebufferResized&) noexcept override { return true; }
+        bool on_button_pressed      (Window&, event::ButtonPressed&)      noexcept override { return true; }
+        bool on_cursor_moved        (Window&, event::CursorMoved&)        noexcept override { return true; }
+        bool on_cursor_entered      (Window&, event::CursorEntered&)      noexcept override { return true; }
+        bool on_scrolled            (Window&, event::Scrolled&)           noexcept override { return true; }
+        bool on_key_pressed         (Window&, event::KeyPressed&)         noexcept override { return true; }
+        bool on_char_input          (Window&, event::CharInput&)          noexcept override { return true; }
+        bool on_file_dropped        (Window&, event::FileDropped&)        noexcept override { return true; }
         // clang-format on
     };
 
@@ -529,7 +551,8 @@ namespace glfw_cpp
          * want to break from the loop or want the visitor to return something, then you better off writing
          * the loop yourself and use `Event::visit` traditionally.
          */
-        void visit(auto&& visitor) const;
+        template <event::EventVisitor T>
+        void visit(T&& visitor) const;
 
         /**
          * @brief Get a view of the underlying buffer as a `std::span`
@@ -694,7 +717,8 @@ namespace glfw_cpp
     static_assert(std::forward_iterator<EventQueue::Iterator<true>>);
 
     // NOTE: the visit function must be defined in the header since it's a template
-    void EventQueue::visit(auto&& visitor) const
+    template <event::EventVisitor T>
+    void EventQueue::visit(T&& visitor) const
     {
         for (const auto& event : *this) {
             event.visit(visitor);

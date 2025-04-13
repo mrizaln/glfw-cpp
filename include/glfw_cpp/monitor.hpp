@@ -50,12 +50,13 @@ namespace glfw_cpp
 
         struct VideoMode
         {
-            int  m_width;
-            int  m_height;
-            int  m_red_bits;
-            int  m_green_bits;
-            int  m_blue_bits;
-            int  m_refresh_rate;
+            int m_width;
+            int m_height;
+            int m_red_bits;
+            int m_green_bits;
+            int m_blue_bits;
+            int m_refresh_rate;
+
             auto operator<=>(const VideoMode&) const = default;
         };
 

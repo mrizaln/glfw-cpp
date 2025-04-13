@@ -1,8 +1,11 @@
 #include <cstdlib>
 #include <ctime>
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
-#include <GLFW/glfw3.h>
 
 #include <cmath>
 #include <thread>
@@ -17,11 +20,11 @@ void window_thread(glfw::Window&& window)
 
     window.run([&, elapsed = 0.0F](const auto& events) mutable {
         for (const glfw::Event& event : events) {
-            if (auto e = event.get_if<glfw::Event::KeyPressed>()) {
+            if (auto e = event.get_if<glfw::event::KeyPressed>()) {
                 if (e->m_key == glfw::KeyCode::Q) {
                     window.request_close();
                 }
-            } else if (auto e = event.get_if<glfw::Event::FramebufferResized>()) {
+            } else if (auto e = event.get_if<glfw::event::FramebufferResized>()) {
                 glViewport(0, 0, e->m_width, e->m_height);
             }
         }

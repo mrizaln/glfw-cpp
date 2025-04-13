@@ -72,10 +72,10 @@ int main()
             hint.m_flags &= ~glfw_cpp::WindowHint::FocusOnShow;
         }
 
-        windows[i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
+        windows[(unsigned)i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
 
         // set window pos will be queued inside WindowManager
-        windows[i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
+        windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
 
         glClearColor(colors[i].r, colors[i].g, colors[i].b, 1.f);
     }
@@ -84,7 +84,7 @@ int main()
     wm->poll_events();
 
     while (wm->has_window_opened()) {
-        for (int i = 0; i < 4; i++) {
+        for (unsigned i = 0; i < 4; i++) {
             windows[i].bind();
 
             glClear(GL_COLOR_BUFFER_BIT);
