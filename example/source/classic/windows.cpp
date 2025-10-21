@@ -39,11 +39,11 @@
 int main()
 {
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -65,17 +65,16 @@ int main()
             { 0.98f, 0.74f, 0.04f },
         };
 
-        auto hint = glfw_cpp::WindowHint{
-            .m_flags = glfw_cpp::WindowHint::Default & ~glfw_cpp::WindowHint::Decorated,
-        };
+        auto hint   = glfw_cpp::Hint{};
+        hint.flags &= ~glfw_cpp::Flag::Decorated;
         if (i > 0) {
-            hint.m_flags &= ~glfw_cpp::WindowHint::FocusOnShow;
+            hint.flags &= ~glfw_cpp::Flag::FocusOnShow;
         }
 
-        windows[i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
+        windows[(unsigned)i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
 
         // set window pos will be queued inside WindowManager
-        windows[i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
+        windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
 
         glClearColor(colors[i].r, colors[i].g, colors[i].b, 1.f);
     }
@@ -84,12 +83,12 @@ int main()
     wm->poll_events();
 
     while (wm->has_window_opened()) {
-        for (int i = 0; i < 4; i++) {
+        for (unsigned i = 0; i < 4; i++) {
             windows[i].bind();
 
             glClear(GL_COLOR_BUFFER_BIT);
 
-            if (windows[i].properties().m_key_state.is_pressed(glfw_cpp::KeyCode::Escape)) {
+            if (windows[i].properties().key_state.is_pressed(glfw_cpp::KeyCode::Escape)) {
                 std::ranges::for_each(windows, &glfw_cpp::Window::request_close);
             }
 

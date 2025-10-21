@@ -5,18 +5,67 @@
 #include "glfw_cpp/input.hpp"
 #include "glfw_cpp/monitor.hpp"
 
-#include <vector>
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
 #include <thread>
+#include <vector>
 
 struct GLFWwindow;
 
 namespace glfw_cpp
 {
     class WindowManager;
+
+    struct Dimensions
+    {
+        int  width;
+        int  height;
+        auto operator<=>(const Dimensions&) const = default;
+    };
+
+    struct FramebufferSize
+    {
+        int  width;
+        int  height;
+        auto operator<=>(const FramebufferSize&) const = default;
+    };
+
+    struct CursorPosition
+    {
+        double x;
+        double y;
+        auto   operator<=>(const CursorPosition&) const = default;
+    };
+
+    struct Atrributes
+    {
+        unsigned int iconified     : 1 = 0;
+        unsigned int maximized     : 1 = 0;
+        unsigned int focused       : 1 = 0;
+        unsigned int visible       : 1 = 0;
+        unsigned int hovered       : 1 = 0;
+        unsigned int resizable     : 1 = 0;
+        unsigned int floating      : 1 = 0;
+        unsigned int auto_iconify  : 1 = 0;
+        unsigned int focus_on_show : 1 = 0;
+
+        bool operator==(const Atrributes&) const = default;
+    };
+
+    struct Properties
+    {
+        std::string            title;
+        Position               pos;
+        Dimensions             dimensions;
+        FramebufferSize        framebuffer_size;
+        CursorPosition         cursor;
+        Atrributes             attribute;
+        MouseButtonStateRecord mouse_button_state;
+        KeyStateRecord         key_state;
+        Monitor                monitor;
+    };
 
     /**
      * @class Window
@@ -34,58 +83,6 @@ namespace glfw_cpp
     public:
         friend WindowManager;
 
-        struct Properties
-        {
-            std::string m_title;
-
-            struct Position
-            {
-                int  m_x;
-                int  m_y;
-                auto operator<=>(const Position&) const = default;
-            } m_pos;
-
-            struct Dimension
-            {
-                int  m_width;
-                int  m_height;
-                auto operator<=>(const Dimension&) const = default;
-            } m_dimension;
-
-            struct FramebufferSize
-            {
-                int  m_width;
-                int  m_height;
-                auto operator<=>(const FramebufferSize&) const = default;
-            } m_framebuffer_size;
-
-            struct CursorPos
-            {
-                double m_x;
-                double m_y;
-                auto   operator<=>(const CursorPos&) const = default;
-            } m_cursor;
-
-            struct Atrribute
-            {
-                unsigned int m_iconified     : 1 = 0;
-                unsigned int m_maximized     : 1 = 0;
-                unsigned int m_focused       : 1 = 0;
-                unsigned int m_visible       : 1 = 0;
-                unsigned int m_hovered       : 1 = 0;
-                unsigned int m_resizable     : 1 = 0;
-                unsigned int m_floating      : 1 = 0;
-                unsigned int m_auto_iconify  : 1 = 0;
-                unsigned int m_focus_on_show : 1 = 0;
-
-                bool operator==(const Atrribute&) const = default;
-            } m_attribute;
-
-            MouseButtonStateRecord m_mouse_button_state = {};
-            KeyStateRecord         m_key_state          = {};
-            Monitor                m_monitor            = {};
-        };
-
         static constexpr std::size_t s_default_eventqueue_size = 128;
 
         template <typename Sig>
@@ -99,6 +96,8 @@ namespace glfw_cpp
         Window()                        = default;
         Window(const Window&)           = delete;
         Window operator=(const Window&) = delete;
+
+        explicit operator bool() const noexcept { return m_handle != nullptr; }
 
         /**
          * @brief Bind window context to current thread (only makes sense for OpenGL and OpenGLES).

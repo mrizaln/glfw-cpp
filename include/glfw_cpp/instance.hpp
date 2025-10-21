@@ -1,6 +1,8 @@
 #ifndef INSTANCE_HPP_AO39EW8FOEW
 #define INSTANCE_HPP_AO39EW8FOEW
 
+#include "glfw_cpp/detail/helper.hpp"
+
 #include <format>
 #include <functional>
 #include <memory>
@@ -15,34 +17,15 @@ namespace glfw_cpp
     class WindowManager;
     class IEventInterceptor;
 
-    /**
-     * @struct Api
-     * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no API).
-     */
-    struct Api
+    namespace api
     {
-        using GlProc      = void (*)();
-        using GlGetProc   = GlProc(const char*);
-        using GlContext   = ::GLFWwindow*;
-        using GlLoaderFun = std::function<void(GlContext handle, GlGetProc proc)>;
-
-        /**
-         * @struct OpenGLES
-         * @brief Describe the OpenGLES version to use.
-         */
-        struct OpenGLES
+        namespace gl
         {
-            int         m_major = 2;
-            int         m_minor = 0;
-            GlLoaderFun m_loader;
-        };
+            using Proc      = void (*)();
+            using GetProc   = Proc(const char*);
+            using Context   = ::GLFWwindow*;
+            using LoaderFun = std::function<void(Context handle, GetProc proc)>;
 
-        /**
-         * @struct OpenGL
-         * @brief Describe the OpenGL version to use.
-         */
-        struct OpenGL
-        {
             /**
              * @enum Profile
              * @brief OpenGL profile to use.
@@ -53,12 +36,30 @@ namespace glfw_cpp
                 Compat,
                 Any,
             };
+        }
 
-            int         m_major          = 1;
-            int         m_minor          = 0;
-            Profile     m_profile        = Profile::Core;    // only makes sense for OpenGL 3.2 above
-            bool        m_forward_compat = true;             // only makes sense for OpenGL 3.0 above
-            GlLoaderFun m_loader;
+        /**
+         * @struct OpenGLES
+         * @brief Describe the OpenGLES version to use.
+         */
+        struct OpenGLES
+        {
+            int           major = 2;
+            int           minor = 0;
+            gl::LoaderFun loader;
+        };
+
+        /**
+         * @struct OpenGL
+         * @brief Describe the OpenGL version to use.
+         */
+        struct OpenGL
+        {
+            int           major          = 1;
+            int           minor          = 0;
+            gl::Profile   profile        = gl::Profile::Core;    // only makes sense for OpenGL 3.2 and above
+            bool          forward_compat = true;                 // only makes sense for OpenGL 3.0 and above
+            gl::LoaderFun loader;
         };
 
         /**
@@ -70,6 +71,39 @@ namespace glfw_cpp
         };
 
         using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
+
+        template <typename T>
+        concept Api = detail::traits::VarTrait<Variant>::template is_elem<T>();
+    }
+
+    /**
+     * @struct Api
+     * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no API).
+     */
+    class Api : public detail::variants::VariantBase<api::Variant>
+    {
+    public:
+        Api() = default;
+
+        template <typename T>
+        Api(T&& t)
+            : VariantBase{ std::forward<T>(t) }
+        {
+        }
+    };
+
+    /**
+     * @enum LogLevel
+     * @brief Log levels for the logger function.
+     */
+    enum class LogLevel
+    {
+        None,
+        Debug,
+        Info,
+        Warning,
+        Error,
+        Critical,
     };
 
     /**
@@ -82,16 +116,6 @@ namespace glfw_cpp
         friend WindowManager;
         friend Window;
 
-        enum class LogLevel
-        {
-            None,
-            Debug,
-            Info,
-            Warning,
-            Error,
-            Critical,
-        };
-
         // LogFun should be noexcept
         using LogFun = std::function<void(LogLevel level, std::string msg)>;
         using Unique = std::unique_ptr<Instance, void (*)(Instance*)>;
@@ -99,7 +123,7 @@ namespace glfw_cpp
         /**
          * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
          */
-        friend Unique init(Api::Variant&&, Instance::LogFun&&);
+        friend Unique init(Api&&, Instance::LogFun&&);
 
         /**
          * @brief Create a `WindowManager` instance.
@@ -124,9 +148,9 @@ namespace glfw_cpp
     private:
         static Instance s_instance;
 
-        bool         m_initialized = false;
-        Api::Variant m_api;
-        LogFun       m_loggger;
+        bool   m_initialized = false;
+        Api    m_api;
+        LogFun m_loggger;
 
         Instance() = default;
 
@@ -185,18 +209,20 @@ namespace glfw_cpp
      * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
      * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
      */
-    Instance::Unique init(Api::Variant&& api, Instance::LogFun&& logger = nullptr);
+    Instance::Unique init(Api&& api, Instance::LogFun&& logger = nullptr);
 
-    inline std::string_view to_string(Instance::LogLevel level)
+    /**
+     * @brief Convert a `LogLevel` enum to a string.
+     */
+    inline std::string_view to_string(LogLevel level)
     {
-        using L = glfw_cpp::Instance::LogLevel;
         switch (level) {
-        case L::None: return "NONE";
-        case L::Debug: return "DEBUG";
-        case L::Info: return "INFO";
-        case L::Warning: return "WARNING";
-        case L::Error: return "ERROR";
-        case L::Critical: return "CRITICAL";
+        case LogLevel::None: return "NONE";
+        case LogLevel::Debug: return "DEBUG";
+        case LogLevel::Info: return "INFO";
+        case LogLevel::Warning: return "WARNING";
+        case LogLevel::Error: return "ERROR";
+        case LogLevel::Critical: return "CRITICAL";
         default: [[unlikely]] return "UNKNOWN";
         }
     }

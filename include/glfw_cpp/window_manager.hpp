@@ -1,6 +1,8 @@
 #ifndef WINDOW_MANAGER_HPP_OR5VIUQW
 #define WINDOW_MANAGER_HPP_OR5VIUQW
 
+#include "glfw_cpp/detail/helper.hpp"
+
 #include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window.hpp"
 
@@ -9,10 +11,10 @@
 #include <memory>
 #include <mutex>
 #include <optional>
-#include <utility>
-#include <vector>
 #include <string_view>
 #include <thread>
+#include <utility>
+#include <vector>
 
 struct GLFWwindow;
 
@@ -31,49 +33,62 @@ namespace glfw_cpp
     class Instance;
     class Window;
     class Monitor;
-    struct IEventInterceptor;
+    class IEventInterceptor;
+
+    enum class Flag : std::uint32_t
+    {
+        None                   = 0,
+        Resizable              = 1 << 0,
+        Visible                = 1 << 1,
+        Decorated              = 1 << 2,
+        Focused                = 1 << 3,
+        AutoIconify            = 1 << 4,
+        Floating               = 1 << 5,
+        Maximized              = 1 << 6,
+        CenterCursor           = 1 << 7,
+        TransparentFramebuffer = 1 << 8,
+        FocusOnShow            = 1 << 9,
+        ScaleToMonitor         = 1 << 10,
+
+        Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
+    };
+
+    template <>
+    struct detail::enums::EnableOperators<Flag> : std::true_type
+    {
+    };
+
+    using detail::enums::operators::operator~;
+    using detail::enums::operators::operator|;
+    using detail::enums::operators::operator&;
+    using detail::enums::operators::operator^;
+    using detail::enums::operators::operator|=;
+    using detail::enums::operators::operator&=;
+    using detail::enums::operators::operator^=;
 
     /**
-     * @struct WindowHint
+     * @struct Hint
      * @brief A struct that holds window hints.
      *
      * The window hints included here are only the relevant ones. Graphics API is omitted since the API is not
      * allowed to change at runtime (my design choice).
      */
-    struct WindowHint
+    struct Hint
     {
-        using Flag = std::int32_t;
-        enum FlagBit : Flag
-        {
-            Resizable              = 1 << 0,
-            Visible                = 1 << 1,
-            Decorated              = 1 << 2,
-            Focused                = 1 << 3,
-            AutoIconify            = 1 << 4,
-            Floating               = 1 << 5,
-            Maximized              = 1 << 6,
-            CenterCursor           = 1 << 7,
-            TransparentFramebuffer = 1 << 8,
-            FocusOnShow            = 1 << 9,
-            ScaleToMonitor         = 1 << 10,
+        Monitor::Handle monitor = nullptr;
+        Window::Handle  share   = nullptr;
 
-            Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
-        };
+        Flag flags = Flag::Default;
 
-        Monitor* m_monitor = nullptr;
-        Window*  m_share   = nullptr;
+        int red_bits     = 8;
+        int green_bits   = 8;
+        int blue_bits    = 8;
+        int alpha_bits   = 8;
+        int depth_bits   = 24;
+        int stencil_bits = 8;
 
-        Flag m_flags = FlagBit::Default;
-
-        int m_red_bits     = 8;
-        int m_green_bits   = 8;
-        int m_blue_bits    = 8;
-        int m_alpha_bits   = 8;
-        int m_depth_bits   = 24;
-        int m_stencil_bits = 8;
-
-        int m_samples      = 0;
-        int m_refresh_rate = -1;
+        int samples      = 0;
+        int refresh_rate = -1;    // -1 means don't care
     };
 
     /**
@@ -120,11 +135,11 @@ namespace glfw_cpp
          * @throw glfw_cpp::PlatformError A platform-specific error occurred.
          */
         Window create_window(
-            const WindowHint& hint,
-            std::string_view  title,
-            int               width,
-            int               height,
-            bool              bind_immediately = true
+            const Hint&      hint,
+            std::string_view title,
+            int              width,
+            int              height,
+            bool             bind_immediately = true
         );
 
         /**
@@ -219,8 +234,8 @@ namespace glfw_cpp
 
         struct WindowTask
         {
-            Window::Handle m_handle;
-            Fun<void()>    m_task;
+            Window::Handle handle;
+            Fun<void()>    task;
         };
 
         WindowManager(std::thread::id thread_id, IEventInterceptor* event_interceptor) noexcept;

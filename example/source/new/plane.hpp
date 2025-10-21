@@ -1,11 +1,11 @@
 #ifndef PLANE_HPP_GR5KWQFD
 #define PLANE_HPP_GR5KWQFD
 
-#include <glm/glm.hpp>
 #include <glbinding/gl/gl.h>
+#include <glm/glm.hpp>
 
-#include <cstddef>
 #include <array>
+#include <cstddef>
 #include <span>
 
 class Plane
@@ -20,9 +20,9 @@ public:
 
         for (auto i = std::size_t{ 0 }; i < num_of_vertices; ++i) {
             vertices[i] = {
-                .m_position  = s_planeVertices[i] * m_side_len / 2.0F,
-                .m_normal    = s_planeNormals[i],
-                .m_tex_coord = s_planeTexCoords[i],
+                .position  = s_planeVertices[i] * m_side_len / 2.0F,
+                .normal    = s_planeNormals[i],
+                .tex_coord = s_planeTexCoords[i],
             };
         }
 
@@ -48,9 +48,9 @@ private:
 
     struct VertexData
     {
-        Triple m_position;
-        Triple m_normal;
-        Pair   m_tex_coord;
+        Triple position;
+        Triple normal;
+        Pair   tex_coord;
     };
 
     using Vertices = std::array<VertexData, num_of_vertices>;
@@ -113,27 +113,27 @@ private:
 
         gl::glVertexAttribPointer(
             0,
-            decltype(VertexData::m_position)::length(),
+            decltype(VertexData::position)::length(),
             gl::GL_FLOAT,
             gl::GL_FALSE,
             stride,
-            (void*)offsetof(VertexData, m_position)
+            (void*)offsetof(VertexData, position)
         );
         gl::glVertexAttribPointer(
             1,
-            decltype(VertexData::m_normal)::length(),
+            decltype(VertexData::normal)::length(),
             gl::GL_FLOAT,
             gl::GL_FALSE,
             stride,
-            (void*)offsetof(VertexData, m_normal)
+            (void*)offsetof(VertexData, normal)
         );
         gl::glVertexAttribPointer(
             2,
-            decltype(VertexData::m_tex_coord)::length(),
+            decltype(VertexData::tex_coord)::length(),
             gl::GL_FLOAT,
             gl::GL_FALSE,
             stride,
-            (void*)offsetof(VertexData, m_tex_coord)
+            (void*)offsetof(VertexData, tex_coord)
         );
         gl::glEnableVertexAttribArray(0);
         gl::glEnableVertexAttribArray(1);

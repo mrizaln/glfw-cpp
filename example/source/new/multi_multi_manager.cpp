@@ -1,8 +1,11 @@
 #include <cstdlib>
 #include <ctime>
+
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
-#include <GLFW/glfw3.h>
 
 #include <cmath>
 #include <thread>
@@ -17,12 +20,12 @@ void window_thread(glfw::Window&& window)
 
     window.run([&, elapsed = 0.0F](const auto& events) mutable {
         for (const glfw::Event& event : events) {
-            if (auto e = event.get_if<glfw::Event::KeyPressed>()) {
-                if (e->m_key == glfw::KeyCode::Q) {
+            if (auto e = event.get_if<glfw::event::KeyPressed>()) {
+                if (e->key == glfw::KeyCode::Q) {
                     window.request_close();
                 }
-            } else if (auto e = event.get_if<glfw::Event::FramebufferResized>()) {
-                glViewport(0, 0, e->m_width, e->m_height);
+            } else if (auto e = event.get_if<glfw::event::FramebufferResized>()) {
+                glViewport(0, 0, e->width, e->height);
             }
         }
         elapsed += (float)window.delta_time();
@@ -42,11 +45,11 @@ int main()
     // forgive me for using rand and srand, I'm lazy :D
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    auto instance = glfw_cpp::init(glfw::Api::OpenGL{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw::Api::OpenGL::Profile::Core,
-        .m_loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    auto instance = glfw_cpp::init(glfw::api::OpenGL{
+        .major   = 3,
+        .minor   = 3,
+        .profile = glfw::api::gl::Profile::Core,
+        .loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 
     // WindowManager does not have a restriction like Instance. It can be instantiated more than

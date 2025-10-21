@@ -8,7 +8,7 @@
 class Shader
 {
 public:
-    const gl::GLuint m_id;
+    const gl::GLuint id;
 
     Shader()                         = delete;
     Shader(const Shader&)            = delete;
@@ -17,26 +17,26 @@ public:
     Shader& operator=(Shader&&)      = delete;
 
     Shader(std::string_view vs_source, std::string_view fs_source)
-        : m_id{ gl::glCreateProgram() }
+        : id{ gl::glCreateProgram() }
     {
         auto vs_id = prepare_shader(vs_source, ShaderStage::Vertex);
         auto fs_id = prepare_shader(fs_source, ShaderStage::Fragment);
 
         // link shaders to shader program
-        gl::glAttachShader(m_id, vs_id);
-        gl::glAttachShader(m_id, fs_id);
-        gl::glLinkProgram(m_id);
+        gl::glAttachShader(id, vs_id);
+        gl::glAttachShader(id, fs_id);
+        gl::glLinkProgram(id);
 
-        shader_link_info(m_id);
+        shader_link_info(id);
 
         // delete shader objects
         gl::glDeleteShader(vs_id);
         gl::glDeleteShader(fs_id);
     }
 
-    ~Shader() { gl::glDeleteProgram(m_id); }
+    ~Shader() { gl::glDeleteProgram(id); }
 
-    void use() const { gl::glUseProgram(m_id); }
+    void use() const { gl::glUseProgram(id); }
 
 private:
     enum class ShaderStage

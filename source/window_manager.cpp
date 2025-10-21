@@ -1,5 +1,5 @@
-#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/window_manager.hpp"
+#include "glfw_cpp/instance.hpp"
 
 #include "util.hpp"
 
@@ -15,16 +15,14 @@
 #include <thread>
 #include <utility>
 
-using LogLevel = glfw_cpp::Instance::LogLevel;
-
 namespace
 {
-    void configure_hints(const glfw_cpp::WindowHint& hint) noexcept
+    void configure_hints(const glfw_cpp::Hint& hint) noexcept
     {
-        using F = glfw_cpp::WindowHint::FlagBit;
+        using F = glfw_cpp::Flag;
 
         const auto set_flag = [&](int flag, F bit) {
-            glfwWindowHint(flag, (hint.m_flags & bit) != 0 ? GLFW_TRUE : GLFW_FALSE);
+            glfwWindowHint(flag, (hint.flags & bit) == bit ? GLFW_TRUE : GLFW_FALSE);
         };
 
         set_flag(GLFW_RESIZABLE, F::Resizable);
@@ -39,15 +37,15 @@ namespace
         set_flag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
         set_flag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
 
-        glfwWindowHint(GLFW_RED_BITS, hint.m_red_bits);
-        glfwWindowHint(GLFW_GREEN_BITS, hint.m_green_bits);
-        glfwWindowHint(GLFW_BLUE_BITS, hint.m_blue_bits);
-        glfwWindowHint(GLFW_ALPHA_BITS, hint.m_alpha_bits);
-        glfwWindowHint(GLFW_DEPTH_BITS, hint.m_depth_bits);
-        glfwWindowHint(GLFW_STENCIL_BITS, hint.m_stencil_bits);
+        glfwWindowHint(GLFW_RED_BITS, hint.red_bits);
+        glfwWindowHint(GLFW_GREEN_BITS, hint.green_bits);
+        glfwWindowHint(GLFW_BLUE_BITS, hint.blue_bits);
+        glfwWindowHint(GLFW_ALPHA_BITS, hint.alpha_bits);
+        glfwWindowHint(GLFW_DEPTH_BITS, hint.depth_bits);
+        glfwWindowHint(GLFW_STENCIL_BITS, hint.stencil_bits);
 
-        glfwWindowHint(GLFW_SAMPLES, hint.m_samples);
-        glfwWindowHint(GLFW_REFRESH_RATE, hint.m_refresh_rate);
+        glfwWindowHint(GLFW_SAMPLES, hint.samples);
+        glfwWindowHint(GLFW_REFRESH_RATE, hint.refresh_rate);
     }
 }
 
@@ -67,23 +65,18 @@ namespace glfw_cpp
     }
 
     Window WindowManager::create_window(
-        const WindowHint& hint,
-        std::string_view  title,
-        int               width,
-        int               height,
-        bool              bind_immediately
+        const Hint&      hint,
+        std::string_view title,
+        int              width,
+        int              height,
+        bool             bind_immediately
     )
     {
         validate_access();
         configure_hints(hint);
+        util::check_glfw_error();
 
-        const auto handle = glfwCreateWindow(
-            width,
-            height,
-            title.data(),
-            hint.m_monitor ? hint.m_monitor->handle() : nullptr,
-            hint.m_share ? hint.m_share->handle() : nullptr
-        );
+        const auto handle = glfwCreateWindow(width, height, title.data(), hint.monitor, hint.share);
         if (handle == nullptr) {
             Instance::log_c("(WindowManager) Window creation failed");
             util::throw_glfw_error();
@@ -118,23 +111,26 @@ namespace glfw_cpp
 
         auto wm_copy = std::enable_shared_from_this<WindowManager>::shared_from_this();
 
-        return Window{ wm_copy, handle, Window::Properties{
-            .m_title             = { title.begin(), title.end() },
-            .m_pos               = { x_pos, y_pos },
-            .m_dimension         = { real_width, real_height },
-            .m_framebuffer_size  = { fb_width, fb_height },
-            .m_cursor            = { x_cursor, y_cursor },
-            .m_attribute         = {
-                .m_iconified     = 0,
-                .m_maximized     = (hint.m_flags & WindowHint::Maximized) != 0,
-                .m_focused       = (hint.m_flags & WindowHint::Focused) != 0,
-                .m_visible       = (hint.m_flags & WindowHint::Visible) != 0,
-                .m_hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .m_resizable     = (hint.m_flags & WindowHint::Resizable) != 0,
-                .m_floating      = (hint.m_flags & WindowHint::Floating) != 0,
-                .m_auto_iconify  = (hint.m_flags & WindowHint::AutoIconify) != 0,
-                .m_focus_on_show = (hint.m_flags & WindowHint::FocusOnShow) != 0,
+        return Window{ wm_copy, handle, Properties{
+            .title              = { title.begin(), title.end() },
+            .pos                = { x_pos, y_pos },
+            .dimensions         = { real_width, real_height },
+            .framebuffer_size   = { fb_width, fb_height },
+            .cursor             = { x_cursor, y_cursor },
+            .attribute          = {
+                .iconified      = 0,
+                .maximized      = (hint.flags & Flag::Maximized) == Flag::Maximized,
+                .focused        = (hint.flags & Flag::Focused) == Flag::Focused,
+                .visible        = (hint.flags & Flag::Visible) == Flag::Visible,
+                .hovered        = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
+                .resizable      = (hint.flags & Flag::Resizable) == Flag::Resizable,
+                .floating       = (hint.flags & Flag::Floating) == Flag::Floating,
+                .auto_iconify   = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
+                .focus_on_show  = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
             },
+            .mouse_button_state = {},
+            .key_state          = {},
+            .monitor            = hint.monitor,
         }, bind_immediately };
     }
 
@@ -243,25 +239,25 @@ namespace glfw_cpp
         }
 
         auto& intr = *m_event_interceptor;
-        return event.visit(Event::Overloaded{
+        return event.visit(event::Overload{
             // clang-format off
-            [&](Event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
-            [&](Event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
-            [&](Event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
-            [&](Event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
-            [&](Event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
-            [&](Event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
-            [&](Event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
-            [&](Event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
-            [&](Event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
-            [&](Event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
-            [&](Event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
-            [&](Event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
-            [&](Event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
-            [&](Event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
-            [&](Event::CharInput&          event) { return intr.on_char_input          (window, event); },
-            [&](Event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
-            [&](Event::Empty&                   ) { return true; /* always true                   */ },
+            [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
+            [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
+            [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
+            [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
+            [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
+            [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
+            [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
+            [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
+            [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
+            [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
+            [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
+            [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
+            [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
+            [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
+            [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
+            [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
+            [&](event::Empty&                   ) { return true; /* always true                   */ },
             // clang-format on
         });
     }

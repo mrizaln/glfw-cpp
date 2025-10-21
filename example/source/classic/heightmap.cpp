@@ -26,11 +26,11 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
-#include <cstdlib>
-#include <cstdio>
-#include <cmath>
 #include <cassert>
+#include <cmath>
 #include <cstddef>
+#include <cstdio>
+#include <cstdlib>
 #include <exception>
 
 #include <glad/glad.h>
@@ -233,26 +233,26 @@ static void init_map()
     /* close the top of the square */
     k = 0;
     for (i = 0; i < MAP_NUM_VERTICES - 1; ++i) {
-        map_line_indices[k++] = (i + 1) * MAP_NUM_VERTICES - 1;
-        map_line_indices[k++] = (i + 2) * MAP_NUM_VERTICES - 1;
+        map_line_indices[k++] = (unsigned)(i + 1) * MAP_NUM_VERTICES - 1;
+        map_line_indices[k++] = (unsigned)(i + 2) * MAP_NUM_VERTICES - 1;
     }
     /* close the right of the square */
     for (i = 0; i < MAP_NUM_VERTICES - 1; ++i) {
-        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + i;
-        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + i + 1;
+        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + (unsigned)i;
+        map_line_indices[k++] = (MAP_NUM_VERTICES - 1) * MAP_NUM_VERTICES + (unsigned)i + 1;
     }
 
     for (i = 0; i < (MAP_NUM_VERTICES - 1); ++i) {
         for (j = 0; j < (MAP_NUM_VERTICES - 1); ++j) {
             int ref               = i * (MAP_NUM_VERTICES) + j;
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + 1;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + 1;
 
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + MAP_NUM_VERTICES;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + MAP_NUM_VERTICES;
 
-            map_line_indices[k++] = ref;
-            map_line_indices[k++] = ref + MAP_NUM_VERTICES + 1;
+            map_line_indices[k++] = (unsigned)ref;
+            map_line_indices[k++] = (unsigned)ref + MAP_NUM_VERTICES + 1;
         }
     }
 
@@ -281,12 +281,12 @@ static void generate_heightmap__circle(float* center_x, float* center_y, float* 
 {
     float sign;
     /* random value for element in between [0-1.0] */
-    *center_x     = (MAP_SIZE * rand()) / (float)RAND_MAX;
-    *center_y     = (MAP_SIZE * rand()) / (float)RAND_MAX;
-    *size         = (MAX_CIRCLE_SIZE * rand()) / (float)RAND_MAX;
-    sign          = (1.0f * rand()) / (float)RAND_MAX;
+    *center_x     = (MAP_SIZE * (float)rand()) / (float)RAND_MAX;
+    *center_y     = (MAP_SIZE * (float)rand()) / (float)RAND_MAX;
+    *size         = (MAX_CIRCLE_SIZE * (float)rand()) / (float)RAND_MAX;
+    sign          = (1.0f * (float)rand()) / (float)RAND_MAX;
     sign          = (sign < DISPLACEMENT_SIGN_LIMIT) ? -1.0f : 1.0f;
-    *displacement = (sign * (MAX_DISPLACEMENT * rand())) / (float)RAND_MAX;
+    *displacement = (sign * (MAX_DISPLACEMENT * (float)rand())) / (float)RAND_MAX;
 }
 
 /* Run the specified number of iterations of the generation process for the
@@ -374,21 +374,21 @@ static void update_mesh()
 int main()
 {
     try {
-        auto api = glfw_cpp::Api::OpenGL{
-            .m_major          = 3,
-            .m_minor          = 2,
-            .m_profile        = glfw_cpp::Api::OpenGL::Profile::Core,
-            .m_forward_compat = true,
-            .m_loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        auto api = glfw_cpp::api::OpenGL{
+            .major          = 3,
+            .minor          = 2,
+            .profile        = glfw_cpp::api::gl::Profile::Core,
+            .forward_compat = true,
+            .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
             }
         };
 
-        using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::Default & ~H::Resizable };
+        using Flag = glfw_cpp::Flag;
+        auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Resizable };
 
         auto glfw   = glfw_cpp::init(api, logger);
         auto wm     = glfw->create_window_manager();
@@ -428,7 +428,7 @@ int main()
         /* Create the vbo to store all the information for the grid and the height */
 
         /* setup the scene ready for rendering */
-        auto [width, height] = window.properties().m_framebuffer_size;
+        auto [width, height] = window.properties().framebuffer_size;
         glViewport(0, 0, width, height);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -438,13 +438,13 @@ int main()
         double last_update_time = glfw_cpp::get_time();
 
         while (!window.should_close()) {
-            using EV = glfw_cpp::Event;
-            using KC = glfw_cpp::KeyCode;
-            using KS = glfw_cpp::KeyState;
+            namespace ev = glfw_cpp::event;
+            using KC     = glfw_cpp::KeyCode;
+            using KS     = glfw_cpp::KeyState;
 
-            for (const EV& event : window.poll()) {
-                if (auto* e = event.get_if<EV::KeyPressed>()) {
-                    if (e->m_key == KC::Escape && e->m_state == KS::Press) {
+            for (const auto& event : window.poll()) {
+                if (auto* e = event.get_if<ev::KeyPressed>()) {
+                    if (e->key == KC::Escape && e->state == KS::Press) {
                         window.request_close();
                     }
                 }

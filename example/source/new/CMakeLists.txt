@@ -37,6 +37,12 @@ create_an_executable(monitor
 create_an_executable(vulkan
   # DO_SANITIZE
   LIBS fmt::fmt vulkan-headers::vulkan-headers Vulkan::Loader glfw-cpp)
+
+create_an_executable(imgui
+  DO_SANITIZE
+  LIBS
+    fmt::fmt glbinding::glbinding glm::glm glfw-cpp khrplatform::khrplatform
+    imgui::imgui imgui::bindings::glfw imgui::bindings::opengl3)
 # cmake-format: on
 
 # copy assets to build directory

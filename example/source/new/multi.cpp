@@ -1,10 +1,10 @@
-#include "shader.hpp"
 #include "plane.hpp"
+#include "shader.hpp"
 
 #include <fmt/core.h>
 #include <fmt/std.h>
-#include <glbinding/glbinding.h>
 #include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <filesystem>
@@ -31,19 +31,18 @@ void handle_events(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
     // Not the best looking code IMO compared to unsafe manual tagged union (use get_if instead
     // if you think it would be better or use an overloaded set)
 
-    events.visit([&](auto& e) {
-        using E  = glfw_cpp::Event;
-        using Ev = std::decay_t<decltype(e)>;
+    events.visit([&]<typename E>(const E& e) {
+        namespace ev = glfw_cpp::event;
 
-        if constexpr (std::same_as<Ev, E::WindowResized>) {
-            gl::glViewport(0, 0, e.m_width, e.m_height);
-        } else if constexpr (std::same_as<Ev, E::KeyPressed>) {
+        if constexpr (std::same_as<E, ev::WindowResized>) {
+            gl::glViewport(0, 0, e.width, e.height);
+        } else if constexpr (std::same_as<E, ev::KeyPressed>) {
             using K = glfw_cpp::KeyCode;
-            if (e.m_state != glfw_cpp::KeyState::Press) {
+            if (e.state != glfw_cpp::KeyState::Press) {
                 return;
             }
 
-            switch (e.m_key) {
+            switch (e.key) {
             case K::Q: window.request_close(); break;
             case K::A: {
                 static int i = 0;
@@ -81,11 +80,11 @@ int main()
     auto loader = [](auto handle, auto proc) {
         glbinding::initialize((glbinding::ContextHandle)handle, proc);
     };
-    auto api = glfw_cpp::Api::OpenGL{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
-        .m_loader  = loader,
+    auto api = glfw_cpp::api::OpenGL{
+        .major   = 3,
+        .minor   = 3,
+        .profile = glfw_cpp::api::gl::Profile::Core,
+        .loader  = loader,
     };
     auto log = [](auto level, auto str) { fmt::println(stderr, "[GLFW: {:<7}] {}", to_string(level), str); };
 
@@ -94,8 +93,8 @@ int main()
 
     auto window1 = wm->create_window({}, "Learn glfw-cpp 1", 800, 600, false);
 
-    using F      = glfw_cpp::WindowHint::FlagBit;
-    auto hint    = glfw_cpp::WindowHint{ .m_flags = F::Default ^ F::Resizable };
+    using F      = glfw_cpp::Flag;
+    auto hint    = glfw_cpp::Hint{ .flags = F::Default ^ F::Resizable };
     auto window2 = wm->create_window(hint, "Learn glfw-cpp 2 (not resizable)", 800, 600, false);
 
     auto vs_source = read_file("asset/shader/shader.vert").value();

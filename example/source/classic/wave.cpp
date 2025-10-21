@@ -92,10 +92,10 @@ void init_vertices()
         for (x = 0; x < QUADW; x++) {
             p = 4 * (y * QUADW + x);
 
-            quad[p + 0] = y * GRIDW + x;              // Some point
-            quad[p + 1] = y * GRIDW + x + 1;          // Neighbor at the right side
-            quad[p + 2] = (y + 1) * GRIDW + x + 1;    // Upper right neighbor
-            quad[p + 3] = (y + 1) * GRIDW + x;        // Upper neighbor
+            quad[p + 0] = (unsigned)(y * GRIDW + x);              // Some point
+            quad[p + 1] = (unsigned)(y * GRIDW + x + 1);          // Neighbor at the right side
+            quad[p + 2] = (unsigned)((y + 1) * GRIDW + x + 1);    // Upper right neighbor
+            quad[p + 3] = (unsigned)((y + 1) * GRIDW + x);        // Upper neighbor
         }
     }
 }
@@ -241,7 +241,7 @@ void calc_grid()
 // Handle key strokes
 //========================================================================
 
-void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& event)
+void key_callback(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed& event)
 {
     using KC = glfw_cpp::KeyCode;
     using KS = glfw_cpp::KeyState;
@@ -274,7 +274,7 @@ void key_callback(glfw_cpp::Window& window, const glfw_cpp::Event::KeyPressed& e
 // Callback function for mouse button events
 //========================================================================
 
-void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::ButtonPressed& event)
+void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::event::ButtonPressed& event)
 {
     using MB = glfw_cpp::MouseButton;
     using MS = glfw_cpp::MouseButtonState;
@@ -287,8 +287,8 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::Butt
 
     if (action == MS::Press) {
         window.set_capture_mouse(true);
-        cursorX = window.properties().m_cursor.m_x;
-        cursorY = window.properties().m_cursor.m_y;
+        cursorX = window.properties().cursor.x;
+        cursorY = window.properties().cursor.y;
     } else {
         window.set_capture_mouse(false);
     }
@@ -298,7 +298,7 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::Event::Butt
 // Callback function for cursor motion events
 //========================================================================
 
-void cursor_position_callback(glfw_cpp::Window& window, const glfw_cpp::Event::CursorMoved& event)
+void cursor_position_callback(glfw_cpp::Window& window, const glfw_cpp::event::CursorMoved& event)
 {
     auto [x, y, dx, dy] = event;
 
@@ -315,7 +315,7 @@ void cursor_position_callback(glfw_cpp::Window& window, const glfw_cpp::Event::C
 // Callback function for scroll events
 //========================================================================
 
-void scroll_callback(const glfw_cpp::Event::Scrolled& event)
+void scroll_callback(const glfw_cpp::event::Scrolled& event)
 {
     auto [x, y] = event;
 
@@ -329,7 +329,7 @@ void scroll_callback(const glfw_cpp::Event::Scrolled& event)
 // Callback function for framebuffer resize events
 //========================================================================
 
-void framebuffer_size_callback(const glfw_cpp::Event::FramebufferResized& event)
+void framebuffer_size_callback(const glfw_cpp::event::FramebufferResized& event)
 {
     auto [width, height, _dw, _dh] = event;
 
@@ -356,11 +356,11 @@ void framebuffer_size_callback(const glfw_cpp::Event::FramebufferResized& event)
 int main()
 {
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -369,8 +369,8 @@ int main()
     auto wm     = glfw->create_window_manager();
     auto window = wm->create_window({}, "Wave Simulation", 640, 480);
 
-    auto [width, height] = window.properties().m_framebuffer_size;
-    framebuffer_size_callback({ width, height });
+    auto [width, height] = window.properties().framebuffer_size;
+    framebuffer_size_callback({ width, height, 0, 0 });
 
     // Initialize OpenGL
     init_opengl();
@@ -385,15 +385,15 @@ int main()
     double dt_total = 0.0;
 
     window.run([&](const auto& events) {
-        using EV = glfw_cpp::Event;
+        namespace ev = glfw_cpp::event;
 
-        events.visit(EV::Overloaded{
+        events.visit(ev::Overload{
             // clang-format off
-            [&](const EV::KeyPressed&         e) { key_callback(window, e); },
-            [&](const EV::FramebufferResized& e) { framebuffer_size_callback(e); },
-            [&](const EV::ButtonPressed&      e) { mouse_button_callback(window, e); },
-            [&](const EV::CursorMoved&        e) { cursor_position_callback(window, e); },
-            [&](const EV::Scrolled&           e) { scroll_callback(e); },
+            [&](const ev::KeyPressed&         e) { key_callback(window, e); },
+            [&](const ev::FramebufferResized& e) { framebuffer_size_callback(e); },
+            [&](const ev::ButtonPressed&      e) { mouse_button_callback(window, e); },
+            [&](const ev::CursorMoved&        e) { cursor_position_callback(window, e); },
+            [&](const ev::Scrolled&           e) { scroll_callback(e); },
             [](auto) { /* Do nothing */ },
             // clang-format on
         });

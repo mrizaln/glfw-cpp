@@ -21,12 +21,12 @@ float to_fps(Clock::duration duration)
 
 int main()
 {
-    auto glfw = glfw_cpp::init(glfw_cpp::Api::OpenGL{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
-        .m_loader  = [](auto handle,
-                       auto proc) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
+    auto glfw = glfw_cpp::init(glfw_cpp::api::OpenGL{
+        .major   = 3,
+        .minor   = 3,
+        .profile = glfw_cpp::api::gl::Profile::Core,
+        .loader  = [](auto handle,
+                     auto proc) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
     });
 
     auto wm = glfw->create_window_manager();
@@ -44,8 +44,8 @@ int main()
         for (auto& win : windows) {
             auto delta = win.use([&](const auto& events) {
                 std::ranges::for_each(events, [&](const glfw_cpp::Event& ev) {
-                    if (auto* e = ev.get_if<glfw_cpp::Event::KeyPressed>()) {
-                        if (e->m_key == glfw_cpp::KeyCode::Q) {
+                    if (auto* e = ev.get_if<glfw_cpp::event::KeyPressed>()) {
+                        if (e->key == glfw_cpp::KeyCode::Q) {
                             win.request_close();
                         }
                     }

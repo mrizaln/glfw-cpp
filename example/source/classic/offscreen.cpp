@@ -27,8 +27,8 @@
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
 #include <exception>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -78,19 +78,19 @@ static const char* fragment_shader_text = R"glsl(
 int main()
 {
     try {
-        auto api = glfw_cpp::Api::OpenGL{
-            .m_major  = 2,
-            .m_minor  = 0,
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        auto api = glfw_cpp::api::OpenGL{
+            .major  = 2,
+            .minor  = 0,
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
             }
         };
 
-        using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::Default & ~H::Visible };
+        using Flag = glfw_cpp::Flag;
+        auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Visible };
 
         // TODO: implement
         // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
@@ -135,8 +135,8 @@ int main()
             vcol_location, 3, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)(sizeof(float) * 2)
         );
 
-        auto [width, height] = window.properties().m_framebuffer_size;
-        float ratio          = width / (float)height;
+        auto [width, height] = window.properties().framebuffer_size;
+        float ratio          = (float)width / (float)height;
 
         glViewport(0, 0, width, height);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -149,7 +149,7 @@ int main()
         glDrawArrays(GL_TRIANGLES, 0, 3);
         glFinish();
 
-        auto buffer = std::make_unique<unsigned char[]>(4 * width * height);
+        auto buffer = std::make_unique<unsigned char[]>((std::size_t)(4 * width * height));
         glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer.get());
 
         // Write image Y-flipped because OpenGL
