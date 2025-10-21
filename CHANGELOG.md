@@ -7,10 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `event` namespace.
+- New `api` namespace.
+- New bitwise operators for `Flag` enum class.
+- Add variants API for `Api` the same as `Event`.
+- ImGui example.
+
+### Fixed
+
+- Remove stray using declaration for `LogLevel` in `source/window_manager.cpp` file.
+- Synchronization issue on `extra::ImGuiInterceptor`.
+
 ### Changed
 
-- Move Event variants into `glfw_cpp::event` namespace.
+- Move Event variants into `event` namespace.
+- Move Api variants into `api` namespace.
 - Drop `m_*` prefix from public facing fields name.
+- Extract nested structs and classes from `Window`, `WindowHint`, `Monitor`, `Instance`, and `Api`.
+- Rename `WindowHint` to `Hint`.
+- Rename `FlagBit` to `Flag` and make it an enum class.
+- Rename `Event::holds` to `Event::is`.
+- Make `Window` convertible to bool (explicit).
+
+### Removed
+
+- `ModifierKey::Bit::None` enumeration.
 
 ## [0.10.0] - 2025-03-18
 
@@ -38,7 +61,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `IEventInterceptor` and its derivatives a class.
 - Promote the severity of internal error from Error to Critical.
 - Add `ErrorCode` enumeration as an alternative type safe GLFW error code.
-- Add `ErrorCode` information inside the `glfw_cpp::Error` class that can be queried with `code()` member function.
+- Add `ErrorCode` information inside the `Error` class that can be queried with `code()` member function.
 
 ## [0.9.0] - 2025-01-26
 
