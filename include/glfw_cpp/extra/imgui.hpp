@@ -4,12 +4,15 @@
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/window.hpp"
 
+#include <cassert>
+#include <shared_mutex>
 #include <unordered_set>
+#include <utility>
 
-#if __has_include(<imgui.h>) and __has_include(<imgui_impl_glfw.h>)
+#if __has_include(<imgui_impl_glfw.h>)
 #    include <imgui_impl_glfw.h>
 #else
-#    error "This file requires imgui.h and imgui_impl_glfw.h to be included."
+#    error "This file requires imgui_impl_glfw.h to be exists and visible."
 #endif
 
 namespace glfw_cpp::extra
@@ -36,97 +39,109 @@ namespace glfw_cpp::extra
          *
          * @param window The window handle to the window to intercept.
          */
-        void add_window(Window::Handle window) noexcept { m_windows.insert(window); }
+        void add_window(Window::Handle window) noexcept
+        {
+            auto lock = std::unique_lock{ m_mutex };
+            m_windows.insert(window);
+        }
 
         /**
          * @brief Remove a window from the list of windows that should be intercepted.
          *
          * @param window The window handle to the window to remove.
          */
-        void remove_window(Window::Handle window) noexcept { m_windows.erase(window); }
+        void remove_window(Window::Handle window) noexcept
+        {
+            auto lock = std::unique_lock{ m_mutex };
+            m_windows.erase(window);
+        }
 
         /**
          * @brief Check if a window is being intercepted.
          *
          * @param window The window handle to check.
          */
-        bool is_intercepting(Window::Handle window) const noexcept { return m_windows.contains(window); }
+        bool is_intercepting(Window::Handle window) const noexcept
+        {
+            auto lock = std::shared_lock{ m_mutex };
+            return m_windows.contains(window);
+        }
 
         // overrides
         // ---------
 
-        bool on_window_focused(Window& window, Event::WindowFocused& focus) noexcept override
+        bool on_window_focused(Window& window, event::WindowFocused& focus) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([focus](Window& win) {
-                    ImGui_ImplGlfw_WindowFocusCallback(win.handle(), focus.m_focused ? 1 : 0);
+                    ImGui_ImplGlfw_WindowFocusCallback(win.handle(), focus.focused ? 1 : 0);
                 });
             }
             return true;
         }
 
-        bool on_cursor_entered(Window& window, Event::CursorEntered& cursor) noexcept override
+        bool on_cursor_entered(Window& window, event::CursorEntered& cursor) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([cursor](Window& win) {
-                    ImGui_ImplGlfw_CursorEnterCallback(win.handle(), cursor.m_entered ? 1 : 0);
+                    ImGui_ImplGlfw_CursorEnterCallback(win.handle(), cursor.entered ? 1 : 0);
                 });
             }
             return true;
         }
 
-        bool on_cursor_moved(Window& window, Event::CursorMoved& cursor) noexcept override
+        bool on_cursor_moved(Window& window, event::CursorMoved& cursor) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([cursor](Window& win) {
-                    ImGui_ImplGlfw_CursorPosCallback(win.handle(), cursor.m_x, cursor.m_y);
+                    ImGui_ImplGlfw_CursorPosCallback(win.handle(), cursor.x, cursor.y);
                 });
             }
             return true;
         }
 
-        bool on_button_pressed(Window& window, Event::ButtonPressed& button) noexcept override
+        bool on_button_pressed(Window& window, event::ButtonPressed& button) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([button](Window& win) {
-                    auto btn    = static_cast<int>(button.m_button);
-                    auto action = static_cast<int>(button.m_state);
-                    auto mods   = static_cast<int>(button.m_mods);
+                    auto btn    = static_cast<int>(button.button);
+                    auto action = static_cast<int>(button.state);
+                    auto mods   = static_cast<int>(button.mods);
                     ImGui_ImplGlfw_MouseButtonCallback(win.handle(), btn, action, mods);
                 });
             }
             return true;
         }
 
-        bool on_scrolled(Window& window, Event::Scrolled& scroll) noexcept override
+        bool on_scrolled(Window& window, event::Scrolled& scroll) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([scroll](Window& win) {
-                    ImGui_ImplGlfw_ScrollCallback(win.handle(), scroll.m_dx, scroll.m_dy);
+                    ImGui_ImplGlfw_ScrollCallback(win.handle(), scroll.dx, scroll.dy);
                 });
             }
             return true;
         }
 
-        bool on_key_pressed(Window& window, Event::KeyPressed& key) noexcept override
+        bool on_key_pressed(Window& window, event::KeyPressed& key) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([key](Window& win) {
-                    auto k      = static_cast<int>(key.m_key);
-                    auto scan   = key.m_scancode;
-                    auto action = static_cast<int>(key.m_state);
-                    auto mods   = static_cast<int>(key.m_mods);
+                    auto k      = static_cast<int>(key.key);
+                    auto scan   = key.scancode;
+                    auto action = static_cast<int>(key.state);
+                    auto mods   = static_cast<int>(key.mods);
                     ImGui_ImplGlfw_KeyCallback(win.handle(), k, scan, action, mods);
                 });
             }
             return true;
         }
 
-        bool on_char_input(Window& window, Event::CharInput& key) noexcept override
+        bool on_char_input(Window& window, event::CharInput& key) noexcept override
         {
-            if (m_windows.contains(window.handle())) {
+            if (auto lock = std::shared_lock{ m_mutex }; m_windows.contains(window.handle())) {
                 window.enqueue_task([key](Window& win) {
-                    ImGui_ImplGlfw_CharCallback(win.handle(), key.m_codepoint);
+                    ImGui_ImplGlfw_CharCallback(win.handle(), key.codepoint);
                 });
             }
             return true;
@@ -139,6 +154,7 @@ namespace glfw_cpp::extra
     private:
         // list of windows that should be intercepted
         std::unordered_set<Window::Handle> m_windows;
+        mutable std::shared_mutex          m_mutex;
     };
 
     /**
@@ -149,57 +165,51 @@ namespace glfw_cpp::extra
      * also manually shutdown the context by calling the `shutdown()` function. At that point the context does
      * not represent a valid ImGui context anymore.
      */
-    class [[nodiscard]] ImguiContext
+    class [[nodiscard]] ImguiHandle
     {
     public:
-        friend ImguiContext init_imgui_for_opengl(
+        friend ImguiHandle init_imgui_for_opengl(
             ImguiInterceptor& interceptor,
             Window::Handle    window
         ) noexcept;
 
-        friend ImguiContext init_imgui_for_vulkan(
+        friend ImguiHandle init_imgui_for_vulkan(
             ImguiInterceptor& interceptor,
             Window::Handle    window
         ) noexcept;
 
-        friend ImguiContext init_imgui_for_other(
+        friend ImguiHandle init_imgui_for_other(
             ImguiInterceptor& interceptor,
             Window::Handle    window
         ) noexcept;
 
-        /**
-         * @brief Default constructor.
-         *
-         * A default constructed `ImguiContext` is as good as an uninitialized one.
-         */
-        ImguiContext() noexcept = default;
+        ImguiHandle() noexcept = default;
 
-        ~ImguiContext() noexcept { shutdown(); }
+        ~ImguiHandle() noexcept { shutdown(); }
 
-        ImguiContext(const ImguiContext&)            = delete;
-        ImguiContext& operator=(const ImguiContext&) = delete;
+        ImguiHandle(const ImguiHandle&)            = delete;
+        ImguiHandle& operator=(const ImguiHandle&) = delete;
 
-        ImguiContext(ImguiContext&& other) noexcept
+        ImguiHandle(ImguiHandle&& other) noexcept
             : m_interceptor{ std::exchange(other.m_interceptor, nullptr) }
             , m_window{ std::exchange(other.m_window, nullptr) }
         {
         }
 
-        ImguiContext& operator=(ImguiContext&& other) noexcept
+        ImguiHandle& operator=(ImguiHandle&& other) noexcept
         {
-            if (this == &other) {
-                return *this;
+            if (this != &other) {
+                shutdown();
+                m_interceptor = std::exchange(other.m_interceptor, nullptr);
+                m_window      = std::exchange(other.m_window, nullptr);
             }
-
-            shutdown();
-
-            m_interceptor = std::exchange(other.m_interceptor, nullptr);
-            m_window      = std::exchange(other.m_window, nullptr);
 
             return *this;
         }
 
         bool is_initialized() const noexcept { return m_interceptor != nullptr and m_window != nullptr; }
+
+        void new_frame() const noexcept { ImGui_ImplGlfw_NewFrame(); }
 
         /**
          * @brief Shutdown the imgui context.
@@ -217,25 +227,13 @@ namespace glfw_cpp::extra
         }
 
     private:
-        enum class Api : std::uint8_t
-        {
-            OpenGL,
-            Vulkan,
-            Other,
-        };
-
         ImguiInterceptor* m_interceptor = nullptr;
         Window::Handle    m_window      = nullptr;
 
-        ImguiContext(Api api, ImguiInterceptor* interceptor, Window::Handle window) noexcept
+        ImguiHandle(ImguiInterceptor* interceptor, Window::Handle window) noexcept
             : m_interceptor{ interceptor }
             , m_window{ window }
         {
-            switch (api) {
-            case Api::OpenGL: ImGui_ImplGlfw_InitForOpenGL(window, false); break;
-            case Api::Vulkan: ImGui_ImplGlfw_InitForVulkan(window, false); break;
-            case Api::Other: ImGui_ImplGlfw_InitForOther(window, false); break;
-            }
         }
     };
 
@@ -250,10 +248,11 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    inline ImguiContext init_imgui_for_opengl(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiHandle init_imgui_for_opengl(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { ImguiContext::Api::OpenGL, &interceptor, window };
+        ImGui_ImplGlfw_InitForOpenGL(window, false);
+        return { &interceptor, window };
     }
 
     /**
@@ -267,10 +266,11 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    inline ImguiContext init_imgui_for_vulkan(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiHandle init_imgui_for_vulkan(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { ImguiContext::Api::Vulkan, &interceptor, window };
+        ImGui_ImplGlfw_InitForVulkan(window, false);
+        return { &interceptor, window };
     }
 
     /**
@@ -284,10 +284,11 @@ namespace glfw_cpp::extra
      * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
      * this function.
      */
-    inline ImguiContext init_imgui_for_other(ImguiInterceptor& interceptor, Window::Handle window) noexcept
+    inline ImguiHandle init_imgui_for_other(ImguiInterceptor& interceptor, Window::Handle window) noexcept
     {
         interceptor.add_window(window);
-        return { ImguiContext::Api::Other, &interceptor, window };
+        ImGui_ImplGlfw_InitForOther(window, false);
+        return { &interceptor, window };
     }
 }
 
