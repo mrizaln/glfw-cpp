@@ -221,7 +221,6 @@ namespace glfw_cpp
          */
         enum Bit : Base
         {
-            None     = 0,
             Shift    = 0x01,
             Control  = 0x02,
             Alt      = 0x04,
@@ -426,7 +425,7 @@ namespace glfw_cpp
          */
         auto& reset() noexcept
         {
-            m_mods = None;
+            m_mods = {};
             return *this;
         }
 

@@ -267,7 +267,7 @@ int main()
             auto mods = Mod{};
             expect(that % underlying(mods) == 0);
 
-            auto mods2 = Mod{ ModBit::None };
+            auto mods2 = Mod{};
             expect(that % mods == mods2);
         };
 
