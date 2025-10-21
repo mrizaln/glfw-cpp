@@ -290,27 +290,29 @@ int main()
 {
     try {
         auto glfw = glfw_cpp::init(
-            glfw_cpp::Api::OpenGL{
+            glfw_cpp::api::OpenGL{
                 // default OpenGL
-                .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+                .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
             },
-            [](auto level, auto msg) { std::cerr << std::format("glfw-cpp [{}]: {}\n", (int)level, msg); }
+            [](auto level, auto msg) {
+                std::cerr << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg);
+            }
         );
 
-        using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::Default | H::TransparentFramebuffer, .m_depth_bits = 16 };
+        using Flag = glfw_cpp::Flag;
+        auto hint = glfw_cpp::Hint{ .flags = Flag::Default | Flag::TransparentFramebuffer, .depth_bits = 16 };
 
         auto wm     = glfw->create_window_manager();
         auto window = wm->create_window(hint, "Gears", 300, 300);
 
-        reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
+        reshape(window.properties().dimensions.width, window.properties().dimensions.height);
         init();
 
         window.run([&](auto&& events) {
             namespace ev = glfw_cpp::event;
             for (const glfw_cpp::Event& event : events) {
                 if (auto* e = event.get_if<ev::FramebufferResized>()) {
-                    reshape(e->m_width, e->m_height);
+                    reshape(e->width, e->height);
                 } else if (auto* e = event.get_if<ev::KeyPressed>()) {
                     key(window, *e);
                 }

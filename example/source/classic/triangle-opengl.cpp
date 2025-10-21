@@ -78,15 +78,15 @@ static const char* fragment_shader_text = R"glsl(
 int main()
 {
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_major          = 3,
-            .m_minor          = 3,
-            .m_profile        = glfw_cpp::Api::OpenGL::Profile::Core,
-            .m_forward_compat = true,
-            .m_loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .major          = 3,
+            .minor          = 3,
+            .profile        = glfw_cpp::api::gl::Profile::Core,
+            .forward_compat = true,
+            .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -134,13 +134,13 @@ int main()
 
         for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.get_if<ev::KeyPressed>()) {
-                if (e->m_key == KC::Escape && e->m_state == KS::Press) {
+                if (e->key == KC::Escape && e->state == KS::Press) {
                     window.request_close();
                 }
             }
         }
 
-        const auto [width, height] = window.properties().m_framebuffer_size;
+        const auto [width, height] = window.properties().framebuffer_size;
         const float ratio          = (float)width / (float)height;
 
         glViewport(0, 0, width, height);

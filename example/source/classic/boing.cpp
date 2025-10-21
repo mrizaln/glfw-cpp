@@ -245,14 +245,14 @@ void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed&
         return;
     }
 
-    if (key == K::Escape && mods.test(M::None)) {
+    if (key == K::Escape && mods.none()) {
         window.request_close();
     }
 
     // should be fullscreen and off (but I haven't implemented adding monitor)
     // TODO: change to fullscreen toggle
     if ((key == K::Enter && mods.test(M::Alt)) || (key == K::F11 && mods.test(M::Alt))) {
-        if (window.properties().m_attribute.m_maximized) {
+        if (window.properties().attribute.maximized) {
             window.restore();
             std::cout << "restore\n";
         } else {
@@ -616,11 +616,13 @@ int main(void)
 {
     try {
         auto glfw = glfw_cpp::init(
-            glfw_cpp::Api::OpenGL{
+            glfw_cpp::api::OpenGL{
                 // default OpenGL
-                .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+                .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
             },
-            [](auto level, auto msg) { std::cout << std::format("glfw-cpp [{}]: {}\n", (int)level, msg); }
+            [](auto level, auto msg) {
+                std::cout << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg);
+            }
         );
 
         auto wm     = glfw->create_window_manager();
@@ -628,7 +630,7 @@ int main(void)
 
         window.lock_current_aspect_ratio();
 
-        reshape(window.properties().m_dimension.m_width, window.properties().m_dimension.m_height);
+        reshape(window.properties().dimensions.width, window.properties().dimensions.height);
         init();
 
         window.run([&](const glfw_cpp::EventQueue& events) {
@@ -638,7 +640,7 @@ int main(void)
 
             namespace ev = glfw_cpp::event;
             events.visit(ev::Overload{
-                [&](const ev::FramebufferResized& e) { reshape(e.m_width, e.m_height); },
+                [&](const ev::FramebufferResized& e) { reshape(e.width, e.height); },
                 [&](const ev::KeyPressed& e) { handleKeyEvent(window, e); },
                 [&](const ev::CursorMoved& e) { handleCursorEvent(e); },
                 [&](const ev::ButtonPressed& e) { handleMouseButtonEvent(e); },

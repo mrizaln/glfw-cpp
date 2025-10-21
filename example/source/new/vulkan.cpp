@@ -162,7 +162,7 @@ struct SwapChainSupportDetails
         }
 
         // otherwise, set it manually
-        auto [width, height] = window.properties().m_dimension;
+        auto [width, height] = window.properties().dimensions;
 
         return {
             .width = std::clamp(
@@ -767,10 +767,11 @@ private:
             .oldSwapchain     = nullptr,
         };
 
+        auto indices = queueIndices.asArray();
         if (queueIndices.m_graphicsFamily != queueIndices.m_presentFamily) {
             createInfo.imageSharingMode      = vk::SharingMode::eConcurrent;
             createInfo.queueFamilyIndexCount = 2;
-            createInfo.pQueueFamilyIndices   = queueIndices.asArray().data();
+            createInfo.pQueueFamilyIndices   = indices.data();
         } else {
             createInfo.imageSharingMode      = vk::SharingMode::eExclusive;
             createInfo.queueFamilyIndexCount = 0;
@@ -1148,11 +1149,11 @@ int main()
 {
     // tip: search for glfw_cpp word inside this file to see how it is used
 
-    auto glfwLogger = [](glfw_cpp::Instance::LogLevel level, std::string&& message) {
+    auto glfwLogger = [](glfw_cpp::LogLevel level, std::string&& message) {
         fmt::println("LOG: [glfw-cpp: {}] {}", (int)level, std::move(message));
     };
 
-    auto glfw   = glfw_cpp::init(glfw_cpp::Api::NoApi{}, glfwLogger);
+    auto glfw   = glfw_cpp::init(glfw_cpp::api::NoApi{}, glfwLogger);
     auto wm     = glfw->create_window_manager();
     auto window = wm->create_window({}, "Learn vulkan", 800, 600);
 
@@ -1162,7 +1163,7 @@ int main()
         const auto& events = window.poll();
         for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.get_if<glfw_cpp::event::KeyPressed>()) {
-                if (e->m_key == glfw_cpp::KeyCode::Q) {
+                if (e->key == glfw_cpp::KeyCode::Q) {
                     window.request_close();
                 }
             }

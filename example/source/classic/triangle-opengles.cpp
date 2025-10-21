@@ -89,13 +89,13 @@ int main()
     // }
 
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGLES{
-            .m_major  = 2,
-            .m_minor  = 0,
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGLES{
+            .major  = 2,
+            .minor  = 0,
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -138,13 +138,13 @@ int main()
 
         for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.get_if<ev::KeyPressed>()) {
-                if (e->m_key == KC::Escape && e->m_state == KS::Press) {
+                if (e->key == KC::Escape && e->state == KS::Press) {
                     window.request_close();
                 }
             }
         }
 
-        const auto [width, height] = window.properties().m_framebuffer_size;
+        const auto [width, height] = window.properties().framebuffer_size;
         const float ratio          = (float)width / (float)height;
 
         glViewport(0, 0, width, height);

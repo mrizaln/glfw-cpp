@@ -74,13 +74,13 @@ int main()
     GLuint texture, program, vertex_buffer;
     GLint  mvp_location, vpos_location, color_location, texture_location;
 
-    auto api = glfw_cpp::Api::OpenGL{
-        .m_major  = 2,
-        .m_minor  = 0,
-        .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    auto api = glfw_cpp::api::OpenGL{
+        .major  = 2,
+        .minor  = 0,
+        .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
     };
     auto logger = [](auto level, auto msg) {
-        if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+        if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
             fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
         }
     };
@@ -147,7 +147,7 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    windows[1] = wm->create_window({ .m_share = &windows[0] }, "Second", 400, 400);
+    windows[1] = wm->create_window({ .share = windows[0].handle() }, "Second", 400, 400);
 
     // Only enable vsync for the first of the windows to be swapped to
     // avoid waiting out the interval for each window
@@ -160,7 +160,7 @@ int main()
         // glfwGetWindowFrameSize(windows[0].handle(), &left, NULL, &right, NULL);
 
         auto& [_1, pos, dim, _2, _3, _4, _5, _6, _7] = windows[0].properties();
-        windows[1].set_window_pos(pos.m_x + dim.m_width, pos.m_y);
+        windows[1].set_window_pos(pos.x + dim.width, pos.y);
     }
 
     // While objects are shared, the global context state is not and will
@@ -187,7 +187,7 @@ int main()
                 using KS     = glfw_cpp::KeyState;
 
                 if (auto* e = event.get_if<ev::KeyPressed>()) {
-                    if (e->m_key == KC::Escape && e->m_state == KS::Press) {
+                    if (e->key == KC::Escape && e->state == KS::Press) {
                         // close both
                         windows[0].request_close();
                         windows[1].request_close();
@@ -195,7 +195,7 @@ int main()
                 }
             }
 
-            auto [width, height] = windows[i].properties().m_framebuffer_size;
+            auto [width, height] = windows[i].properties().framebuffer_size;
             glViewport(0, 0, width, height);
 
             mat4x4 mvp;

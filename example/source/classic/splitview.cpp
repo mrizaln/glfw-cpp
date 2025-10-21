@@ -391,8 +391,8 @@ static void windowRefreshFun(glfw_cpp::Window& window)
 static void cursorPosFun(glfw_cpp::Window& window, const glfw_cpp::event::CursorMoved& event)
 {
     auto [x, y, dx, dy]          = event;
-    auto [wnd_width, wnd_height] = window.properties().m_dimension;
-    auto [fb_width, fb_height]   = window.properties().m_framebuffer_size;
+    auto [wnd_width, wnd_height] = window.properties().dimensions;
+    auto [fb_width, fb_height]   = window.properties().framebuffer_size;
 
     double scale = (double)fb_width / (double)wnd_width;
 
@@ -474,20 +474,20 @@ static void key_callback(glfw_cpp::Window& window, const glfw_cpp::event::KeyPre
 int main()
 {
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto lvl, auto msg) { fprintf(stderr, "GLFW [%d]: %s\n", (int)lvl, msg.c_str()); }
     );
 
-    auto hint   = glfw_cpp::WindowHint{ .m_samples = 4 };
+    auto hint   = glfw_cpp::Hint{ .samples = 4 };
     auto wm     = glfw->create_window_manager();
     auto window = wm->create_window(hint, "Split view demo", 500, 500);
 
     glEnable(GL_MULTISAMPLE);
 
-    width  = window.properties().m_framebuffer_size.m_width;
-    height = window.properties().m_framebuffer_size.m_height;
+    width  = window.properties().framebuffer_size.width;
+    height = window.properties().framebuffer_size.height;
 
     framebufferSizeFun(width, height);
 
@@ -495,7 +495,7 @@ int main()
         namespace ev = glfw_cpp::event;
         window.poll().visit(ev::Overload{
             // clang-format off
-            [&](const ev::FramebufferResized& ev) { framebufferSizeFun(ev.m_width, ev.m_height); },
+            [&](const ev::FramebufferResized& ev) { framebufferSizeFun(ev.width, ev.height); },
             [&](const ev::WindowRefreshed&      ) { windowRefreshFun(window); },
             [&](const ev::CursorMoved&        ev) { cursorPosFun(window, ev); },
             [&](const ev::ButtonPressed&      ev) { mouseButtonFun(ev); },

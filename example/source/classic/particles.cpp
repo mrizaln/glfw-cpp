@@ -897,8 +897,8 @@ int main(int argc, char** argv)
     thrd_t physics_thread = 0;
 
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         nullptr
     );
@@ -913,19 +913,21 @@ int main(int argc, char** argv)
         return glfw_cpp::Monitor{};
     }();
 
-    auto hint = glfw_cpp::WindowHint{};
+    auto hint = glfw_cpp::Hint{};
     if (monitor) {
         auto mode = monitor.current_video_mode();
 
-        hint.m_monitor = &monitor;
+        hint.monitor = monitor.handle();
 
-        hint.m_red_bits     = mode.m_red_bits;
-        hint.m_green_bits   = mode.m_green_bits;
-        hint.m_blue_bits    = mode.m_blue_bits;
-        hint.m_refresh_rate = mode.m_refresh_rate;
+        hint.red_bits     = mode.red_bits;
+        hint.green_bits   = mode.green_bits;
+        hint.blue_bits    = mode.blue_bits;
+        hint.refresh_rate = mode.refresh_rate;
 
-        width  = mode.m_width;
-        height = mode.m_height;
+        width  = mode.width;
+        height = mode.height;
+
+        printf("Using monitor %s (%d x %d)\n", monitor.name().data(), width, height);
     } else {
         width  = 640;
         height = 480;
@@ -1026,8 +1028,8 @@ int main(int argc, char** argv)
                 glViewport(0, 0, width, height);
                 aspect_ratio = height ? (float)width / (float)height : 1.f;
             } else if (auto* e = event.get_if<ev::KeyPressed>()) {
-                if (e->m_state == KS::Press) {
-                    switch (e->m_key) {
+                if (e->state == KS::Press) {
+                    switch (e->key) {
                     case KC::Escape: window.request_close(); break;
                     case KC::W:
                         wireframe = !wireframe;

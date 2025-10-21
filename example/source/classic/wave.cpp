@@ -287,8 +287,8 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::event::Butt
 
     if (action == MS::Press) {
         window.set_capture_mouse(true);
-        cursorX = window.properties().m_cursor.m_x;
-        cursorY = window.properties().m_cursor.m_y;
+        cursorX = window.properties().cursor.x;
+        cursorY = window.properties().cursor.y;
     } else {
         window.set_capture_mouse(false);
     }
@@ -356,11 +356,11 @@ void framebuffer_size_callback(const glfw_cpp::event::FramebufferResized& event)
 int main()
 {
     auto glfw = glfw_cpp::init(
-        glfw_cpp::Api::OpenGL{
-            .m_loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        glfw_cpp::api::OpenGL{
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         },
         [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "%s\n", msg.c_str());
             }
         }
@@ -369,7 +369,7 @@ int main()
     auto wm     = glfw->create_window_manager();
     auto window = wm->create_window({}, "Wave Simulation", 640, 480);
 
-    auto [width, height] = window.properties().m_framebuffer_size;
+    auto [width, height] = window.properties().framebuffer_size;
     framebuffer_size_callback({ width, height, 0, 0 });
 
     // Initialize OpenGL

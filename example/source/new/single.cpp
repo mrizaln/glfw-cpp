@@ -6,15 +6,16 @@
 
 int main()
 {
+    namespace api = glfw_cpp::api;
+
     // `glfw_cpp::init()` calls `glfwInit()` internally and returns an `glfw_cpp::Instance::Unique` that will
     // call `glfwTerminate()` on dtor. Note that the graphics API can't be changed later, this is a design
     // choice.
-    auto instance = glfw_cpp::init(glfw_cpp::Api::OpenGL{
-        .m_major   = 3,
-        .m_minor   = 3,
-        .m_profile = glfw_cpp::Api::OpenGL::Profile::Core,
-        .m_loader  = [](glfw_cpp::Api::GlContext /* handle */,
-                       glfw_cpp::Api::GlGetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    auto instance = glfw_cpp::init(api::OpenGL{
+        .major   = 3,
+        .minor   = 3,
+        .profile = api::gl::Profile::Core,
+        .loader  = [](api::gl::Context, api::gl::GetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 
     // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
@@ -24,7 +25,7 @@ int main()
     auto wm = instance->create_window_manager();
 
     // graphics API hints are omitted from the `WindowHint`, only other relevant hints are included.
-    auto hint = glfw_cpp::WindowHint{};    // use default hint
+    auto hint = glfw_cpp::Hint{};    // use default hint
 
     auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
 
@@ -36,8 +37,8 @@ int main()
 
             // clang-format off
             events.visit(ev::Overload{
-                [&](const ev::KeyPressed&         e) { if (e.m_key == K::Q) window.request_close();         },
-                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.m_width, e.m_height);             },
+                [&](const ev::KeyPressed&         e) { if (e.key == K::Q) window.request_close();         },
+                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height);             },
                 [&](const auto&                   e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
             });
             // clang-format on
@@ -47,7 +48,7 @@ int main()
         // itself. You can query it for continuous key input (for movement) for example.
         {
             using K          = glfw_cpp::KeyCode;
-            const auto& keys = window.properties().m_key_state;
+            const auto& keys = window.properties().key_state;
 
             if (keys.all_pressed({ K::H, K::J, K::L, K::K })) {
                 std::cout << "HJKL key pressed all at once\n";

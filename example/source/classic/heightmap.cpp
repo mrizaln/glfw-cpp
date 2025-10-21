@@ -374,21 +374,21 @@ static void update_mesh()
 int main()
 {
     try {
-        auto api = glfw_cpp::Api::OpenGL{
-            .m_major          = 3,
-            .m_minor          = 2,
-            .m_profile        = glfw_cpp::Api::OpenGL::Profile::Core,
-            .m_forward_compat = true,
-            .m_loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        auto api = glfw_cpp::api::OpenGL{
+            .major          = 3,
+            .minor          = 2,
+            .profile        = glfw_cpp::api::gl::Profile::Core,
+            .forward_compat = true,
+            .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
         };
         auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::Instance::LogLevel::Error) {
+            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
                 fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
             }
         };
 
-        using H = glfw_cpp::WindowHint;
-        H hint  = { .m_flags = H::Default & ~H::Resizable };
+        using Flag = glfw_cpp::Flag;
+        auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Resizable };
 
         auto glfw   = glfw_cpp::init(api, logger);
         auto wm     = glfw->create_window_manager();
@@ -428,7 +428,7 @@ int main()
         /* Create the vbo to store all the information for the grid and the height */
 
         /* setup the scene ready for rendering */
-        auto [width, height] = window.properties().m_framebuffer_size;
+        auto [width, height] = window.properties().framebuffer_size;
         glViewport(0, 0, width, height);
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -444,7 +444,7 @@ int main()
 
             for (const auto& event : window.poll()) {
                 if (auto* e = event.get_if<ev::KeyPressed>()) {
-                    if (e->m_key == KC::Escape && e->m_state == KS::Press) {
+                    if (e->key == KC::Escape && e->state == KS::Press) {
                         window.request_close();
                     }
                 }

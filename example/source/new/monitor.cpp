@@ -9,7 +9,7 @@
 
 int main()
 {
-    auto instance = glfw_cpp::init(glfw_cpp::Api::NoApi{});
+    auto instance = glfw_cpp::init(glfw_cpp::api::NoApi{});
     auto monitors = glfw_cpp::get_monitors();
 
     for (int count = 1; auto monitor : monitors) {
@@ -34,7 +34,7 @@ int main()
 
         bool isCurrent = false;
         for (const auto& mode : videoModes) {
-            fmt::print("\t\t{}x{} \tat {}Hz", mode.m_width, mode.m_height, mode.m_refresh_rate);
+            fmt::print("\t\t{}x{} \tat {}Hz", mode.width, mode.height, mode.refresh_rate);
             if (isCurrent = (mode == currentMode); isCurrent) {
                 fmt::println("\t(current)");
             } else {
@@ -45,7 +45,7 @@ int main()
         if (!isCurrent) {
             fmt::println("current video mode:");
             fmt::println(
-                "\t\t{}x{} \tat {}Hz", currentMode.m_width, currentMode.m_height, currentMode.m_refresh_rate
+                "\t\t{}x{} \tat {}Hz", currentMode.width, currentMode.height, currentMode.refresh_rate
             );
         }
 
