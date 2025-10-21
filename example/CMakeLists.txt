@@ -8,18 +8,20 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-find_package(fmt REQUIRED)
-find_package(glbinding REQUIRED)
-find_package(glad REQUIRED)
-find_package(glfw3 3.3 REQUIRED)
-find_package(glm REQUIRED)
-find_package(khrplatform REQUIRED)
 find_package(VulkanHeaders REQUIRED)
 find_package(VulkanLoader REQUIRED)
+find_package(fmt REQUIRED)
+find_package(glad REQUIRED)
+find_package(glbinding REQUIRED)
+find_package(glfw3 3.3 REQUIRED)
+find_package(glm REQUIRED)
+find_package(imgui REQUIRED)
+find_package(khrplatform REQUIRED)
 find_package(linmath.h REQUIRED)
 find_package(stb REQUIRED)
 find_package(tinycthread REQUIRED)
 
+include(cmake/imgui-bindings.cmake) # imgui bindings
 add_subdirectory(lib/getopt)
 
 # the library
