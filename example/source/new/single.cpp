@@ -27,7 +27,7 @@ int main()
     // graphics API hints are omitted from the `WindowHint` since it's already set at initialization. Only
     // other relevant hints are included.
     using F   = glfw_cpp::Flag;
-    auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Resizable };    // use default hint but not resizable
+    auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Focused };    // use default hint but not focused
 
     auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
 
@@ -42,7 +42,7 @@ int main()
             events.visit(ev::Overload{
                 [&](const ev::KeyPressed&         e) { if (e.key == K::Q) window.request_close();           },
                 [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height);                 },
-                [&](const auto&                   e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
+                [&](const auto&                   e) { std::cout << glfw_cpp::event_name(e) << '\n'; },  // catch-all case
             });
             // clang-format on
         }

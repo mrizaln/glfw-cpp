@@ -306,6 +306,51 @@ namespace glfw_cpp
     };
 
     /**
+     * @brief Get the name of the event.
+     *
+     * @param event The event.
+     *
+     * The returned string is null-terminated.
+     */
+    template <event::Event E>
+    std::string_view event_name() noexcept
+    {
+        // clang-format off
+        if      constexpr (std::same_as<E, event::Empty>)              return "Empty";
+        else if constexpr (std::same_as<E, event::WindowMoved>)        return "WindowMoved";
+        else if constexpr (std::same_as<E, event::WindowResized>)      return "WindowResized";
+        else if constexpr (std::same_as<E, event::WindowClosed>)       return "WindowClosed";
+        else if constexpr (std::same_as<E, event::WindowRefreshed>)    return "WindowRefreshed";
+        else if constexpr (std::same_as<E, event::WindowFocused>)      return "WindowFocused";
+        else if constexpr (std::same_as<E, event::WindowIconified>)    return "WindowIconified";
+        else if constexpr (std::same_as<E, event::FramebufferResized>) return "FramebufferResized";
+        else if constexpr (std::same_as<E, event::ButtonPressed>)      return "ButtonPressed";
+        else if constexpr (std::same_as<E, event::CursorMoved>)        return "CursorMoved";
+        else if constexpr (std::same_as<E, event::CursorEntered>)      return "CursorEntered";
+        else if constexpr (std::same_as<E, event::Scrolled>)           return "Scrolled";
+        else if constexpr (std::same_as<E, event::KeyPressed>)         return "KeyPressed";
+        else if constexpr (std::same_as<E, event::CharInput>)          return "CharInput";
+        else if constexpr (std::same_as<E, event::FileDropped>)        return "FileDropped";
+        else if constexpr (std::same_as<E, event::WindowMaximized>)    return "WindowMaximized";
+        else if constexpr (std::same_as<E, event::WindowScaleChanged>) return "WindowScaleChanged";
+        else    static_assert(false, "not an event");
+        // clang-format on
+    }
+
+    /**
+     * @brief Get the name of the event.
+     *
+     * @param event The event.
+     *
+     * The returned string is null-terminated.
+     */
+    template <event::Event E>
+    std::string_view event_name(const E&) noexcept
+    {
+        return event_name<E>();
+    }
+
+    /**
      * @class IEventInterceptor
      * @brief An abstract class (interface) that is used to create an event interceptor.
      *
