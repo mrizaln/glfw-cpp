@@ -9,8 +9,8 @@ int main()
     namespace api = glfw_cpp::api;
 
     // `glfw_cpp::init()` calls `glfwInit()` internally and returns an `glfw_cpp::Instance::Unique` that will
-    // call `glfwTerminate()` on dtor. Note that the graphics API can't be changed later, this is a design
-    // choice.
+    // call `glfwTerminate()` on destruction. Note that the graphics API can't be changed later, this is a
+    // design choice.
     auto instance = glfw_cpp::init(api::OpenGL{
         .major   = 3,
         .minor   = 3,
@@ -19,26 +19,29 @@ int main()
     });
 
     // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
-    // it is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
+    // `Window` is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
     // `std::shared_ptr<WindowManager>`. Each window created with this instance claims ownership of it (hence
     // the shared_ptr).
     auto wm = instance->create_window_manager();
 
-    // graphics API hints are omitted from the `WindowHint`, only other relevant hints are included.
-    auto hint = glfw_cpp::Hint{};    // use default hint
+    // graphics API hints are omitted from the `WindowHint` since it's already set at initialization. Only
+    // other relevant hints are included.
+    using F   = glfw_cpp::Flag;
+    auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Resizable };    // use default hint but not resizable
 
     auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
 
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
-        // handling events
-        {
-            using K      = glfw_cpp::KeyCode;
-            namespace ev = glfw_cpp::event;
+        using K      = glfw_cpp::KeyCode;
+        namespace ev = glfw_cpp::event;
 
+        // handling events
+
+        {
             // clang-format off
             events.visit(ev::Overload{
-                [&](const ev::KeyPressed&         e) { if (e.key == K::Q) window.request_close();         },
-                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height);             },
+                [&](const ev::KeyPressed&         e) { if (e.key == K::Q) window.request_close();           },
+                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height);                 },
                 [&](const auto&                   e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
             });
             // clang-format on
@@ -47,7 +50,6 @@ int main()
         // `glfw_cpp::Window` keep a copy of (almost) every properties of the window (like pressed keys) in
         // itself. You can query it for continuous key input (for movement) for example.
         {
-            using K          = glfw_cpp::KeyCode;
             const auto& keys = window.properties().key_state;
 
             if (keys.all_pressed({ K::H, K::J, K::L, K::K })) {
@@ -71,6 +73,7 @@ int main()
         glClearColor(r, g, b, 1.0F);
         glClear(GL_COLOR_BUFFER_BIT);
 
+        // poll events from the OS
         wm->poll_events();
     });
 }
