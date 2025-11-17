@@ -18,6 +18,7 @@ namespace
     case Val: return #Val
 
         switch (glfw_errc) {
+            CASE_ENTRY(GLFW_NO_ERROR);
             CASE_ENTRY(GLFW_NOT_INITIALIZED);
             CASE_ENTRY(GLFW_NO_CURRENT_CONTEXT);
             CASE_ENTRY(GLFW_INVALID_ENUM);
@@ -34,7 +35,7 @@ namespace
             CASE_ENTRY(GLFW_FEATURE_UNIMPLEMENTED);
             CASE_ENTRY(GLFW_PLATFORM_UNAVAILABLE);
 #endif
-        default: return "Unknown error";
+        default: return "UNKNOWN_ERROR";
 #undef CASE_ENTRY
         }
     }
@@ -92,7 +93,7 @@ namespace glfw_cpp
         instance.m_initialized = true;
 
         glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::log_c("(Internal error [{}|{:#010x}]) {}", error_to_string(err), err, msg);
+            Instance::log_c("[{}|{:#010x}] {}", error_to_string(err), err, msg);
         });
 
         if (glfwInit() != GLFW_TRUE) {
