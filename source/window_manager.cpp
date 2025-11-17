@@ -111,7 +111,7 @@ namespace glfw_cpp
 
         auto wm_copy = std::enable_shared_from_this<WindowManager>::shared_from_this();
 
-        return Window{ wm_copy, handle, Properties{
+        return Window{ std::move(wm_copy), handle, Properties{
             .title              = { title.begin(), title.end() },
             .pos                = { x_pos, y_pos },
             .dimensions         = { real_width, real_height },

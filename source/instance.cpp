@@ -104,7 +104,9 @@ namespace glfw_cpp
         instance.m_api.visit(util::VisitOverloaded{
             [](api::OpenGL& api) {
                 if (api.loader == nullptr) {
+#if not __EMSCRIPTEN__
                     throw EmptyLoader{};
+#endif
                 }
 
                 auto gl_profile = [&] {

@@ -17,6 +17,10 @@
 #include <utility>
 #include <vector>
 
+#if __EMSCRIPTEN__
+#    include <emscripten/emscripten.h>
+#endif
+
 namespace glfw_cpp
 {
     void Window::window_pos_callback(GLFWwindow* window, int x, int y)
@@ -228,7 +232,14 @@ namespace glfw_cpp
             bind();
             set_vsync(m_vsync);
             glfwSetWindowUserPointer(m_handle, this);
+#if not __EMSCRIPTEN__
+            assert(api.loader != nullptr);
             api.loader(handle, glfwGetProcAddress);
+#else
+            if (api.loader) {
+                api.loader(handle, glfwGetProcAddress);
+            }
+#endif
             if (not bind_immediately) {
                 unbind();
             }
@@ -481,6 +492,12 @@ namespace glfw_cpp
     {
         if (not Instance::get().m_api.is<api::NoApi>()) {
             glfwSwapBuffers(m_handle);
+
+#if __EMSCRIPTEN__
+            if (is_vsync_enabled()) {
+                emscripten_sleep(GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL);
+            }
+#endif
         } else {
             util::check_glfw_error();
         }

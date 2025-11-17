@@ -41,6 +41,10 @@ namespace glfw_cpp
         /**
          * @struct OpenGLES
          * @brief Describe the OpenGLES version to use.
+         *
+         * On emscripten, the loader is optional, so you can just set the value to `nullptr` and use the
+         * `<GL/gl.h>` header directly. But if you want to use a loader anyway like `glbinding` then you can
+         * set the loader like usual.
          */
         struct OpenGLES
         {
@@ -52,6 +56,10 @@ namespace glfw_cpp
         /**
          * @struct OpenGL
          * @brief Describe the OpenGL version to use.
+         *
+         * On emscripten, the loader is optional, so you can just set the value to `nullptr` and use the
+         * `<GL/gl.h>` header directly. But if you want to use a loader anyway like `glbinding` then you can
+         * set the loader like usual.
          */
         struct OpenGL
         {
