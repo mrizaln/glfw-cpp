@@ -23,11 +23,10 @@ namespace glfw_cpp
     /**
      * @brief Turns fps to milliseconds.
      */
-    inline std::chrono::milliseconds operator""_fps(unsigned long long fps)
+    constexpr std::chrono::milliseconds operator""_fps(unsigned long long fps)
     {
         namespace chr = std::chrono;
-        auto duration{ chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps) };
-        return duration;
+        return chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps);
     }
 
     class Instance;
