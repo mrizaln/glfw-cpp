@@ -492,12 +492,6 @@ namespace glfw_cpp
     {
         if (not Instance::get().m_api.is<api::NoApi>()) {
             glfwSwapBuffers(m_handle);
-
-#if __EMSCRIPTEN__
-            if (is_vsync_enabled()) {
-                emscripten_sleep(GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL);
-            }
-#endif
         } else {
             util::check_glfw_error();
         }

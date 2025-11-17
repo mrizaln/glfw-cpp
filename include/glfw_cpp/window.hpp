@@ -266,7 +266,14 @@ namespace glfw_cpp
          *
          * @return The time taken between the last call to this function and the current call.
          *
-         * This function corresponds to `glfwSwapBuffers`.
+         * This function corresponds to `glfwSwapBuffers`. This function also updates the delta time recorded
+         * on the window instance (delta time defined as interval between calls to `display()`).
+         *
+         * If you are using emscripten, this function will not block the execution regardless the vsync
+         * option. But instead it will return immediately since `glfwSwapBuffers` is not implemented for wasm
+         * platform. In fact, there is no need to do buffer swapping since the browser will do it
+         * automatically. Instead, you need to manage the update frequency yourself. Calling this function is
+         * still required though to update the delta time stored in this window instance.
          */
         double display();
 
@@ -310,6 +317,9 @@ namespace glfw_cpp
          * at the beginning of the loop and unbound at the end.
          *
          * Basically, this function is an analogue to `use` but with a loop.
+         *
+         * Warning! this function will loop as fast as possible in emscripten, rendering the browser unusable.
+         * Read more on `display()`.
          */
         void run(std::invocable<const EventQueue&> auto&& func)
         {

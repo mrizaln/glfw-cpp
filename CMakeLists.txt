@@ -10,14 +10,12 @@ project(
 # Enable Vulkan support (requires Vulkan SDK)
 option(GLFW_CPP_VULKAN_SUPPORT "Enable Vulkan support" OFF)
 option(GLFW_CPP_EMSCRIPTEN_PORT "Use emscripten port" OFF)
-set(GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL 10 CACHE STRING "Swap interval for swap command")
 
 if(GLFW_CPP_EMSCRIPTEN_PORT)
     if(NOT EMSCRIPTEN)
         message(FATAL_ERROR "Emscripten port enabled but not using emscripten")
     else()
         message(STATUS "glfw-cpp: GLFW_CPP_EMSCRIPTEN_PORT option set - emscripten port enabled.")
-        message(STATUS "glfw-cpp: GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL set to ${GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL}")
     endif()
 else()
     find_package(glfw3 3.3 REQUIRED)
@@ -39,11 +37,8 @@ set_target_properties(glfw-cpp PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(glfw-cpp PUBLIC glfw)
 
 if(GLFW_CPP_EMSCRIPTEN_PORT)
-    target_compile_definitions(glfw-cpp PRIVATE GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL=${GLFW_CPP_EMSCRIPTEN_SWAP_INTERVAL})
-
     target_compile_options(glfw-cpp PUBLIC "--use-port=contrib.glfw3")
     target_link_options(glfw-cpp PUBLIC "--use-port=contrib.glfw3")
-    target_link_options(glfw-cpp PUBLIC "-sASYNCIFY")
 endif()
 
 if(GLFW_CPP_VULKAN_SUPPORT)
