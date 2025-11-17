@@ -32,7 +32,7 @@ set(glfw-cpp_SOURCES
 
 add_library(glfw-cpp STATIC ${glfw-cpp_SOURCES})
 target_include_directories(glfw-cpp PUBLIC include)
-target_compile_features(glfw-cpp INTERFACE cxx_std_20)
+target_compile_features(glfw-cpp PRIVATE cxx_std_20)
 set_target_properties(glfw-cpp PROPERTIES CXX_EXTENSIONS OFF)
 target_link_libraries(glfw-cpp PUBLIC glfw)
 
