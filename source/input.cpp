@@ -144,25 +144,25 @@ namespace glfw_cpp
 
     void KeyStateRecord::set_bit(std::size_t pos, bool value) noexcept
     {
-        constexpr auto element_bit_count = sizeof(State::value_type) * CHAR_BIT;
+        constexpr auto element_bit_count = sizeof(Element) * CHAR_BIT;
         assert(pos < element_bit_count * State{}.size());
 
         const auto byte_pos = pos / element_bit_count;
         const auto bit_pos  = pos % element_bit_count;
 
-        const Element mask = 1ul << bit_pos;
+        const Element mask = Element{ 1ul } << bit_pos;
         m_state[byte_pos]  = value ? m_state[byte_pos] | mask : m_state[byte_pos] & ~mask;
     }
 
     bool KeyStateRecord::get_bit(std::size_t pos) const noexcept
     {
-        constexpr auto element_bit_count = sizeof(State::value_type) * CHAR_BIT;
+        constexpr auto element_bit_count = sizeof(Element) * CHAR_BIT;
         assert(pos < element_bit_count * State{}.size());
 
         const auto byte_pos = pos / element_bit_count;
         const auto bit_pos  = pos % element_bit_count;
 
-        const Element mask = 1ul << bit_pos;
+        const Element mask = Element{ 1ul } << bit_pos;
         return (m_state[byte_pos] & mask) != 0;
     }
 
