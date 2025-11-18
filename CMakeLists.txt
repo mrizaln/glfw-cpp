@@ -11,6 +11,10 @@ project(
 option(GLFW_CPP_VULKAN_SUPPORT "Enable Vulkan support" OFF)
 option(GLFW_CPP_EMSCRIPTEN_PORT "Use emscripten port" OFF)
 
+if(GLFW_CPP_VULKAN_SUPPORT AND GLFW_CPP_EMSCRIPTEN_PORT)
+    message(FATAL_ERROR "Vulkan support can't be enabled together with emscripten")
+endif()
+
 if(GLFW_CPP_EMSCRIPTEN_PORT)
     if(NOT EMSCRIPTEN)
         message(FATAL_ERROR "Emscripten port enabled but not using emscripten")
