@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `event_name()` function that gets the name of an event.
+- Emscripten support using [`contrib.glfw3`](https://github.com/pongasoft/emscripten-glfw) port.
+- Emscripten example.
+
+### Fixed
+
+- Missing `#ifdef` block and enumeration for error codes.
+
+### Changed
+
+- User-defined literal `_fps` now is `constexpr`.
+
 ## [0.11.0] - 2025-10-21
 
 ### Added
