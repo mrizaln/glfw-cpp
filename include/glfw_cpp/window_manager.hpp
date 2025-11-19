@@ -109,11 +109,12 @@ namespace glfw_cpp
         using Fun = std::function<Sig>;
 
         WindowManager()                                = default;
-        ~WindowManager()                               = default;
         WindowManager(const WindowManager&)            = delete;
         WindowManager& operator=(const WindowManager&) = delete;
         WindowManager(WindowManager&&)                 = delete;
         WindowManager& operator=(WindowManager&&)      = delete;
+
+        ~WindowManager();
 
         /**
          * @brief Create a window.

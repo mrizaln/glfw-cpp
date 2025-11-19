@@ -51,6 +51,12 @@ namespace
 
 namespace glfw_cpp
 {
+    WindowManager::~WindowManager()
+    {
+        // this is necessary to flush tasks like window deletion request
+        check_tasks();
+    }
+
     void WindowManager::GLFWwindowDeleter::operator()(GLFWwindow* handle) const noexcept
     {
         glfwDestroyWindow(handle);
@@ -207,11 +213,9 @@ namespace glfw_cpp
 
     void WindowManager::check_tasks()
     {
-        // window deletion
-        for (auto handle : util::lock_exchange(m_mutex, m_window_delete_queue, {})) {
-            if (std::erase_if(m_windows, [handle](auto& e) { return e.get() == handle; }) != 0) {
-                Instance::log_i("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
-            }
+        // general task request
+        for (auto&& task : std::exchange(m_task_queue, {})) {
+            task();
         }
 
         // window task requests
@@ -226,9 +230,11 @@ namespace glfw_cpp
             }
         }
 
-        // general task request
-        for (auto&& task : std::exchange(m_task_queue, {})) {
-            task();
+        // window deletion
+        for (auto handle : util::lock_exchange(m_mutex, m_window_delete_queue, {})) {
+            if (std::erase_if(m_windows, [handle](auto& e) { return e.get() == handle; }) != 0) {
+                Instance::log_i("(WindowManager) Window ({:#x}) deleted", (std::size_t)handle);
+            }
         }
     }
 
