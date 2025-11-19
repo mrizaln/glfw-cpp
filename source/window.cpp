@@ -492,7 +492,6 @@ namespace glfw_cpp
     {
         if (not Instance::get().m_api.is<api::NoApi>()) {
             glfwSwapBuffers(m_handle);
-        } else {
             util::check_glfw_error();
         }
         update_delta_time();
