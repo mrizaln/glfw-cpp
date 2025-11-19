@@ -48,6 +48,7 @@ namespace glfw_cpp
         if (m_initialized) {
             // WARN:this might fail though
             glfwTerminate();
+            Instance::log_i("(Instance) Successfully terminated glfw-cpp");
         }
     }
 
@@ -61,6 +62,7 @@ namespace glfw_cpp
         if (m_initialized) {
             // WARN: this might fail though
             glfwTerminate();
+            Instance::log_i("(Instance) Successfully terminated glfw-cpp");
         }
         m_initialized = false;
     }
@@ -141,6 +143,8 @@ namespace glfw_cpp
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
             },
         });
+
+        Instance::log_i("(Instance) Successfully initialized glfw-cpp");
 
         return { &Instance::s_instance, [](Instance* instance) { instance->reset(); } };
     }
