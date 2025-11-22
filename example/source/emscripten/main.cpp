@@ -25,12 +25,15 @@ int main()
     };
 
     auto glfw   = glfw_cpp::init(api, logger);
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window({}, "Learn glfw-cpp", 800, 600);
+    auto window = glfw->create_window({}, "Hello emscripten from glfw-cpp", 800, 600);
 
     set_main_loop([&, elapsed = 0.0f]() mutable {
         using K      = glfw_cpp::KeyCode;
         namespace ev = glfw_cpp::event;
+
+        // poll must be done in the beginning before drawing
+        // see: https://github.com/pongasoft/emscripten-glfw/issues/21#issuecomment-3218244944
+        glfw->poll_events();
 
         // handling events
         {
@@ -71,6 +74,5 @@ int main()
 
         // poll events from the OS
         window.display();
-        wm->poll_events();
     });
 }

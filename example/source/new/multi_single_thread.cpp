@@ -4,7 +4,6 @@
 #include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
-#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cmath>
@@ -25,30 +24,28 @@ int main()
         .major   = 3,
         .minor   = 3,
         .profile = glfw_cpp::api::gl::Profile::Core,
-        .loader  = [](auto handle,
-                     auto proc) { glbinding::initialize((glbinding::ContextHandle)handle, proc); },
+        .loader  = [](auto ctx, auto proc) { glbinding::initialize((glbinding::ContextHandle)ctx, proc); },
     });
 
-    auto wm = glfw->create_window_manager();
+    // default constructed windows will have nullptr as its handle
+    auto windows = std::array<glfw_cpp::Window, 3>{};
 
-    std::array<glfw_cpp::Window, 3> windows;
     for (auto i : std::views::iota(0u, windows.size())) {
-        windows[i] = wm->create_window({}, fmt::format("Learn glfw-cpp {}", i), 800, 600);
+        windows[i] = glfw->create_window({}, fmt::format("Hello glfw-cpp {}", i), 800, 600, false);
         windows[i].set_vsync(false);
-        windows[i].unbind();
     }
 
     auto now = Clock::now();
 
-    while (wm->has_window_opened()) {
+    while (glfw->has_window_opened()) {
         for (auto& win : windows) {
-            auto delta = win.use([&](const auto& events) {
-                std::ranges::for_each(events, [&](const glfw_cpp::Event& ev) {
-                    if (auto* e = ev.get_if<glfw_cpp::event::KeyPressed>()) {
-                        if (e->key == glfw_cpp::KeyCode::Q) {
-                            win.request_close();
-                        }
-                    }
+            auto delta = win.use([&](const glfw_cpp::EventQueue& events) {
+                events.visit(glfw_cpp::event::Overload{
+                    [&](const glfw_cpp::event::KeyPressed& e) {
+                        e.key == glfw_cpp::KeyCode::Q ? win.request_close() : void();
+                    },
+                    [&](const auto&) { /* do nothing */ },
+
                 });
 
                 auto epoch = std::chrono::steady_clock::now().time_since_epoch();
@@ -68,7 +65,7 @@ int main()
         }
 
         using glfw_cpp::operator""_fps;
-        wm->poll_events(120_fps);
+        glfw->poll_events(120_fps);
 
         auto current = Clock::now();
         auto elapsed = current - now;

@@ -58,16 +58,15 @@ int main()
         .loader  = [](auto, auto proc) { glbinding::initialize(proc); },
     };
 
-    auto glfw = glfw_cpp::init(api);
-
+    auto glfw        = glfw_cpp::init(api);
     auto interceptor = glfw_cpp::extra::ImguiInterceptor{};
-    auto wm          = glfw->create_window_manager(&interceptor);
+    glfw->set_event_interceptor(&interceptor);
 
-    auto window        = wm->create_window({}, "hello imgui", 1280, 720, false);
+    auto window        = glfw->create_window({}, "Hello ImGui from glfw-cpp", 1280, 720, false);
     auto window_thread = std::jthread{ render_thread, std::ref(window), std::ref(interceptor) };
 
-    while (wm->has_window_opened()) {
+    while (glfw->has_window_opened()) {
         using glfw_cpp::operator""_fps;
-        wm->poll_events(120_fps);
+        glfw->poll_events(120_fps);
     }
 }

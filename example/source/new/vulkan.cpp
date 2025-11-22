@@ -25,9 +25,9 @@
 #include <vector>
 
 #if !defined(NDEBUG)
-#    define ENABLE_VULKAN_VALIDATION_LAYERS 1
+#define ENABLE_VULKAN_VALIDATION_LAYERS 1
 #else
-#    define ENABLE_VULKAN_VALIDATION_LAYERS 0
+#define ENABLE_VULKAN_VALIDATION_LAYERS 0
 #endif
 
 struct QueueFamilyIndices
@@ -1154,10 +1154,9 @@ int main()
     };
 
     auto glfw   = glfw_cpp::init(glfw_cpp::api::NoApi{}, glfwLogger);
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window({}, "Learn vulkan", 800, 600);
+    auto window = glfw->create_window({}, "Hello Vulkan from glfw-cpp", 800, 600);
 
-    Vulkan vulkan{ window, "vulkan program" };
+    auto vulkan = Vulkan{ window, "vulkan program" };
 
     while (not window.should_close()) {
         const auto& events = window.poll();
@@ -1172,6 +1171,6 @@ int main()
         vulkan.drawFrame();
 
         window.display();
-        wm->poll_events();
+        glfw->poll_events();
     }
 }

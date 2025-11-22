@@ -110,7 +110,7 @@ double   dt;
 
 /* Random number generator */
 #ifndef RAND_MAX
-#    define RAND_MAX 4095
+#define RAND_MAX 4095
 #endif
 
 /*****************************************************************************
@@ -613,46 +613,41 @@ void drawGrid(void)
  *======================================================================*/
 
 int main(void)
-{
-    try {
-        auto glfw = glfw_cpp::init(
-            glfw_cpp::api::OpenGL{
-                // default OpenGL
-                .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-            },
-            [](auto level, auto msg) {
-                std::cout << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg);
-            }
-        );
+try {
+    auto glfw = glfw_cpp::init(
+        glfw_cpp::api::OpenGL{
+            // default OpenGL
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        },
+        [](auto level, auto msg) { std::cout << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg); }
+    );
 
-        auto wm     = glfw->create_window_manager();
-        auto window = wm->create_window({}, "Boing (classic Amiga demo)", 400, 400);
+    auto window = glfw->create_window({}, "Boing | classic Amiga demo (glfw-cpp)", 400, 400);
 
-        window.lock_current_aspect_ratio();
+    window.lock_current_aspect_ratio();
 
-        reshape(window.properties().dimensions.width, window.properties().dimensions.height);
-        init();
+    reshape(window.properties().dimensions.width, window.properties().dimensions.height);
+    init();
 
-        window.run([&](const glfw_cpp::EventQueue& events) {
-            t     = glfw_cpp::get_time();
-            dt    = t - t_old;
-            t_old = t;
+    window.run([&](const glfw_cpp::EventQueue& events) {
+        t     = glfw_cpp::get_time();
+        dt    = t - t_old;
+        t_old = t;
 
-            namespace ev = glfw_cpp::event;
-            events.visit(ev::Overload{
-                [&](const ev::FramebufferResized& e) { reshape(e.width, e.height); },
-                [&](const ev::KeyPressed& e) { handleKeyEvent(window, e); },
-                [&](const ev::CursorMoved& e) { handleCursorEvent(e); },
-                [&](const ev::ButtonPressed& e) { handleMouseButtonEvent(e); },
-                [](auto&) {},
-            });
-
-            display();
-
-            wm->poll_events();
+        namespace ev = glfw_cpp::event;
+        events.visit(ev::Overload{
+            [&](const ev::FramebufferResized& e) { reshape(e.width, e.height); },
+            [&](const ev::KeyPressed& e) { handleKeyEvent(window, e); },
+            [&](const ev::CursorMoved& e) { handleCursorEvent(e); },
+            [&](const ev::ButtonPressed& e) { handleMouseButtonEvent(e); },
+            [](auto&) {},
         });
-    } catch (std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << '\n';
-        return 1;
-    }
+
+        display();
+
+        glfw->poll_events();
+    });
+} catch (std::exception& e) {
+    std::cerr << "Exception occurred: " << e.what() << '\n';
+    return 1;
 }

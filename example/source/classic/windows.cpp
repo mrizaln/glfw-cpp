@@ -33,9 +33,6 @@
 #include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 int main()
 {
     auto glfw = glfw_cpp::init(
@@ -48,22 +45,23 @@ int main()
             }
         }
     );
-    auto wm = glfw->create_window_manager();
 
     auto [xpos, ypos, width, height] = glfw_cpp::get_primary_monitor().work_area();
 
-    std::array<glfw_cpp::Window, 4> windows;
+    auto windows = std::array<glfw_cpp::Window, 4>{};
     for (int i = 0; i < 4; i++) {
-        const int size = height / 5;
-        const struct
+        struct Color
         {
             float r, g, b;
-        } colors[] = {
+        };
+
+        const Color colors[] = {
             { 0.95f, 0.32f, 0.11f },
             { 0.50f, 0.80f, 0.16f },
             { 0.f, 0.68f, 0.94f },
             { 0.98f, 0.74f, 0.04f },
         };
+        const int size = height / 5;
 
         auto hint   = glfw_cpp::Hint{};
         hint.flags &= ~glfw_cpp::Flag::Decorated;
@@ -71,7 +69,7 @@ int main()
             hint.flags &= ~glfw_cpp::Flag::FocusOnShow;
         }
 
-        windows[(unsigned)i] = wm->create_window(hint, "Learn Multi-Window Example", size, size);
+        windows[(unsigned)i] = glfw->create_window(hint, "Multi-Window Example (glfw-cpp)", size, size);
 
         // set window pos will be queued inside WindowManager
         windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
@@ -80,10 +78,17 @@ int main()
     }
 
     // process queued tasks
-    wm->poll_events();
+    glfw->poll_events();
 
-    while (wm->has_window_opened()) {
+    while (glfw->has_window_opened()) {
         for (unsigned i = 0; i < 4; i++) {
+            if (windows[i].should_close()) {
+                if (windows[i].properties().attribute.visible) {
+                    windows[i].hide();
+                }
+                continue;
+            }
+
             windows[i].bind();
 
             glClear(GL_COLOR_BUFFER_BIT);
@@ -96,6 +101,6 @@ int main()
             windows[i].unbind();
         }
 
-        wm->wait_events();
+        glfw->wait_events();
     }
 }

@@ -26,7 +26,7 @@ create_an_executable(multi_single_thread
   DO_SANITIZE
   LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
-create_an_executable(multi_multi_manager
+create_an_executable(multi_multi_thread
   DO_SANITIZE
   LIBS fmt::fmt glad::glad glfw-cpp khrplatform::khrplatform)
 
