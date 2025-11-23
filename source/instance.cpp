@@ -81,7 +81,7 @@ namespace glfw_cpp
     {
         if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
             auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().pos;
+            auto  prev   = window.properties().position;
             glfw_cpp::Instance::get().push_event(
                 window,
                 glfw_cpp::event::WindowMoved{
@@ -188,7 +188,7 @@ namespace glfw_cpp
     {
         if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
             auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().cursor;
+            auto  prev   = window.properties().cursor_position;
             glfw_cpp::Instance::get().push_event(
                 window,
                 event::CursorMoved{
@@ -439,27 +439,30 @@ namespace glfw_cpp
         glfwGetCursorPos(handle, &x_cursor, &y_cursor);
         glfwGetFramebufferSize(handle, &fb_width, &fb_height);
 
-        return Window{ handle, Properties{
+        auto properties = Properties{
             .title              = { title.begin(), title.end() },
-            .pos                = { x_pos, y_pos },
+            .position           = { x_pos, y_pos },
             .dimensions         = { real_width, real_height },
             .framebuffer_size   = { fb_width, fb_height },
-            .cursor             = { x_cursor, y_cursor },
-            .attribute          = {
-                .iconified      = 0,
-                .maximized      = (hint.flags & Flag::Maximized) == Flag::Maximized,
-                .focused        = (hint.flags & Flag::Focused) == Flag::Focused,
-                .visible        = (hint.flags & Flag::Visible) == Flag::Visible,
-                .hovered        = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .resizable      = (hint.flags & Flag::Resizable) == Flag::Resizable,
-                .floating       = (hint.flags & Flag::Floating) == Flag::Floating,
-                .auto_iconify   = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
-                .focus_on_show  = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
-            },
+            .cursor_position    = { x_cursor, y_cursor },
             .mouse_button_state = {},
             .key_state          = {},
             .monitor            = hint.monitor,
-        }, bind_immediately };
+        };
+
+        auto attributes = Attributes{
+            .iconified     = 0,
+            .maximized     = (hint.flags & Flag::Maximized) == Flag::Maximized,
+            .focused       = (hint.flags & Flag::Focused) == Flag::Focused,
+            .visible       = (hint.flags & Flag::Visible) == Flag::Visible,
+            .hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
+            .resizable     = (hint.flags & Flag::Resizable) == Flag::Resizable,
+            .floating      = (hint.flags & Flag::Floating) == Flag::Floating,
+            .auto_iconify  = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
+            .focus_on_show = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
+        };
+
+        return Window{ handle, std::move(properties), std::move(attributes), bind_immediately };
     }
 
     bool Instance::has_window_opened() const noexcept

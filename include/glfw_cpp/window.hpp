@@ -39,7 +39,7 @@ namespace glfw_cpp
         auto   operator<=>(const CursorPosition&) const = default;
     };
 
-    struct Atrributes
+    struct Attributes
     {
         unsigned int iconified     : 1 = 0;
         unsigned int maximized     : 1 = 0;
@@ -51,17 +51,16 @@ namespace glfw_cpp
         unsigned int auto_iconify  : 1 = 0;
         unsigned int focus_on_show : 1 = 0;
 
-        bool operator==(const Atrributes&) const = default;
+        bool operator==(const Attributes&) const = default;
     };
 
     struct Properties
     {
         std::string            title;
-        Position               pos;
+        Position               position;
         Dimensions             dimensions;
         FramebufferSize        framebuffer_size;
-        CursorPosition         cursor;
-        Atrributes             attribute;
+        CursorPosition         cursor_position;
         MouseButtonStateRecord mouse_button_state;
         KeyStateRecord         key_state;
         Monitor                monitor;
@@ -409,6 +408,13 @@ namespace glfw_cpp
         const Properties& properties() const noexcept { return m_properties; }
 
         /**
+         * @brief Get the attributes of the window.
+         *
+         * @return The attributes of the window.
+         */
+        const Attributes& attributes() const noexcept { return m_attributes; }
+
+        /**
          * @brief Get last frame time.
          */
         double delta_time() const noexcept { return m_delta_time; }
@@ -429,7 +435,7 @@ namespace glfw_cpp
         Handle handle() const noexcept { return m_handle; }
 
     private:
-        Window(Handle handle, Properties&& properties, bool make_current);
+        Window(Handle handle, Properties&& properties, Attributes&& attributes, bool make_current);
 
         void push_event(Event&& event) noexcept;
         void process_queued_tasks() noexcept;
@@ -439,6 +445,7 @@ namespace glfw_cpp
 
         // window stuff
         Properties m_properties      = {};
+        Attributes m_attributes      = {};
         double     m_last_frame_time = 0.0;
         double     m_delta_time      = 0.0;
         bool       m_vsync           = true;

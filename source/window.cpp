@@ -17,9 +17,10 @@
 namespace glfw_cpp
 {
     // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(Handle handle, Properties&& properties, bool make_current)
+    Window::Window(Handle handle, Properties&& properties, Attributes&& attributes, bool make_current)
         : m_handle{ handle }
         , m_properties{ std::move(properties) }
+        , m_attributes{ std::move(attributes) }
     {
         auto init = [&](auto& api) {
             auto prev = glfw_cpp::get_current();
@@ -51,6 +52,7 @@ namespace glfw_cpp
     Window::Window(Window&& other) noexcept
         : m_handle            { std::exchange(other.m_handle, nullptr) }
         , m_properties        { std::move(other.m_properties) }
+        , m_attributes        { std::move(other.m_attributes) }
         , m_last_frame_time   { other.m_last_frame_time }
         , m_delta_time        { other.m_delta_time }
         , m_vsync             { other.m_vsync }
@@ -80,6 +82,7 @@ namespace glfw_cpp
 
         m_handle            = std::exchange(other.m_handle, nullptr);
         m_properties        = std::move(other.m_properties);
+        m_attributes        = std::move(other.m_attributes);
         m_last_frame_time   = other.m_last_frame_time;
         m_delta_time        = other.m_delta_time;
         m_vsync             = other.m_vsync;
@@ -116,38 +119,38 @@ namespace glfw_cpp
 
     void Window::iconify() noexcept
     {
-        m_properties.attribute.iconified = true;
+        m_attributes.iconified = true;
         Instance::get().enqueue_task([this] { glfwIconifyWindow(m_handle); });
     }
 
     void Window::restore() noexcept
     {
-        m_properties.attribute.iconified = false;
-        m_properties.attribute.maximized = false;
+        m_attributes.iconified = false;
+        m_attributes.maximized = false;
         Instance::get().enqueue_task([this] { glfwRestoreWindow(m_handle); });
     }
 
     void Window::maximize() noexcept
     {
-        m_properties.attribute.maximized = true;
+        m_attributes.maximized = true;
         Instance::get().enqueue_task([this] { glfwMaximizeWindow(m_handle); });
     }
 
     void Window::show() noexcept
     {
-        m_properties.attribute.visible = true;
+        m_attributes.visible = true;
         Instance::get().enqueue_task([this] { glfwShowWindow(m_handle); });
     }
 
     void Window::hide() noexcept
     {
-        m_properties.attribute.visible = false;
+        m_attributes.visible = false;
         Instance::get().enqueue_task([this] { glfwHideWindow(m_handle); });
     }
 
     void Window::focus() noexcept
     {
-        m_properties.attribute.focused = true;
+        m_attributes.focused = true;
         Instance::get().enqueue_task([this] { glfwFocusWindow(m_handle); });
     }
 
@@ -175,7 +178,7 @@ namespace glfw_cpp
 
     void Window::set_resizable(bool value)
     {
-        m_properties.attribute.resizable = value;
+        m_attributes.resizable = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_RESIZABLE, value ? GLFW_TRUE : GLFW_FALSE);
         });
@@ -183,7 +186,7 @@ namespace glfw_cpp
 
     void Window::set_floating(bool value)
     {
-        m_properties.attribute.floating = value;
+        m_attributes.floating = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_FLOATING, value ? GLFW_TRUE : GLFW_FALSE);
         });
@@ -191,7 +194,7 @@ namespace glfw_cpp
 
     void Window::set_auto_iconify(bool value)
     {
-        m_properties.attribute.auto_iconify = value;
+        m_attributes.auto_iconify = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_AUTO_ICONIFY, value ? GLFW_TRUE : GLFW_FALSE);
         });
@@ -199,7 +202,7 @@ namespace glfw_cpp
 
     void Window::set_focus_on_show(bool value)
     {
-        m_properties.attribute.focus_on_show = value;
+        m_attributes.focus_on_show = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_FOCUS_ON_SHOW, value ? GLFW_TRUE : GLFW_FALSE);
         });
@@ -213,7 +216,7 @@ namespace glfw_cpp
 
     void Window::set_window_pos(int x, int y) noexcept
     {
-        m_properties.pos = { .x = x, .y = y };
+        m_properties.position = { .x = x, .y = y };
         Instance::get().enqueue_task([this, x, y] { glfwSetWindowPos(m_handle, x, y); });
     }
 
@@ -303,7 +306,7 @@ namespace glfw_cpp
         m_capture_mouse = value;
         Instance::get().enqueue_task([this] {
             if (m_capture_mouse) {
-                auto& [x, y] = m_properties.cursor;
+                auto& [x, y] = m_properties.cursor_position;
                 glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
@@ -327,17 +330,17 @@ namespace glfw_cpp
         using KS = KeyState;
         using MS = MouseButtonState;
 
-        auto& [_, pos, dim, frame, cursor, attr, btns, keys, __] = m_properties;
+        auto& [title, pos, dim, frame, cursor, btns, keys, mon] = m_properties;
         event.visit(util::VisitOverloaded{
             // clang-format off
             [&](event::WindowMoved&        e) { pos    = { .x     = e.x,     .y      = e.y   }; },
             [&](event::WindowResized&      e) { dim    = { .width = e.width, .height = e.height }; },
             [&](event::FramebufferResized& e) { frame  = { .width = e.width, .height = e.height }; },
             [&](event::CursorMoved&        e) { cursor = { .x     = e.x,     .y      = e.y      }; },
-            [&](event::CursorEntered&      e) { attr.hovered   = e.entered;   },
-            [&](event::WindowFocused&      e) { attr.focused   = e.focused;   },
-            [&](event::WindowIconified&    e) { attr.iconified = e.iconified; },
-            [&](event::WindowMaximized&    e) { attr.maximized = e.maximized; },
+            [&](event::CursorEntered&      e) { m_attributes.hovered   = e.entered;   },
+            [&](event::WindowFocused&      e) { m_attributes.focused   = e.focused;   },
+            [&](event::WindowIconified&    e) { m_attributes.iconified = e.iconified; },
+            [&](event::WindowMaximized&    e) { m_attributes.maximized = e.maximized; },
             [&](event::KeyPressed&         e) { keys.set_value(e.key,    e.state != KS::Release); },
             [&](event::ButtonPressed&      e) { btns.set_value(e.button, e.state != MS::Release); },
             [&] /* else */ (auto&)         { /* do nothing */ }
