@@ -412,6 +412,50 @@ namespace glfw_cpp
      * @throw glfw_cpp::NotInitialized if GLFW is not initialized.
      */
     GLFWwindow* get_current();
+
+    /**
+     * @brief Set the clipboard string.
+     *
+     * @param string The string to set (must be null-terminated).
+     */
+    void set_clipboard_string(const char* string);
+
+    /**
+     * @brief Get the clipboard string.
+     *
+     * @return The clipboard string.
+     */
+    std::string_view get_clipboard_string();
+
+    /**
+     * @brief Get time in seconds since the GLFW library was initialized.
+     *
+     * @return The time in seconds.
+     */
+    double get_time();
+
+    /**
+     * @brief Set the current GLFW time.
+     *
+     * @param time The time to set, in seconds.
+     *
+     * The time value must be a positive finite number less than or equal to 18446744073.0.
+     */
+    void set_time(double time);
+
+    /**
+     * @brief Get the current value of the raw timer, measured in 1 / frequency seconds.
+     *
+     * @return The timer value in microseconds.
+     */
+    uint64_t get_timer_value();
+
+    /**
+     * @brief Get the frequency, in Hz, of the raw timer.
+     *
+     * @return The timer frequency.
+     */
+    uint64_t get_timer_frequency();
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */
