@@ -431,34 +431,6 @@ namespace glfw_cpp
     private:
         Window(Handle handle, Properties&& properties, bool make_current);
 
-        static void window_pos_callback(GLFWwindow* window, int x, int y);
-        static void window_size_callback(GLFWwindow* window, int width, int height);
-        static void window_close_callback(GLFWwindow* window);
-        static void window_refresh_callback(GLFWwindow* window);
-        static void window_focus_callback(GLFWwindow* window, int focused);
-        static void window_iconify_callback(GLFWwindow* window, int iconified);
-        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-        static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-        static void cursor_pos_callback(GLFWwindow* window, double x, double y);
-        static void cursor_enter_callback(GLFWwindow* window, int entered);
-        static void scroll_callback(GLFWwindow* window, double x, double y);
-        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-        static void char_callback(GLFWwindow* window, unsigned int codepoint);
-        static void file_drop_callback(GLFWwindow* window, int count, const char** paths);
-        static void window_maximize_callback(GLFWwindow* window, int maximized);
-        static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
-
-        // NOTE: These two callbacks are beyond glfw_cpp::Window control alone, maybe setting it in
-        //       the glfw_cpp::Instance makes more sense. But then, there's the problem of how to
-        //       'broadcast' the event to all opened windows...
-        // TODO: Implement these two callbacks
-        /*
-            static void monitor_callback(GLFWmonitor* monitor, int action);
-            static void joystick_callback(int jid, int action);
-        */
-
-        static void window_callback_helper(GLFWwindow* window, Event&& event) noexcept;
-
         void push_event(Event&& event) noexcept;
         void process_queued_tasks() noexcept;
         void update_delta_time() noexcept;

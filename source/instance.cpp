@@ -71,6 +71,235 @@ namespace
 #undef CASE_ENTRY
         }
     }
+
+}
+
+// callbacks
+namespace glfw_cpp
+{
+    void Instance::window_pos_callback(GLFWwindow* window, int x, int y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().pos;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                glfw_cpp::event::WindowMoved{
+                    .x  = x,
+                    .y  = y,
+                    .dx = x - prev.x,
+                    .dy = y - prev.y,
+                }
+            );
+        }
+    }
+    void Instance::window_size_callback(GLFWwindow* window, int width, int height)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().dimensions;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowResized{
+                    .width         = width,
+                    .height        = height,
+                    .width_change  = width - prev.width,
+                    .height_change = height - prev.height,
+                }
+            );
+        }
+    }
+
+    void Instance::window_close_callback(GLFWwindow* window)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(window, event::WindowClosed{});
+        }
+    }
+
+    void Instance::window_refresh_callback(GLFWwindow* window)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(window, event::WindowRefreshed{});
+        }
+    }
+
+    void Instance::window_focus_callback(GLFWwindow* window, int focused)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowFocused{
+                    .focused = focused == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::window_iconify_callback(GLFWwindow* window, int iconified)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowIconified{
+                    .iconified = iconified == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().framebuffer_size;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::FramebufferResized{
+                    .width         = width,
+                    .height        = height,
+                    .width_change  = width - prev.width,
+                    .height_change = height - prev.height,
+                }
+            );
+        }
+    }
+
+    void Instance::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::ButtonPressed{
+                    .button = static_cast<MouseButton>(button),
+                    .state  = static_cast<MouseButtonState>(action),
+                    .mods   = ModifierKey{ mods },
+                }
+            );
+        }
+    }
+
+    void Instance::cursor_pos_callback(GLFWwindow* window, double x, double y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().cursor;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CursorMoved{
+                    .x  = x,
+                    .y  = y,
+                    .dx = x - prev.x,
+                    .dy = y - prev.y,
+                }
+            );
+        }
+    }
+
+    void Instance::cursor_enter_callback(GLFWwindow* window, int entered)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CursorEntered{
+                    .entered = entered == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::scroll_callback(GLFWwindow* window, double x, double y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::Scrolled{
+                    .dx = x,
+                    .dy = y,
+                }
+            );
+        }
+    }
+
+    void Instance::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::KeyPressed{
+                    .key      = static_cast<KeyCode>(key),
+                    .scancode = scancode,
+                    .state    = static_cast<KeyState>(action),
+                    .mods     = ModifierKey{ mods },
+                }
+            );
+        }
+    }
+
+    void Instance::char_callback(GLFWwindow* window, unsigned int codepoint)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CharInput{
+                    .codepoint = codepoint,
+                }
+            );
+        }
+    }
+
+    void Instance::file_drop_callback(GLFWwindow* window, int count, const char** paths)
+    {
+        auto paths_vec = std::vector<std::filesystem::path>(static_cast<std::size_t>(count));
+        for (std::size_t i = 0; i < paths_vec.size(); ++i) {
+            paths_vec[i] = std::filesystem::path{ paths[i] };
+        }
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::FileDropped{
+                    .files = std::move(paths_vec),
+                }
+            );
+        }
+    }
+
+    void Instance::window_maximize_callback(GLFWwindow* window, int maximized)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowMaximized{
+                    .maximized = maximized == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowScaleChanged{
+                    .x = xscale,
+                    .y = yscale,
+                }
+            );
+        }
+    }
 }
 
 namespace glfw_cpp
@@ -104,34 +333,39 @@ namespace glfw_cpp
         }
     }
 
-    bool Instance::send_intercept_event(Window& window, Event& event) noexcept
+    void Instance::push_event(Window& window, Event event) noexcept
     {
-        if (!m_event_interceptor) {
-            return true;
+        auto forward = true;
+
+        if (m_event_interceptor) {
+            auto& intr = *m_event_interceptor;
+
+            forward = event.visit(event::Overload{
+                // clang-format off
+                [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
+                [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
+                [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
+                [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
+                [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
+                [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
+                [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
+                [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
+                [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
+                [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
+                [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
+                [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
+                [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
+                [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
+                [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
+                [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
+                [&](event::Empty&                   ) { return true; /* always true                      */ },
+                // clang-format on
+            });
         }
 
-        auto& intr = *m_event_interceptor;
-        return event.visit(event::Overload{
-            // clang-format off
-            [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
-            [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
-            [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
-            [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
-            [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
-            [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
-            [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
-            [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
-            [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
-            [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
-            [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
-            [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
-            [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
-            [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
-            [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
-            [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
-            [&](event::Empty&                   ) { return true; /* always true                   */ },
-            // clang-format on
-        });
+        if (forward) {
+            window.push_event(std::move(event));
+        }
     }
 
     void Instance::validate_access() const
@@ -181,22 +415,22 @@ namespace glfw_cpp
 
         Instance::log_i("(Instance) Window ({:#x}) created", (std::size_t)handle);
 
-        glfwSetWindowPosCallback(handle, Window::window_pos_callback);
-        glfwSetWindowSizeCallback(handle, Window::window_size_callback);
-        glfwSetWindowCloseCallback(handle, Window::window_close_callback);
-        glfwSetWindowRefreshCallback(handle, Window::window_refresh_callback);
-        glfwSetWindowFocusCallback(handle, Window::window_focus_callback);
-        glfwSetWindowIconifyCallback(handle, Window::window_iconify_callback);
-        glfwSetFramebufferSizeCallback(handle, Window::framebuffer_size_callback);
-        glfwSetMouseButtonCallback(handle, Window::mouse_button_callback);
-        glfwSetCursorPosCallback(handle, Window::cursor_pos_callback);
-        glfwSetCursorEnterCallback(handle, Window::cursor_enter_callback);
-        glfwSetScrollCallback(handle, Window::scroll_callback);
-        glfwSetKeyCallback(handle, Window::key_callback);
-        glfwSetCharCallback(handle, Window::char_callback);
-        glfwSetDropCallback(handle, Window::file_drop_callback);
-        glfwSetWindowMaximizeCallback(handle, Window::window_maximize_callback);
-        glfwSetWindowContentScaleCallback(handle, Window::window_content_scale_callback);
+        glfwSetWindowPosCallback(handle, window_pos_callback);
+        glfwSetWindowSizeCallback(handle, window_size_callback);
+        glfwSetWindowCloseCallback(handle, window_close_callback);
+        glfwSetWindowRefreshCallback(handle, window_refresh_callback);
+        glfwSetWindowFocusCallback(handle, window_focus_callback);
+        glfwSetWindowIconifyCallback(handle, window_iconify_callback);
+        glfwSetFramebufferSizeCallback(handle, framebuffer_size_callback);
+        glfwSetMouseButtonCallback(handle, mouse_button_callback);
+        glfwSetCursorPosCallback(handle, cursor_pos_callback);
+        glfwSetCursorEnterCallback(handle, cursor_enter_callback);
+        glfwSetScrollCallback(handle, scroll_callback);
+        glfwSetKeyCallback(handle, key_callback);
+        glfwSetCharCallback(handle, char_callback);
+        glfwSetDropCallback(handle, file_drop_callback);
+        glfwSetWindowMaximizeCallback(handle, window_maximize_callback);
+        glfwSetWindowContentScaleCallback(handle, window_content_scale_callback);
 
         int    x_pos, y_pos, real_width, real_height, fb_width, fb_height;
         double x_cursor, y_cursor;

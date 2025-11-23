@@ -322,13 +322,22 @@ namespace glfw_cpp
     private:
         inline static Instance* s_instance = nullptr;
 
-        // Constructs a default instance (same as uninitialized)
+        /**
+         * @brief Constructs a default instance (same as uninitialized)
+         */
         Instance() = default;
 
-        // Safe (in debug) wrapper to get the instance from the global pointer
+        /**
+         * @brief Safe (in debug) wrapper to get the instance from the global pointer
+         */
         static Instance& get();
 
-        // can be called from any thread
+        /**
+         * @brief Log a message.
+         *
+         * @param level Severity of the message.
+         * @param msg The message.
+         */
         static void log(LogLevel level, std::string msg) noexcept;
 
 #define GLFW_CPP_LOG_FN(Name, Level)                                                                         \
@@ -346,16 +355,51 @@ namespace glfw_cpp
 
 #undef GLFW_CPP_LOG_FN
 
-        // send event to interceptor, returns the value the interceptor returns. but if there is not
-        // interceptor, the returned value will always be true.
-        bool send_intercept_event(Window& window, Event& event) noexcept;
+        static void window_pos_callback(GLFWwindow* window, int x, int y);
+        static void window_size_callback(GLFWwindow* window, int width, int height);
+        static void window_close_callback(GLFWwindow* window);
+        static void window_refresh_callback(GLFWwindow* window);
+        static void window_focus_callback(GLFWwindow* window, int focused);
+        static void window_iconify_callback(GLFWwindow* window, int iconified);
+        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
+        static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
+        static void cursor_pos_callback(GLFWwindow* window, double x, double y);
+        static void cursor_enter_callback(GLFWwindow* window, int entered);
+        static void scroll_callback(GLFWwindow* window, double x, double y);
+        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
+        static void char_callback(GLFWwindow* window, unsigned int codepoint);
+        static void file_drop_callback(GLFWwindow* window, int count, const char** paths);
+        static void window_maximize_callback(GLFWwindow* window, int maximized);
+        static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
 
-        // Check whether caller thread is the same as attached thread
-        // may throw `WrongThreadAccess`
+        // TODO: Implement these two callbacks
+        /*
+            static void monitor_callback(GLFWmonitor* monitor, int action);
+            static void joystick_callback(int jid, int action);
+        */
+
+        /**
+         * @brief Check whether caller thread is the same as attached thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess If this function is not called from attached_thread_id.
+         */
         void validate_access() const;
 
-        // Run queued tasks
-        // may throw `PlatformError`
+        /**
+         * @brief Push event to Window but intercept it first using the associated interceptor.
+         *
+         * @param window The window on which the event belong to.
+         * @param event The event to be pushed.
+         */
+        void push_event(Window& window, Event event) noexcept;
+
+        // Run queued tasks.
+        // May throw `PlatformError`.
+        /**
+         * @brief Run queued tasks.
+         *
+         * @throw glfw_cpp::PlatformError If the underlying platform produces an error.
+         */
         void run_tasks();
 
         Api    m_api     = api::NoApi{};
