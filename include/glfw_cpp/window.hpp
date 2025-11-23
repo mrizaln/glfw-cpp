@@ -3,13 +3,13 @@
 
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/input.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/monitor.hpp"
 
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
-#include <thread>
 #include <vector>
 
 struct GLFWwindow;
@@ -98,21 +98,6 @@ namespace glfw_cpp
         Window operator=(const Window&) = delete;
 
         explicit operator bool() const noexcept { return m_handle != nullptr; }
-
-        /**
-         * @brief Bind window context to current thread (only makes sense for OpenGL and OpenGLES).
-         *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
-         * @throw glfw_cpp::AlreadyBound If the window context is already bound to other thread.
-         */
-        void bind();
-
-        /**
-         * @brief Unbind window context from current thread (only makes sense for OpenGL and OpenGLES).
-         *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
-         */
-        void unbind();
 
         /**
          * @brief Destroy the window and reset the instance to default-initialized state.
@@ -298,14 +283,14 @@ namespace glfw_cpp
                 return std::nullopt;
             }
 
-            bind();
+            auto prev = glfw_cpp::get_current();
+            glfw_cpp::make_current(handle());
 
             const auto& events = poll();
             func(events);
             auto delta = display();
 
-            unbind();
-
+            glfw_cpp::make_current(prev);
             return delta;
         }
 
@@ -326,7 +311,8 @@ namespace glfw_cpp
          */
         void run(std::invocable<const EventQueue&> auto&& func)
         {
-            bind();
+            auto prev = glfw_cpp::get_current();
+            glfw_cpp::make_current(handle());
 
             while (!should_close()) {
                 const auto& events = poll();
@@ -334,7 +320,7 @@ namespace glfw_cpp
                 display();
             }
 
-            unbind();
+            glfw_cpp::make_current(prev);
         }
 
         /**
@@ -401,16 +387,8 @@ namespace glfw_cpp
          */
         Handle handle() const noexcept { return m_handle; }
 
-        /**
-         * @brief Get the thread id that the window is attached to.
-         *
-         * @return The thread id that the window is attached to. If the window is not attached to any thread,
-         * it will return a default-constructed `std::thread::id`.
-         */
-        std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; };
-
     private:
-        Window(Handle handle, Properties&& properties, bool bind_immediately);
+        Window(Handle handle, Properties&& properties, bool make_current);
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
@@ -447,12 +425,11 @@ namespace glfw_cpp
         Handle m_handle = nullptr;
 
         // window stuff
-        std::thread::id m_attached_thread_id = {};
-        Properties      m_properties         = {};
-        double          m_last_frame_time    = 0.0;
-        double          m_delta_time         = 0.0;
-        bool            m_vsync              = true;
-        bool            m_capture_mouse      = false;
+        Properties m_properties      = {};
+        double     m_last_frame_time = 0.0;
+        double     m_delta_time      = 0.0;
+        bool       m_vsync           = true;
+        bool       m_capture_mouse   = false;
 
         // queues
         EventQueue                      m_event_queue_front = EventQueue{ s_default_eventqueue_size };

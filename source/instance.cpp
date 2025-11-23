@@ -351,4 +351,17 @@ namespace glfw_cpp
 
         return instance;
     }
+
+    void make_current(GLFWwindow* window)
+    {
+        glfwMakeContextCurrent(window);
+        util::check_glfw_error();
+    }
+
+    GLFWwindow* get_current()
+    {
+        auto current = glfwGetCurrentContext();
+        util::check_glfw_error();
+        return current;
+    }
 }

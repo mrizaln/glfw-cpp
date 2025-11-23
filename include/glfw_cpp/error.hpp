@@ -1,8 +1,8 @@
 #ifndef ERROR_HPP_32QWETF9D8
 #define ERROR_HPP_32QWETF9D8
 
-#include <stdexcept>
 #include <format>
+#include <stdexcept>
 
 namespace glfw_cpp
 {

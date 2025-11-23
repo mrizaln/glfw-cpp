@@ -12,7 +12,6 @@
 #include <filesystem>
 #include <functional>
 #include <mutex>
-#include <thread>
 #include <utility>
 #include <vector>
 
@@ -212,12 +211,14 @@ namespace glfw_cpp
     }
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(Handle handle, Properties&& properties, bool bind_immediately)
+    Window::Window(Handle handle, Properties&& properties, bool make_current)
         : m_handle{ handle }
         , m_properties{ std::move(properties) }
     {
         auto init = [&](auto& api) {
-            bind();
+            auto prev = glfw_cpp::get_current();
+            glfw_cpp::make_current(handle);
+
             set_vsync(m_vsync);
             glfwSetWindowUserPointer(m_handle, this);
 #if not __EMSCRIPTEN__
@@ -228,8 +229,8 @@ namespace glfw_cpp
                 api.loader(handle, glfwGetProcAddress);
             }
 #endif
-            if (not bind_immediately) {
-                unbind();
+            if (not make_current) {
+                glfw_cpp::make_current(prev);
             }
         };
 
@@ -243,7 +244,6 @@ namespace glfw_cpp
     // clang-format off
     Window::Window(Window&& other) noexcept
         : m_handle            { std::exchange(other.m_handle, nullptr) }
-        , m_attached_thread_id{ std::exchange(other.m_attached_thread_id, {}) }
         , m_properties        { std::move(other.m_properties) }
         , m_last_frame_time   { other.m_last_frame_time }
         , m_delta_time        { other.m_delta_time }
@@ -264,21 +264,23 @@ namespace glfw_cpp
         }
 
         if (m_handle != nullptr) {
-            unbind();
+            if (get_current() == m_handle) {
+                make_current(nullptr);
+            }
+
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
             Instance::get().request_delete_window(m_handle);
         }
 
-        m_handle             = std::exchange(other.m_handle, nullptr);
-        m_attached_thread_id = other.m_attached_thread_id;
-        m_properties         = std::move(other.m_properties);
-        m_last_frame_time    = other.m_last_frame_time;
-        m_delta_time         = other.m_delta_time;
-        m_vsync              = other.m_vsync;
-        m_capture_mouse      = other.m_capture_mouse;
-        m_event_queue_front  = std::move(other.m_event_queue_front);
-        m_event_queue_back   = std::move(other.m_event_queue_back);
-        m_task_queue         = std::move(other.m_task_queue);
+        m_handle            = std::exchange(other.m_handle, nullptr);
+        m_properties        = std::move(other.m_properties);
+        m_last_frame_time   = other.m_last_frame_time;
+        m_delta_time        = other.m_delta_time;
+        m_vsync             = other.m_vsync;
+        m_capture_mouse     = other.m_capture_mouse;
+        m_event_queue_front = std::move(other.m_event_queue_front);
+        m_event_queue_back  = std::move(other.m_event_queue_back);
+        m_task_queue        = std::move(other.m_task_queue);
 
         if (m_handle != nullptr) {
             glfwSetWindowUserPointer(m_handle, this);
@@ -290,63 +292,14 @@ namespace glfw_cpp
     Window::~Window()
     {
         if (m_handle != nullptr) {
-            if (not Instance::get().m_api.is<api::NoApi>()) {
-                unbind();
+            if (get_current() == m_handle) {
+                make_current(nullptr);
             }
+
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
             Instance::get().request_delete_window(m_handle);
         } else {
             // window is in invalid state (probably moved)
-        }
-    }
-
-    void Window::bind()
-    {
-        if (m_attached_thread_id == std::thread::id{}) {
-            // no thread attached, attach to this thread
-
-            m_attached_thread_id = std::this_thread::get_id();
-            Instance::log_d("(Window) Context ({:#x}) attached (+)", (std::size_t)m_handle);
-
-            if (not Instance::get().m_api.is<api::NoApi>()) {
-                glfwMakeContextCurrent(m_handle);
-            } else {
-                throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
-            }
-
-        } else if (m_attached_thread_id == std::this_thread::get_id()) {
-
-            // same thread, do nothing
-
-        } else {
-            // different thread, cannot attach
-
-            Instance::log_c(
-                "(Window) Context ({:#x}) already attached to another thread [{:#x}], cannot attach to this "
-                "thread [{:#x}].",
-                (std::size_t)m_handle,
-                util::get_thread_num(m_attached_thread_id),
-                util::get_thread_num(std::this_thread::get_id())
-            );
-
-            throw AlreadyBound{
-                util::get_thread_num(std::this_thread::get_id()),
-                util::get_thread_num(m_attached_thread_id),
-            };
-        }
-    }
-
-    void Window::unbind()
-    {
-        if (not Instance::get().m_api.is<api::NoApi>()) {
-            glfwMakeContextCurrent(nullptr);
-        } else {
-            throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
-        }
-
-        if (m_attached_thread_id != std::thread::id{}) {
-            Instance::log_d("(Window) Context ({:#x}) detached (-)", (std::size_t)m_handle);
-            m_attached_thread_id = std::thread::id{};
         }
     }
 
@@ -396,13 +349,15 @@ namespace glfw_cpp
         // 0 = immediate update, 1 = update synchronized with vertical retrace
         auto vsync = value ? 1 : 0;
 
-        if (auto current = glfwGetCurrentContext(); current == m_handle) {
+        if (auto current = get_current(); current == m_handle) {
             glfwSwapInterval(vsync);
         } else {
-            glfwMakeContextCurrent(m_handle);
+            make_current(m_handle);
             glfwSwapInterval(vsync);
-            glfwMakeContextCurrent(current);
+            make_current(current);
         }
+
+        util::check_glfw_error();
     }
 
     void Window::set_window_size(int width, int height) noexcept

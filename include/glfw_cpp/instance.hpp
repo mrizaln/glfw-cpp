@@ -221,7 +221,7 @@ namespace glfw_cpp
          * @param title The window title.
          * @param width The window width.
          * @param height The window height.
-         * @param bind_immediately Bind window context immediately to current thread (OpengGL/OpenGL ES only).
+         * @param make_current Immediately make the OpenGL/OpenGL ES context current to this thread.
          *
          * @thread_safety This function must be called from the main thread.
          *
@@ -237,7 +237,7 @@ namespace glfw_cpp
             std::string_view title,
             int              width,
             int              height,
-            bool             bind_immediately = true
+            bool             make_current = true
         );
 
         /**
@@ -372,6 +372,15 @@ namespace glfw_cpp
     };
 
     /**
+     * @brief Turns fps to milliseconds.
+     */
+    constexpr std::chrono::milliseconds operator""_fps(unsigned long long fps)
+    {
+        namespace chr = std::chrono;
+        return chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps);
+    }
+
+    /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
      *
      * @param api The underlying graphics API to use with GLFW.
@@ -387,13 +396,22 @@ namespace glfw_cpp
     std::unique_ptr<Instance> init(Api&& api, Instance::LogFun&& logger = nullptr);
 
     /**
-     * @brief Turns fps to milliseconds.
+     * @brief Make the OpenGL or OpenGL ES context of the specified window current on calling thread.
+     *
+     * @param context The window whose context to make current (pass null to detach).
+     *
+     * @throw glfw_cpp::NotInitialized if GLFW is not initialized.
+     * @throw glfw_cpp::NoWindowContext if the window doesn't have OpenGL or OpenGL ES context.
+     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
      */
-    constexpr std::chrono::milliseconds operator""_fps(unsigned long long fps)
-    {
-        namespace chr = std::chrono;
-        return chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps);
-    }
+    void make_current(GLFWwindow* window);
+
+    /**
+     * @brief Get window handle whose context is current.
+     *
+     * @throw glfw_cpp::NotInitialized if GLFW is not initialized.
+     */
+    GLFWwindow* get_current();
 }
 
 #endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */
