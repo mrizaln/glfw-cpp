@@ -372,108 +372,106 @@ static void update_mesh()
 }
 
 int main()
-{
-    try {
-        auto api = glfw_cpp::api::OpenGL{
-            .major          = 3,
-            .minor          = 2,
-            .profile        = glfw_cpp::api::gl::Profile::Core,
-            .forward_compat = true,
-            .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        };
-        auto logger = [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-                fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
-            }
-        };
 
-        using Flag = glfw_cpp::Flag;
-        auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Resizable };
-
-        auto glfw   = glfw_cpp::init(api, logger);
-        auto wm     = glfw->create_window_manager();
-        auto window = wm->create_window(hint, "GLFW OpenGL3 Heightmap demo", 800, 600);
-
-        /* Prepare opengl resources for rendering */
-        GLuint shader_program = make_shader_program(vertex_shader_text, fragment_shader_text);
-        if (shader_program == 0u) {
-            fprintf(stderr, "Failed to create shader program\n");
-            return 1;
+try {
+    auto api = glfw_cpp::api::OpenGL{
+        .major          = 3,
+        .minor          = 2,
+        .profile        = glfw_cpp::api::gl::Profile::Core,
+        .forward_compat = true,
+        .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    };
+    auto logger = [](auto level, auto msg) {
+        if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
+            fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
         }
+    };
 
-        glUseProgram(shader_program);
-        GLint uloc_project   = glGetUniformLocation(shader_program, "project");
-        GLint uloc_modelview = glGetUniformLocation(shader_program, "modelview");
+    using Flag = glfw_cpp::Flag;
+    auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Resizable };
 
-        /* Compute the projection matrix */
-        float f               = 1.0f / tanf(view_angle / 2.0f);
-        projection_matrix[0]  = f / aspect_ratio;
-        projection_matrix[5]  = f;
-        projection_matrix[10] = (z_far + z_near) / (z_near - z_far);
-        projection_matrix[11] = -1.0f;
-        projection_matrix[14] = 2.0f * (z_far * z_near) / (z_near - z_far);
-        glUniformMatrix4fv(uloc_project, 1, GL_FALSE, projection_matrix);
+    auto glfw   = glfw_cpp::init(api, logger);
+    auto window = glfw->create_window(hint, "GLFW OpenGL3 Heightmap demo (glfw-cpp)", 800, 600);
 
-        /* Set the camera position */
-        modelview_matrix[12] = -5.0f;
-        modelview_matrix[13] = -5.0f;
-        modelview_matrix[14] = -20.0f;
-        glUniformMatrix4fv(uloc_modelview, 1, GL_FALSE, modelview_matrix);
-
-        /* Create mesh data */
-        init_map();
-        make_mesh(shader_program);
-
-        /* Create vao + vbo to store the mesh */
-        /* Create the vbo to store all the information for the grid and the height */
-
-        /* setup the scene ready for rendering */
-        auto [width, height] = window.properties().framebuffer_size;
-        glViewport(0, 0, width, height);
-        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-
-        /* main loop */
-        int    frame            = 0;
-        int    iter             = 0;
-        double last_update_time = glfw_cpp::get_time();
-
-        while (!window.should_close()) {
-            namespace ev = glfw_cpp::event;
-            using KC     = glfw_cpp::KeyCode;
-            using KS     = glfw_cpp::KeyState;
-
-            for (const auto& event : window.poll()) {
-                if (auto* e = event.get_if<ev::KeyPressed>()) {
-                    if (e->key == KC::Escape && e->state == KS::Press) {
-                        window.request_close();
-                    }
-                }
-            }
-
-            ++frame;
-
-            /* render the next frame */
-            glClear(GL_COLOR_BUFFER_BIT);
-            glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
-
-            window.display();
-            wm->poll_events();
-
-            /* Check the frame rate and update the heightmap if needed */
-            double dt = glfw_cpp::get_time();
-            if ((dt - last_update_time) > 0.2) {
-                /* generate the next iteration of the heightmap */
-                if (iter < MAX_ITER) {
-                    update_map(NUM_ITER_AT_A_TIME);
-                    update_mesh();
-                    iter += NUM_ITER_AT_A_TIME;
-                }
-                last_update_time = dt;
-                frame            = 0;
-            }
-        };
-    } catch (std::exception& e) {
-        fprintf(stderr, "Exception occurred: %s\n", e.what());
+    /* Prepare opengl resources for rendering */
+    GLuint shader_program = make_shader_program(vertex_shader_text, fragment_shader_text);
+    if (shader_program == 0u) {
+        fprintf(stderr, "Failed to create shader program\n");
         return 1;
     }
+
+    glUseProgram(shader_program);
+    GLint uloc_project   = glGetUniformLocation(shader_program, "project");
+    GLint uloc_modelview = glGetUniformLocation(shader_program, "modelview");
+
+    /* Compute the projection matrix */
+    float f               = 1.0f / tanf(view_angle / 2.0f);
+    projection_matrix[0]  = f / aspect_ratio;
+    projection_matrix[5]  = f;
+    projection_matrix[10] = (z_far + z_near) / (z_near - z_far);
+    projection_matrix[11] = -1.0f;
+    projection_matrix[14] = 2.0f * (z_far * z_near) / (z_near - z_far);
+    glUniformMatrix4fv(uloc_project, 1, GL_FALSE, projection_matrix);
+
+    /* Set the camera position */
+    modelview_matrix[12] = -5.0f;
+    modelview_matrix[13] = -5.0f;
+    modelview_matrix[14] = -20.0f;
+    glUniformMatrix4fv(uloc_modelview, 1, GL_FALSE, modelview_matrix);
+
+    /* Create mesh data */
+    init_map();
+    make_mesh(shader_program);
+
+    /* Create vao + vbo to store the mesh */
+    /* Create the vbo to store all the information for the grid and the height */
+
+    /* setup the scene ready for rendering */
+    auto [width, height] = window.properties().framebuffer_size;
+    glViewport(0, 0, width, height);
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+
+    /* main loop */
+    int    frame            = 0;
+    int    iter             = 0;
+    double last_update_time = glfw_cpp::get_time();
+
+    while (!window.should_close()) {
+        namespace ev = glfw_cpp::event;
+        using KC     = glfw_cpp::KeyCode;
+        using KS     = glfw_cpp::KeyState;
+
+        for (const auto& event : window.poll()) {
+            if (auto* e = event.get_if<ev::KeyPressed>()) {
+                if (e->key == KC::Escape && e->state == KS::Press) {
+                    window.request_close();
+                }
+            }
+        }
+
+        ++frame;
+
+        /* render the next frame */
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
+
+        window.display();
+        glfw->poll_events();
+
+        /* Check the frame rate and update the heightmap if needed */
+        double dt = glfw_cpp::get_time();
+        if ((dt - last_update_time) > 0.2) {
+            /* generate the next iteration of the heightmap */
+            if (iter < MAX_ITER) {
+                update_map(NUM_ITER_AT_A_TIME);
+                update_mesh();
+                iter += NUM_ITER_AT_A_TIME;
+            }
+            last_update_time = dt;
+            frame            = 0;
+        }
+    };
+} catch (std::exception& e) {
+    fprintf(stderr, "Exception occurred: %s\n", e.what());
+    return 1;
 }

@@ -287,44 +287,39 @@ static void init()
 
 /* program entry */
 int main()
-{
-    try {
-        auto glfw = glfw_cpp::init(
-            glfw_cpp::api::OpenGL{
-                // default OpenGL
-                .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-            },
-            [](auto level, auto msg) {
-                std::cerr << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg);
+try {
+    auto glfw = glfw_cpp::init(
+        glfw_cpp::api::OpenGL{
+            // default OpenGL
+            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+        },
+        [](auto level, auto msg) { std::cerr << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg); }
+    );
+
+    using Flag = glfw_cpp::Flag;
+    auto hint  = glfw_cpp::Hint{ .flags = Flag::Default | Flag::TransparentFramebuffer, .depth_bits = 16 };
+
+    auto window = glfw->create_window(hint, "Gears (glfw-cpp)", 300, 300);
+
+    reshape(window.properties().dimensions.width, window.properties().dimensions.height);
+    init();
+
+    window.run([&](auto&& events) {
+        namespace ev = glfw_cpp::event;
+        for (const glfw_cpp::Event& event : events) {
+            if (auto* e = event.get_if<ev::FramebufferResized>()) {
+                reshape(e->width, e->height);
+            } else if (auto* e = event.get_if<ev::KeyPressed>()) {
+                key(window, *e);
             }
-        );
+        }
 
-        using Flag = glfw_cpp::Flag;
-        auto hint = glfw_cpp::Hint{ .flags = Flag::Default | Flag::TransparentFramebuffer, .depth_bits = 16 };
+        draw();
+        animate();
 
-        auto wm     = glfw->create_window_manager();
-        auto window = wm->create_window(hint, "Gears", 300, 300);
-
-        reshape(window.properties().dimensions.width, window.properties().dimensions.height);
-        init();
-
-        window.run([&](auto&& events) {
-            namespace ev = glfw_cpp::event;
-            for (const glfw_cpp::Event& event : events) {
-                if (auto* e = event.get_if<ev::FramebufferResized>()) {
-                    reshape(e->width, e->height);
-                } else if (auto* e = event.get_if<ev::KeyPressed>()) {
-                    key(window, *e);
-                }
-            }
-
-            draw();
-            animate();
-
-            wm->poll_events();
-        });
-    } catch (std::exception& e) {
-        std::cerr << "Exception occurred: " << e.what() << '\n';
-        return 1;
-    }
+        glfw->poll_events();
+    });
+} catch (std::exception& e) {
+    std::cerr << "Exception occurred: " << e.what() << '\n';
+    return 1;
 }

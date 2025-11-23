@@ -27,12 +27,12 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
-#include <chrono>
 #if defined(_MSC_VER)
 // Make MS math.h define M_PI
-#    define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 #endif
 
+#include <chrono>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
@@ -47,13 +47,13 @@
 #include <tinycthread.h>
 
 #define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>    // some operations require this to be included
+#include <GLFW/glfw3.h>    // for glfwExtensionSupported() function
 
 // Define tokens for GL_EXT_separate_specular_color if not already defined
 #ifndef GL_EXT_separate_specular_color
-#    define GL_LIGHT_MODEL_COLOR_CONTROL_EXT 0x81F8
-#    define GL_SINGLE_COLOR_EXT              0x81F9
-#    define GL_SEPARATE_SPECULAR_COLOR_EXT   0x81FA
+#define GL_LIGHT_MODEL_COLOR_CONTROL_EXT 0x81F8
+#define GL_SINGLE_COLOR_EXT              0x81F9
+#define GL_SEPARATE_SPECULAR_COLOR_EXT   0x81FA
 #endif    // GL_EXT_separate_specular_color
 
 //========================================================================
@@ -446,8 +446,8 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
     // Wait for particle physics thread to be done
     mtx_lock(&thread_sync.particles_lock);
     while (!window.should_close() && thread_sync.p_frame <= thread_sync.d_frame) {
-        auto     time = std::chrono::system_clock::now().time_since_epoch().count();
-        timespec ts   = {
+        auto time = std::chrono::system_clock::now().time_since_epoch().count();
+        auto ts   = timespec{
               .tv_sec  = 0,
               .tv_nsec = time,
         };
@@ -933,8 +933,7 @@ int main(int argc, char** argv)
         height = 480;
     }
 
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window(hint, "Particle Engine", width, height);
+    auto window = glfw->create_window(hint, "Particle Engine (glfw-cpp)", width, height);
 
     // Set initial aspect ratio
     window.lock_current_aspect_ratio();
@@ -1005,17 +1004,17 @@ int main(int argc, char** argv)
     cnd_init(&thread_sync.d_done);
 
     if (thrd_create(&physics_thread, physics_thread_main, &window) != thrd_success) {
-        glfwTerminate();
+        glfw.reset();
         exit(EXIT_FAILURE);
     }
 
-    glfwSetTime(0.0);
+    glfw_cpp::set_time(0.0);
 
-    while (wm->has_window_opened()) {
+    while (glfw->has_window_opened()) {
         draw_scene(window, glfw_cpp::get_time());
 
         // the real polling done here. WindowManager sends the events to Window's events queue here.
-        wm->poll_events();
+        glfw->poll_events();
 
         // this poll returns the events from the queue
         for (const auto& event : window.poll()) {

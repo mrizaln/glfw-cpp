@@ -3,19 +3,23 @@
 
 #include "glfw_cpp/detail/helper.hpp"
 
+#include <chrono>
 #include <format>
 #include <functional>
 #include <memory>
 #include <string>
+#include <thread>
+#include <utility>
 #include <variant>
 
 struct GLFWwindow;
+struct GLFWmonitor;
 
 namespace glfw_cpp
 {
     class Window;
-    class WindowManager;
     class IEventInterceptor;
+    class Event;
 
     namespace api
     {
@@ -115,111 +119,6 @@ namespace glfw_cpp
     };
 
     /**
-     * @class Instance
-     * @brief Singleton that manages the global state required to interface with GLFW.
-     */
-    class Instance
-    {
-    public:
-        friend WindowManager;
-        friend Window;
-
-        // LogFun should be noexcept
-        using LogFun = std::function<void(LogLevel level, std::string msg)>;
-        using Unique = std::unique_ptr<Instance, void (*)(Instance*)>;
-
-        /**
-         * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
-         */
-        friend Unique init(Api&&, Instance::LogFun&&);
-
-        /**
-         * @brief Create a `WindowManager` instance.
-         *
-         * @param event_interceptor The event interceptor (can be nullptr).
-         *
-         * @return A shared pointer to the `WindowManager` instance.
-         *
-         * The interceptor should have a longer lifetime than this `WindowManager` and the memory management
-         * of it is the responsibility of the caller.
-         */
-        std::shared_ptr<WindowManager> create_window_manager(
-            IEventInterceptor* event_interceptor = nullptr
-        ) noexcept;
-
-        ~Instance();
-        Instance& operator=(Instance&&)      = delete;
-        Instance(Instance&&)                 = delete;
-        Instance(const Instance&)            = delete;
-        Instance& operator=(const Instance&) = delete;
-
-    private:
-        static Instance s_instance;
-
-        bool   m_initialized = false;
-        Api    m_api;
-        LogFun m_loggger;
-
-        Instance() = default;
-
-        void set_logger(LogFun&& logger) noexcept;
-        void reset() noexcept;
-
-        static Instance& get() noexcept;
-
-        // can be called from any thread
-        static void log(LogLevel level, std::string msg) noexcept;
-
-        template <typename... Args>
-        static void log_d(std::format_string<Args...> fmt, Args&&... args) noexcept
-        {
-            log(LogLevel::Debug, std::format(fmt, std::forward<Args>(args)...));
-        }
-
-        template <typename... Args>
-        static void log_i(std::format_string<Args...> fmt, Args&&... args) noexcept
-        {
-            log(LogLevel::Info, std::format(fmt, std::forward<Args>(args)...));
-        }
-
-        template <typename... Args>
-        static void log_w(std::format_string<Args...> fmt, Args&&... args) noexcept
-        {
-            log(LogLevel::Warning, std::format(fmt, std::forward<Args>(args)...));
-        }
-
-        template <typename... Args>
-        static void log_e(std::format_string<Args...> fmt, Args&&... args) noexcept
-        {
-            log(LogLevel::Error, std::format(fmt, std::forward<Args>(args)...));
-        }
-
-        template <typename... Args>
-        static void log_c(std::format_string<Args...> fmt, Args&&... args) noexcept
-        {
-            log(LogLevel::Critical, std::format(fmt, std::forward<Args>(args)...));
-        }
-    };
-
-    // Global state required to interface with GLFW
-    inline Instance Instance::s_instance = {};
-
-    /**
-     * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
-     *
-     * @param api The underlying graphics API to use with GLFW.
-     * @param logger The logger function to use.
-     * @return A RAII handle that will terminate GLFW on destruction.
-     *
-     * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
-     * @throw glfw_cpp::EmptyLoader if the loader function is empty (OpenGL/OpenGL ES only).
-     * @throw glfw_cpp::ApiUnavailable if the requested client API is unavailable.
-     * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
-     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
-     */
-    Instance::Unique init(Api&& api, Instance::LogFun&& logger = nullptr);
-
-    /**
      * @brief Convert a `LogLevel` enum to a string.
      */
     inline std::string_view to_string(LogLevel level)
@@ -233,6 +132,267 @@ namespace glfw_cpp
         case LogLevel::Critical: return "CRITICAL";
         default: [[unlikely]] return "UNKNOWN";
         }
+    }
+
+    /**
+     * @enum Flag
+     * @brief Window flags used in its creation.
+     */
+    enum class Flag : std::uint32_t
+    {
+        None                   = 0,
+        Resizable              = 1 << 0,
+        Visible                = 1 << 1,
+        Decorated              = 1 << 2,
+        Focused                = 1 << 3,
+        AutoIconify            = 1 << 4,
+        Floating               = 1 << 5,
+        Maximized              = 1 << 6,
+        CenterCursor           = 1 << 7,
+        TransparentFramebuffer = 1 << 8,
+        FocusOnShow            = 1 << 9,
+        ScaleToMonitor         = 1 << 10,
+
+        Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
+    };
+
+    template <>
+    struct detail::enums::EnableOperators<Flag> : std::true_type
+    {
+    };
+
+    using detail::enums::operators::operator~;
+    using detail::enums::operators::operator|;
+    using detail::enums::operators::operator&;
+    using detail::enums::operators::operator^;
+    using detail::enums::operators::operator|=;
+    using detail::enums::operators::operator&=;
+    using detail::enums::operators::operator^=;
+
+    /**
+     * @struct Hint
+     * @brief Window creation hints.
+     *
+     * The window hints included here are only the relevant ones. Graphics API is omitted since the API is not
+     * allowed to change at runtime (my design choice).
+     */
+    struct Hint
+    {
+        GLFWmonitor* monitor = nullptr;
+        GLFWwindow*  share   = nullptr;
+
+        Flag flags = Flag::Default;
+
+        int red_bits     = 8;
+        int green_bits   = 8;
+        int blue_bits    = 8;
+        int alpha_bits   = 8;
+        int depth_bits   = 24;
+        int stencil_bits = 8;
+
+        int samples      = 0;
+        int refresh_rate = -1;    // -1 means don't care
+    };
+
+    /**
+     * @class Instance
+     * @brief Singleton that manages the global state required to interface with GLFW.
+     */
+    class Instance
+    {
+    public:
+        friend Window;
+
+        // LogFun should be noexcept
+        using LogFun = std::function<void(LogLevel level, std::string msg)>;
+
+        friend std::unique_ptr<Instance> init(Api&&, Instance::LogFun&&);
+
+        ~Instance();
+        Instance& operator=(Instance&&)      = delete;
+        Instance(Instance&&)                 = delete;
+        Instance(const Instance&)            = delete;
+        Instance& operator=(const Instance&) = delete;
+
+        /**
+         * @brief Create a window.
+         *
+         * @param hint The window hint.
+         * @param title The window title.
+         * @param width The window width.
+         * @param height The window height.
+         * @param bind_immediately Bind window context immediately to current thread (OpengGL/OpenGL ES only).
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         * @throw glfw_cpp::ApiUnavailable The requested client API is unavailable.
+         * @throw glfw_cpp::VersionUnavailable The requested client API version is unavailable.
+         * @throw glfw_cpp::FormatUnavailable The requested format is unavailable.
+         * @throw glfw_cpp::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
+         * @throw glfw_cpp::PlatformError A platform-specific error occurred.
+         */
+        Window create_window(
+            const Hint&      hint,
+            std::string_view title,
+            int              width,
+            int              height,
+            bool             bind_immediately = true
+        );
+
+        /**
+         * @brief Set an event interceptor.
+         *
+         * @param event_interceptor The event interceptor (nullptr to remove).
+         *
+         * @return The old event interceptor.
+         *
+         * The interceptor should have a longer lifetime than this `Instance` and the memory management
+         * of it is the responsibility of the caller.
+         */
+        IEventInterceptor* set_event_interceptor(IEventInterceptor* event_interceptor) noexcept
+        {
+            return std::exchange(m_event_interceptor, event_interceptor);
+        }
+
+        /**
+         * @brief Set logger for glfw-cpp.
+         *
+         * @param logger The new logger function.
+         *
+         * This function replaces the logger used by glfw-cpp used to log its debug information and the
+         * underlying GLFW errors. You can set the argument to nullptr to effectively turn off the logger.
+         */
+        void set_logger(LogFun&& logger) noexcept { m_loggger = logger; }
+
+        /**
+         * @brief Check if any window is still open.
+         *
+         * @thread_safety This function can be called from any thread.
+         */
+        bool has_window_opened() const noexcept;
+
+        /**
+         * @brief Poll events for all windows.
+         *
+         * @param poll_rate The poll rate, or `std::nullopt` if no sleep is needed.
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         */
+        void poll_events(std::optional<std::chrono::milliseconds> poll_rate = {});
+
+        /**
+         * @brief Wait for events for all windows.
+         *
+         * @param timeout The timeout, or `std::nullopt` if no timeout is needed.
+         *
+         * @thread_safety This function must be called from the main thread.
+         *
+         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         */
+        void wait_events(std::optional<std::chrono::milliseconds> timeout = {});
+
+        /**
+         * @brief Request to delete a window.
+         *
+         * @param handle The window handle.
+         *
+         * @thread_safety This function can be called from any thread.
+         */
+        void request_delete_window(GLFWwindow* handle) noexcept;
+
+        /**
+         * @brief Enqueue a task to be processed in the main thread.
+         *
+         * @param task The task.
+         *
+         * @thread_safety This function can be called from any thread.
+         *
+         * This function can be used for any task that needs to be executed in the main thread.
+         */
+        void enqueue_task(std::function<void()>&& task) noexcept;
+
+        /**
+         * @brief Get the thread id this instance is attached to.
+         */
+        std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; }
+
+    private:
+        inline static Instance* s_instance = nullptr;
+
+        // Constructs a default instance (same as uninitialized)
+        Instance() = default;
+
+        // Safe (in debug) wrapper to get the instance from the global pointer
+        static Instance& get();
+
+        // can be called from any thread
+        static void log(LogLevel level, std::string msg) noexcept;
+
+#define GLFW_CPP_LOG_FN(Name, Level)                                                                         \
+    template <typename... Args>                                                                              \
+    static void Name(std::format_string<Args...> fmt, Args&&... args) noexcept                               \
+    {                                                                                                        \
+        log(LogLevel::Level, std::format(fmt, std::forward<Args>(args)...));                                 \
+    }
+
+        GLFW_CPP_LOG_FN(log_d, Debug)
+        GLFW_CPP_LOG_FN(log_i, Info)
+        GLFW_CPP_LOG_FN(log_w, Warning)
+        GLFW_CPP_LOG_FN(log_e, Error)
+        GLFW_CPP_LOG_FN(log_c, Critical)
+
+#undef GLFW_CPP_LOG_FN
+
+        // send event to interceptor, returns the value the interceptor returns. but if there is not
+        // interceptor, the returned value will always be true.
+        bool send_intercept_event(Window& window, Event& event) noexcept;
+
+        // Check whether caller thread is the same as attached thread
+        // may throw `WrongThreadAccess`
+        void validate_access() const;
+
+        // Run queued tasks
+        // may throw `PlatformError`
+        void run_tasks();
+
+        Api    m_api     = api::NoApi{};
+        LogFun m_loggger = nullptr;
+
+        std::thread::id    m_attached_thread_id = {};
+        IEventInterceptor* m_event_interceptor  = nullptr;
+
+        std::vector<GLFWwindow*>           m_windows;
+        std::vector<GLFWwindow*>           m_window_delete_queue;
+        std::vector<std::function<void()>> m_task_queue;
+
+        mutable std::mutex m_mutex;    // protects queue
+    };
+
+    /**
+     * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
+     *
+     * @param api The underlying graphics API to use with GLFW.
+     * @param logger The logger function to use.
+     * @return A RAII handle that will terminate GLFW on destruction.
+     *
+     * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
+     * @throw glfw_cpp::EmptyLoader if the loader function is empty (non-emscripten OpenGL/OpenGL ES only).
+     * @throw glfw_cpp::ApiUnavailable if the requested client API is unavailable.
+     * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
+     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
+     */
+    std::unique_ptr<Instance> init(Api&& api, Instance::LogFun&& logger = nullptr);
+
+    /**
+     * @brief Turns fps to milliseconds.
+     */
+    constexpr std::chrono::milliseconds operator""_fps(unsigned long long fps)
+    {
+        namespace chr = std::chrono;
+        return chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps);
     }
 }
 

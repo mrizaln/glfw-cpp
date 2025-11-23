@@ -11,7 +11,7 @@
 
 #if defined(_MSC_VER)
 // Make MS math.h define M_PI
-#    define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 #endif
 
 #include <cstdio>
@@ -366,8 +366,7 @@ int main()
         }
     );
 
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window({}, "Wave Simulation", 640, 480);
+    auto window = glfw->create_window({}, "Wave Simulation (glfw-cpp)", 640, 480);
 
     auto [width, height] = window.properties().framebuffer_size;
     framebuffer_size_callback({ width, height, 0, 0 });
@@ -418,6 +417,6 @@ int main()
         // Draw wave grid to OpenGL display
         draw_scene();
 
-        wm->poll_events();
+        glfw->poll_events();
     });
 }

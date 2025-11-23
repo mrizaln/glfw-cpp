@@ -16,7 +16,7 @@ struct GLFWwindow;
 
 namespace glfw_cpp
 {
-    class WindowManager;
+    class Instance;
 
     struct Dimensions
     {
@@ -81,7 +81,7 @@ namespace glfw_cpp
     class Window
     {
     public:
-        friend WindowManager;
+        friend Instance;
 
         static constexpr std::size_t s_default_eventqueue_size = 128;
 
@@ -169,6 +169,9 @@ namespace glfw_cpp
          * @param value True to enable vsync, false to disable.
          *
          * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
+         *
+         * If the window context is not current at the point of calling, this function will bind it
+         * temporarily before restoring it to previously bound context.
          */
         void set_vsync(bool value);
 
@@ -407,12 +410,7 @@ namespace glfw_cpp
         std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; };
 
     private:
-        Window(
-            std::shared_ptr<WindowManager> manager,
-            Handle                         handle,
-            Properties&&                   properties,
-            bool                           bind_immediately
-        );
+        Window(Handle handle, Properties&& properties, bool bind_immediately);
 
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
@@ -446,8 +444,7 @@ namespace glfw_cpp
         void process_queued_tasks() noexcept;
         void update_delta_time() noexcept;
 
-        std::shared_ptr<WindowManager> m_manager = nullptr;
-        Handle                         m_handle  = nullptr;
+        Handle m_handle = nullptr;
 
         // window stuff
         std::thread::id m_attached_thread_id = {};

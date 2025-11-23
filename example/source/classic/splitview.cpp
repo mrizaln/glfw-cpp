@@ -15,7 +15,7 @@
 
 #if defined(_MSC_VER)
 // Make MS math.h define M_PI
-#    define _USE_MATH_DEFINES
+#define _USE_MATH_DEFINES
 #endif
 
 #include <cmath>
@@ -481,8 +481,7 @@ int main()
     );
 
     auto hint   = glfw_cpp::Hint{ .samples = 4 };
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window(hint, "Split view demo", 500, 500);
+    auto window = glfw->create_window(hint, "Split view demo (glfw-cpp)", 500, 500);
 
     glEnable(GL_MULTISAMPLE);
 
@@ -491,7 +490,7 @@ int main()
 
     framebufferSizeFun(width, height);
 
-    while (wm->has_window_opened()) {
+    while (glfw->has_window_opened()) {
         namespace ev = glfw_cpp::event;
         window.poll().visit(ev::Overload{
             // clang-format off
@@ -508,6 +507,6 @@ int main()
             windowRefreshFun(window);
         }
 
-        wm->wait_events();
+        glfw->wait_events();
     }
 }

@@ -27,7 +27,6 @@ endif()
 
 set(glfw-cpp_SOURCES
     source/window.cpp
-    source/window_manager.cpp
     source/instance.cpp
     source/monitor.cpp
     source/input.cpp

@@ -2,7 +2,6 @@
 #include "glfw_cpp/error.hpp"
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/instance.hpp"
-#include "glfw_cpp/window_manager.hpp"
 
 #include "util.hpp"
 
@@ -16,10 +15,6 @@
 #include <thread>
 #include <utility>
 #include <vector>
-
-#if __EMSCRIPTEN__
-#    include <emscripten/emscripten.h>
-#endif
 
 namespace glfw_cpp
 {
@@ -217,15 +212,8 @@ namespace glfw_cpp
     }
 
     // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(
-        WindowManager::Shared manager,
-        Handle                handle,
-        Properties&&          properties,
-        bool                  bind_immediately
-    )
-        : m_manager{ std::move(manager) }
-        , m_handle{ handle }
-        , m_attached_thread_id{}
+    Window::Window(Handle handle, Properties&& properties, bool bind_immediately)
+        : m_handle{ handle }
         , m_properties{ std::move(properties) }
     {
         auto init = [&](auto& api) {
@@ -254,8 +242,7 @@ namespace glfw_cpp
 
     // clang-format off
     Window::Window(Window&& other) noexcept
-        : m_manager           { std::exchange(other.m_manager, nullptr) }
-        , m_handle            { std::exchange(other.m_handle, nullptr) }
+        : m_handle            { std::exchange(other.m_handle, nullptr) }
         , m_attached_thread_id{ std::exchange(other.m_attached_thread_id, {}) }
         , m_properties        { std::move(other.m_properties) }
         , m_last_frame_time   { other.m_last_frame_time }
@@ -279,10 +266,9 @@ namespace glfw_cpp
         if (m_handle != nullptr) {
             unbind();
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
-            m_manager->request_delete_window(m_handle);
+            Instance::get().request_delete_window(m_handle);
         }
 
-        m_manager            = std::exchange(other.m_manager, nullptr);
         m_handle             = std::exchange(other.m_handle, nullptr);
         m_attached_thread_id = other.m_attached_thread_id;
         m_properties         = std::move(other.m_properties);
@@ -308,7 +294,7 @@ namespace glfw_cpp
                 unbind();
             }
             glfwSetWindowUserPointer(m_handle, nullptr);    // remove user pointer
-            m_manager->request_delete_window(m_handle);
+            Instance::get().request_delete_window(m_handle);
         } else {
             // window is in invalid state (probably moved)
         }
@@ -371,43 +357,51 @@ namespace glfw_cpp
 
     void Window::iconify() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwIconifyWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwIconifyWindow(m_handle); });
     }
 
     void Window::restore() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwRestoreWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwRestoreWindow(m_handle); });
     }
 
     void Window::maximize() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwMaximizeWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwMaximizeWindow(m_handle); });
     }
 
     void Window::show() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwShowWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwShowWindow(m_handle); });
     }
 
     void Window::hide() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwHideWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwHideWindow(m_handle); });
     }
 
     void Window::focus() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] { glfwFocusWindow(m_handle); });
+        Instance::get().enqueue_task([this] { glfwFocusWindow(m_handle); });
     }
 
     void Window::set_vsync(bool value)
     {
         m_vsync = value;
 
-        if (not Instance::get().m_api.is<api::NoApi>()) {
-            // 0 = immediate updates, 1 = update synchronized with vertical retrace
-            glfwSwapInterval(value ? 1 : 0);
-        } else {
+        if (Instance::get().m_api.is<api::NoApi>()) {
             throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
+        }
+
+        // 0 = immediate update, 1 = update synchronized with vertical retrace
+        auto vsync = value ? 1 : 0;
+
+        if (auto current = glfwGetCurrentContext(); current == m_handle) {
+            glfwSwapInterval(vsync);
+        } else {
+            glfwMakeContextCurrent(m_handle);
+            glfwSwapInterval(vsync);
+            glfwMakeContextCurrent(current);
         }
     }
 
@@ -418,15 +412,13 @@ namespace glfw_cpp
             .height = height,
         };
 
-        m_manager->enqueue_window_task(m_handle, [this, width, height] {
-            glfwSetWindowSize(m_handle, width, height);
-        });
+        Instance::get().enqueue_task([this, width, height] { glfwSetWindowSize(m_handle, width, height); });
     }
 
     void Window::set_window_pos(int x, int y) noexcept
     {
         m_properties.pos = { .x = x, .y = y };
-        m_manager->enqueue_window_task(m_handle, [this, x, y] { glfwSetWindowPos(m_handle, x, y); });
+        Instance::get().enqueue_task([this, x, y] { glfwSetWindowPos(m_handle, x, y); });
     }
 
     float Window::aspect_ratio() const noexcept
@@ -442,7 +434,7 @@ namespace glfw_cpp
             return;
         }
 
-        m_manager->enqueue_window_task(m_handle, [=, this] {
+        Instance::get().enqueue_task([this, ratio] {
             auto width  = m_properties.dimensions.width;
             auto height = int((float)width / ratio);
             glfwSetWindowAspectRatio(m_handle, width, height);
@@ -451,7 +443,7 @@ namespace glfw_cpp
 
     void Window::lock_current_aspect_ratio() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] {
+        Instance::get().enqueue_task([this] {
             auto [width, height] = m_properties.dimensions;
             glfwSetWindowAspectRatio(m_handle, width, height);
         });
@@ -459,7 +451,7 @@ namespace glfw_cpp
 
     void Window::unlock_aspect_ratio() noexcept
     {
-        m_manager->enqueue_window_task(m_handle, [this] {
+        Instance::get().enqueue_task([this] {
             glfwSetWindowAspectRatio(m_handle, GLFW_DONT_CARE, GLFW_DONT_CARE);
         });
     }
@@ -467,8 +459,8 @@ namespace glfw_cpp
     void Window::update_title(std::string_view title) noexcept
     {
         m_properties.title = title;
-        m_manager->enqueue_window_task(m_handle, [this] {
-            glfwSetWindowTitle(m_handle, m_properties.title.c_str());
+        Instance::get().enqueue_task([this, &title = m_properties.title] {
+            glfwSetWindowTitle(m_handle, title.c_str());
         });
     }
 
@@ -513,7 +505,7 @@ namespace glfw_cpp
     void Window::set_capture_mouse(bool value) noexcept
     {
         m_capture_mouse = value;
-        m_manager->enqueue_task([this] {
+        Instance::get().enqueue_task([this] {
             if (m_capture_mouse) {
                 auto& [x, y] = m_properties.cursor;
                 glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
@@ -585,7 +577,7 @@ namespace glfw_cpp
             return;
         }
 
-        auto forward = w->m_manager->send_intercept_event(*w, event);
+        auto forward = Instance::get().send_intercept_event(*w, event);
         if (forward) {
             w->push_event(std::move(event));
         }

@@ -101,8 +101,7 @@ int main()
         }
     );
 
-    auto wm     = glfw->create_window_manager();
-    auto window = wm->create_window({}, "OpenGL ES 2.0 Triangle", 640, 480);
+    auto window = glfw->create_window({}, "OpenGL ES 2.0 Triangle (glfw-cpp)", 640, 480);
 
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);
@@ -160,6 +159,6 @@ int main()
         glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*)&mvp);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
-        wm->poll_events();
+        glfw->poll_events();
     });
 }

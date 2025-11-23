@@ -18,18 +18,13 @@ int main()
         .loader  = [](api::gl::Context, api::gl::GetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
     });
 
-    // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
-    // `Window` is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
-    // `std::shared_ptr<WindowManager>`. Each window created with this instance claims ownership of it (hence
-    // the shared_ptr).
-    auto wm = instance->create_window_manager();
-
     // graphics API hints are omitted from the `WindowHint` since it's already set at initialization. Only
     // other relevant hints are included.
     using F   = glfw_cpp::Flag;
     auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Focused };    // use default hint but not focused
 
-    auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
+    // creates a window
+    auto window = instance->create_window(hint, "Hello glfw-cpp", 800, 600);
 
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
         using K      = glfw_cpp::KeyCode;
@@ -74,6 +69,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // poll events from the OS
-        wm->poll_events();
+        instance->poll_events();
     });
 }
