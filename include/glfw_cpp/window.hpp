@@ -155,6 +155,8 @@ namespace glfw_cpp
          *
          * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
          *
+         * Corresponds to `glfwSwapInterval(1)` on true or `glfwSwapInterval(0)` on false.
+         *
          * If the window context is not current at the point of calling, this function will bind it
          * temporarily before restoring it to previously bound context.
          */
@@ -164,8 +166,47 @@ namespace glfw_cpp
          * @brief Toggle window vertical sync (vsync).
          *
          * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
+         *
+         * Corresponds to `glfwSwapInterval`.
          */
         void toggle_vsync() { set_vsync(!is_vsync_enabled()); }
+
+        /**
+         * @brief Set whether the window should be resizable by the user.
+         *
+         * @param value True to make the window resizable, false to disable.
+         *
+         * Corresponds to setting `GLFW_RESIZABLE` attribute.
+         */
+        void set_resizable(bool value);
+
+        /**
+         * @brief Set whether the window should be floating or not.
+         *
+         * @param value True to make it floating, false to disable.
+         *
+         * Also known as always-on-top.
+         * Corresponds to setting `GLFW_FLOATING` attribute.
+         */
+        void set_floating(bool value);
+
+        /**
+         * @brief Set whether the window on fullscreen should iconify on focus loss, a close widget, etc.
+         *
+         * @param value True to make it auto iconify, false to disable.
+         *
+         * Corresponds to setting `GLFW_AUTO_ICONIFY` attribute.
+         */
+        void set_auto_iconify(bool value);
+
+        /**
+         * @brief Set whether the window will be given input focus when window is shown from hidden state.
+         *
+         * @param value True to make it auto focus, false to disable.
+         *
+         * Corresponds to setting `GLFW_FOCUS_ON_SHOW` attribute.
+         */
+        void set_focus_on_show(bool value);
 
         /**
          * @brief Set window size.
