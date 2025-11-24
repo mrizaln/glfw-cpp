@@ -535,6 +535,16 @@ namespace glfw_cpp
         m_task_queue.emplace_back(std::move(task));
     }
 
+    gl::Proc get_proc_address(const char* procname) noexcept
+    {
+        return glfwGetProcAddress(procname);
+    }
+
+    bool extension_supported(const char* extension) noexcept
+    {
+        return glfwExtensionSupported(extension) == GLFW_TRUE;
+    }
+
     std::unique_ptr<Instance> init(const InitHint& hint)
     {
         if (Instance::s_instance) {

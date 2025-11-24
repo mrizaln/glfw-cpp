@@ -464,6 +464,30 @@ namespace glfw_cpp
     }
 
     /**
+     * @brief Return the address of the specified OpenGL or OpenGLES core or extension function.
+     *
+     * @param procname The name of the function in ASCII.
+     * @return The address of the function, or `nullptr` if an error occurred.
+     *
+     * This function is a wrapper of `glfwGetProcAddress` function. The error will be logged but this function
+     * won't throw to preserve the behavior from the underlying function. The possible error is
+     * `GLFW_NO_CURRENT_CONTEXT` so make sure to have context current when calling this function.
+     */
+    gl::Proc get_proc_address(const char* procname) noexcept;
+
+    /**
+     * @brief Check whether the specified extension is supported by current OpenGL or OpenGL ES context.
+     *
+     * @param extension The name of the extensio in ASCII.
+     * @return True if extension is available or false otherwise.
+     *
+     * This function is a wrapper of `glfwExtensionSupported` function. The error will be logged but this
+     * function won't throw to preserve the behavior from the underlying function. The possible error is
+     * `GLFW_NO_CURRENT_CONTEXT` so make sure to have context current when calling this function.
+     */
+    bool extension_supported(const char* extension) noexcept;
+
+    /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
      *
      * @param hint Initialization hints.
