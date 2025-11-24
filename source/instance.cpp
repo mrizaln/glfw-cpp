@@ -591,8 +591,16 @@ namespace glfw_cpp
 
     void make_current(GLFWwindow* window)
     {
+#if __EMSCRIPTEN__
+        // emscripten-glfw which is the one used for this library emits an error if window is nullptr,
+        // see: https://github.com/pongasoft/emscripten-glfw/issues/24
+
+        window ? glfwMakeContextCurrent(window) : void();
+        util::check_glfw_error();
+#else
         glfwMakeContextCurrent(window);
         util::check_glfw_error();
+#endif
     }
 
     GLFWwindow* get_current()
