@@ -3,11 +3,11 @@
 
 #include "glfw_cpp/detail/helper.hpp"
 
+#include "glfw_cpp/constant.hpp"
+
 #include <chrono>
-#include <format>
 #include <functional>
 #include <memory>
-#include <string>
 #include <thread>
 #include <utility>
 #include <variant>
@@ -21,57 +21,80 @@ namespace glfw_cpp
     class IEventInterceptor;
     class Event;
 
+    namespace gl
+    {
+        using Proc    = void (*)();
+        using GetProc = Proc(const char*);
+
+        /**
+         * @enum Profile
+         * @brief OpenGL profile to use.
+         */
+        enum class Profile : int
+        {
+            Any    = 0,
+            Core   = 0x00032001,
+            Compat = 0x00032002,
+        };
+
+        enum class CreationApi : int
+        {
+            Native = 0x00036001,
+            EGL    = 0x00036002,
+            OSMesa = 0x00036003,
+        };
+
+        enum class Robustness : int
+        {
+            NoRobustness        = 0,
+            NoResetNotification = 0x00031001,
+            LoseContextOnReset  = 0x00031002,
+        };
+
+        enum class ReleaseBehavior : int
+        {
+            Any   = 0,
+            Flush = 0x00035001,
+            None  = 0x00035002,
+        };
+    }
+
     namespace api
     {
-        namespace gl
+        /**
+         * @struct OpenGL
+         * @brief Describe the OpenGL version to use.
+         */
+        struct OpenGL
         {
-            using Proc      = void (*)();
-            using GetProc   = Proc(const char*);
-            using Context   = ::GLFWwindow*;
-            using LoaderFun = std::function<void(Context handle, GetProc proc)>;
+            int  version_major  = 1;
+            int  version_minor  = 0;
+            bool forward_compat = true;    // for OpenGL 3.0 and above
 
-            /**
-             * @enum Profile
-             * @brief OpenGL profile to use.
-             */
-            enum class Profile
-            {
-                Core,
-                Compat,
-                Any,
-            };
-        }
+            gl::Profile         profile          = gl::Profile::Core;    // for OpenGL 3.2 and above
+            gl::CreationApi     creation_api     = gl::CreationApi::Native;
+            gl::Robustness      robustness       = gl::Robustness::NoRobustness;
+            gl::ReleaseBehavior release_behavior = gl::ReleaseBehavior::Any;
+
+            bool debug    = false;
+            bool no_error = false;
+        };
 
         /**
          * @struct OpenGLES
          * @brief Describe the OpenGLES version to use.
-         *
-         * On emscripten, the loader is optional, so you can just set the value to `nullptr` and use the
-         * `<GL/gl.h>` header directly. But if you want to use a loader anyway like `glbinding` then you can
-         * set the loader like usual.
          */
         struct OpenGLES
         {
-            int           major = 2;
-            int           minor = 0;
-            gl::LoaderFun loader;
-        };
+            int version_major = 1;
+            int version_minor = 0;
 
-        /**
-         * @struct OpenGL
-         * @brief Describe the OpenGL version to use.
-         *
-         * On emscripten, the loader is optional, so you can just set the value to `nullptr` and use the
-         * `<GL/gl.h>` header directly. But if you want to use a loader anyway like `glbinding` then you can
-         * set the loader like usual.
-         */
-        struct OpenGL
-        {
-            int           major          = 1;
-            int           minor          = 0;
-            gl::Profile   profile        = gl::Profile::Core;    // only makes sense for OpenGL 3.2 and above
-            bool          forward_compat = true;                 // only makes sense for OpenGL 3.0 and above
-            gl::LoaderFun loader;
+            gl::CreationApi     creation_api     = gl::CreationApi::Native;
+            gl::Robustness      robustness       = gl::Robustness::NoRobustness;
+            gl::ReleaseBehavior release_behavior = gl::ReleaseBehavior::Any;
+
+            bool debug    = false;
+            bool no_error = false;
         };
 
         /**
@@ -88,110 +111,135 @@ namespace glfw_cpp
         concept Api = detail::traits::VarTrait<Variant>::template is_elem<T>();
     }
 
-    /**
-     * @struct Api
-     * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no API).
-     */
-    class Api : public detail::variants::VariantBase<api::Variant>
+    namespace hint
     {
-    public:
-        Api() = default;
-
-        template <typename T>
-        Api(T&& t)
-            : VariantBase{ std::forward<T>(t) }
+        /**
+         * @struct Api
+         * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no
+         * API).
+         */
+        class Api : public detail::variants::VariantBase<api::Variant>
         {
-        }
-    };
+        public:
+            Api() = default;
 
-    /**
-     * @enum LogLevel
-     * @brief Log levels for the logger function.
-     */
-    enum class LogLevel
-    {
-        None,
-        Debug,
-        Info,
-        Warning,
-        Error,
-        Critical,
-    };
+            template <typename T>
+            Api(T&& t)
+                : VariantBase{ std::forward<T>(t) }
+            {
+            }
+        };
 
-    /**
-     * @brief Convert a `LogLevel` enum to a string.
-     */
-    inline std::string_view to_string(LogLevel level)
-    {
-        switch (level) {
-        case LogLevel::None: return "NONE";
-        case LogLevel::Debug: return "DEBUG";
-        case LogLevel::Info: return "INFO";
-        case LogLevel::Warning: return "WARNING";
-        case LogLevel::Error: return "ERROR";
-        case LogLevel::Critical: return "CRITICAL";
-        default: [[unlikely]] return "UNKNOWN";
-        }
+        struct Window
+        {
+            bool resizable               = true;
+            bool visible                 = true;
+            bool decorated               = true;
+            bool focused                 = true;
+            bool auto_iconify            = true;
+            bool floating                = false;
+            bool maximized               = false;
+            bool center_cursor           = true;
+            bool transparent_framebuffer = false;
+            bool focus_on_show           = true;
+            bool scale_to_monitor        = false;
+            bool scale_framebuffer       = true;
+            bool mouse_passthrough       = false;
+            int  position_x              = constant::any_position;
+            int  position_y              = constant::any_position;
+        };
+
+        struct Framebuffer
+        {
+            int  red_bits     = 8;
+            int  green_bits   = 8;
+            int  blue_bits    = 8;
+            int  alpha_bits   = 8;
+            int  depth_bits   = 24;
+            int  stencil_bits = 8;
+            int  samples      = 0;
+            bool stereo       = false;
+            bool srgb_capable = false;
+            bool doublebuffer = true;
+        };
+
+        struct Monitor
+        {
+            int refresh_rate = constant::dont_care;
+        };
+
+        struct Win32
+        {
+            bool keyboard_menu = false;
+            bool showdefault   = false;
+        };
+
+        struct Cocoa
+        {
+            const char* frame_name         = "";
+            bool        graphics_switching = false;
+        };
+
+        struct Wayland
+        {
+            const char* app_id = "";
+        };
+
+        struct X11
+        {
+            const char* class_name    = "";
+            const char* instance_name = "";
+        };
     }
 
-    /**
-     * @enum Flag
-     * @brief Window flags used in its creation.
-     */
-    enum class Flag : std::uint32_t
-    {
-        None                   = 0,
-        Resizable              = 1 << 0,
-        Visible                = 1 << 1,
-        Decorated              = 1 << 2,
-        Focused                = 1 << 3,
-        AutoIconify            = 1 << 4,
-        Floating               = 1 << 5,
-        Maximized              = 1 << 6,
-        CenterCursor           = 1 << 7,
-        TransparentFramebuffer = 1 << 8,
-        FocusOnShow            = 1 << 9,
-        ScaleToMonitor         = 1 << 10,
-
-        Default = Resizable | Visible | Decorated | Focused | AutoIconify | FocusOnShow,
-    };
-
-    template <>
-    struct detail::enums::EnableOperators<Flag> : std::true_type
-    {
-    };
-
-    using detail::enums::operators::operator~;
-    using detail::enums::operators::operator|;
-    using detail::enums::operators::operator&;
-    using detail::enums::operators::operator^;
-    using detail::enums::operators::operator|=;
-    using detail::enums::operators::operator&=;
-    using detail::enums::operators::operator^=;
-
-    /**
-     * @struct Hint
-     * @brief Window creation hints.
-     *
-     * The window hints included here are only the relevant ones. Graphics API is omitted since the API is not
-     * allowed to change at runtime (my design choice).
-     */
     struct Hint
     {
-        GLFWmonitor* monitor = nullptr;
-        GLFWwindow*  share   = nullptr;
+        hint::Api         api         = api::OpenGL{};
+        hint::Window      window      = {};
+        hint::Framebuffer framebuffer = {};
+        hint::Monitor     monitor     = {};
+        hint::Win32       win32       = {};
+        hint::Cocoa       cocoa       = {};
+        hint::Wayland     wayland     = {};
+        hint::X11         x11         = {};
+    };
 
-        Flag flags = Flag::Default;
+    enum class Platform : int
+    {
+        Any     = 0x00060000,
+        Win32   = 0x00060001,
+        Cocoa   = 0x00060002,
+        Wayland = 0x00060003,
+        X11     = 0x00060004,
+        Null    = 0x00060005,
+    };
 
-        int red_bits     = 8;
-        int green_bits   = 8;
-        int blue_bits    = 8;
-        int alpha_bits   = 8;
-        int depth_bits   = 24;
-        int stencil_bits = 8;
+    enum class AnglePlatform : int
+    {
+        None     = 0x00037001,
+        OpenGL   = 0x00037002,
+        OpenGLES = 0x00037003,
+        D3D9     = 0x00037004,
+        D3D11    = 0x00037005,
+        Vulkan   = 0x00037006,
+        Metal    = 0x00037007,
+    };
 
-        int samples      = 0;
-        int refresh_rate = -1;    // -1 means don't care
+    enum class WaylandLibdecor : int
+    {
+        Prefer  = 0x00038001,
+        Disable = 0x00038002,
+    };
+
+    struct InitHint
+    {
+        Platform        platform               = Platform::Any;
+        bool            joystick_hat_buttons   = true;
+        AnglePlatform   angle_platform_type    = AnglePlatform::None;
+        bool            cocoa_chdir_resource   = true;
+        bool            cocoa_menubar          = true;
+        WaylandLibdecor wayland_libdecor       = WaylandLibdecor::Prefer;
+        bool            x11_xcb_vulkan_surface = true;
     };
 
     /**
@@ -202,11 +250,9 @@ namespace glfw_cpp
     {
     public:
         friend Window;
+        friend std::unique_ptr<Instance> init(const InitHint&);
 
-        // LogFun should be noexcept
-        using LogFun = std::function<void(LogLevel level, std::string msg)>;
-
-        friend std::unique_ptr<Instance> init(Api&&, Instance::LogFun&&);
+        using ErrorCallback = std::function<void(int, std::string_view)>;
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -215,29 +261,44 @@ namespace glfw_cpp
         Instance& operator=(const Instance&) = delete;
 
         /**
+         * @brief Apply window creation hints.
+         *
+         * @param hint The hints to be applied.
+         *
+         * The hints sticks to the instance. The value set won't be changed unless a new hint is applied. To
+         * get the same effect as setting the hint as default (`glfwDefaultWindowHints`) pass a default
+         * constructed `Hint`.
+         *
+         * This function does not check whether the specified hint values are valid. If you set hints to
+         * invalid values this will instead be reported by the next call to `create_window`.
+         */
+        void apply_hint(const Hint& hint);
+
+        /**
          * @brief Create a window.
          *
-         * @param hint The window hint.
-         * @param title The window title.
-         * @param width The window width.
-         * @param height The window height.
-         * @param make_current Immediately make the OpenGL/OpenGL ES context current to this thread.
+         * @param width The desired width in screen coordinates (must be positive).
+         * @param height The desired height in screen coordinates (must be positive).
+         * @param title Initial window title (utf-8).
+         * @param monitor Monitor to use for full screen mode, or `nullptr` for windowed mode.
+         * @param share The window whose context to share with, or `nullptr` to not share resources.
          *
          * @thread_safety This function must be called from the main thread.
          *
          * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         * @throw glfw_cpp::InvalidValue if a hint has invalid value.
          * @throw glfw_cpp::ApiUnavailable The requested client API is unavailable.
-         * @throw glfw_cpp::VersionUnavailable The requested client API version is unavailable.
+         * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
          * @throw glfw_cpp::FormatUnavailable The requested format is unavailable.
          * @throw glfw_cpp::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
          * @throw glfw_cpp::PlatformError A platform-specific error occurred.
          */
         Window create_window(
-            const Hint&      hint,
-            std::string_view title,
             int              width,
             int              height,
-            bool             make_current = true
+            std::string_view title,
+            GLFWmonitor*     monitor,
+            GLFWwindow*      share
         );
 
         /**
@@ -263,7 +324,10 @@ namespace glfw_cpp
          * This function replaces the logger used by glfw-cpp used to log its debug information and the
          * underlying GLFW errors. You can set the argument to nullptr to effectively turn off the logger.
          */
-        void set_logger(LogFun&& logger) noexcept { m_loggger = logger; }
+        void set_error_callback(std::function<void(int, std::string_view)> callback) noexcept
+        {
+            m_callback = callback;
+        }
 
         /**
          * @brief Check if any window is still open.
@@ -332,29 +396,6 @@ namespace glfw_cpp
          */
         static Instance& get();
 
-        /**
-         * @brief Log a message.
-         *
-         * @param level Severity of the message.
-         * @param msg The message.
-         */
-        static void log(LogLevel level, std::string msg) noexcept;
-
-#define GLFW_CPP_LOG_FN(Name, Level)                                                                         \
-    template <typename... Args>                                                                              \
-    static void Name(std::format_string<Args...> fmt, Args&&... args) noexcept                               \
-    {                                                                                                        \
-        log(LogLevel::Level, std::format(fmt, std::forward<Args>(args)...));                                 \
-    }
-
-        GLFW_CPP_LOG_FN(log_d, Debug)
-        GLFW_CPP_LOG_FN(log_i, Info)
-        GLFW_CPP_LOG_FN(log_w, Warning)
-        GLFW_CPP_LOG_FN(log_e, Error)
-        GLFW_CPP_LOG_FN(log_c, Critical)
-
-#undef GLFW_CPP_LOG_FN
-
         static void window_pos_callback(GLFWwindow* window, int x, int y);
         static void window_size_callback(GLFWwindow* window, int width, int height);
         static void window_close_callback(GLFWwindow* window);
@@ -402,11 +443,9 @@ namespace glfw_cpp
          */
         void run_tasks();
 
-        Api    m_api     = api::NoApi{};
-        LogFun m_loggger = nullptr;
-
-        std::thread::id    m_attached_thread_id = {};
+        std::thread::id    m_attached_thread_id = std::this_thread::get_id();
         IEventInterceptor* m_event_interceptor  = nullptr;
+        ErrorCallback      m_callback           = nullptr;
 
         std::vector<GLFWwindow*>           m_windows;
         std::vector<GLFWwindow*>           m_window_delete_queue;
@@ -427,17 +466,17 @@ namespace glfw_cpp
     /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
      *
-     * @param api The underlying graphics API to use with GLFW.
-     * @param logger The logger function to use.
+     * @param hint Initialization hints.
      * @return A RAII handle that will terminate GLFW on destruction.
      *
      * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
-     * @throw glfw_cpp::EmptyLoader if the loader function is empty (non-emscripten OpenGL/OpenGL ES only).
-     * @throw glfw_cpp::ApiUnavailable if the requested client API is unavailable.
-     * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
      * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
+     * @throw glfw_cpp::PlatformUnavailable if platform can't be detected; if `Platform::Any` was set, GLFW
+     * can only detect null platform.
+     *
+     * Pass a default constructed hint to use default init hints.
      */
-    std::unique_ptr<Instance> init(Api&& api, Instance::LogFun&& logger = nullptr);
+    std::unique_ptr<Instance> init(const InitHint& hint);
 
     /**
      * @brief Make the OpenGL or OpenGL ES context of the specified window current on calling thread.

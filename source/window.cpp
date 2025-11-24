@@ -16,36 +16,13 @@
 
 namespace glfw_cpp
 {
-    // this constructor must be called only from main thread (WindowManager run in main thread)
-    Window::Window(Handle handle, Properties&& properties, Attributes&& attributes, bool make_current)
+    Window::Window(Handle handle, Properties&& properties, Attributes&& attributes)
         : m_handle{ handle }
         , m_properties{ std::move(properties) }
         , m_attributes{ std::move(attributes) }
+        , m_has_context{ glfwGetWindowAttrib(handle, GLFW_CLIENT_API) != GLFW_NO_API }
     {
-        auto init = [&](auto& api) {
-            auto prev = glfw_cpp::get_current();
-            glfw_cpp::make_current(handle);
-
-            set_vsync(m_vsync);
-            glfwSetWindowUserPointer(m_handle, this);
-#if not __EMSCRIPTEN__
-            assert(api.loader != nullptr);
-            api.loader(handle, glfwGetProcAddress);
-#else
-            if (api.loader) {
-                api.loader(handle, glfwGetProcAddress);
-            }
-#endif
-            if (not make_current) {
-                glfw_cpp::make_current(prev);
-            }
-        };
-
-        Instance::get().m_api.visit(util::VisitOverloaded{
-            [&](api::OpenGL& api) { init(api); },
-            [&](api::OpenGLES& api) { init(api); },
-            [&](api::NoApi&) { glfwSetWindowUserPointer(m_handle, this); },
-        });
+        glfwSetWindowUserPointer(m_handle, this);
     }
 
     // clang-format off
@@ -158,8 +135,8 @@ namespace glfw_cpp
     {
         m_vsync = value;
 
-        if (Instance::get().m_api.is<api::NoApi>()) {
-            throw NoWindowContext{ "glfw-cpp is initialized to be NoApi" };
+        if (not m_has_context) {
+            throw NoWindowContext{ "Window has no associated context" };
         }
 
         // 0 = immediate update, 1 = update synchronized with vertical retrace
@@ -228,11 +205,7 @@ namespace glfw_cpp
 
     void Window::lock_aspect_ratio(float ratio) noexcept
     {
-        if (ratio <= 0.0f) {
-            Instance::log_w("(Window) Invalid aspect ratio: {}", ratio);
-            return;
-        }
-
+        assert(ratio > 0.0f);
         Instance::get().enqueue_task([this, ratio] {
             auto width  = m_properties.dimensions.width;
             auto height = int((float)width / ratio);
@@ -281,7 +254,7 @@ namespace glfw_cpp
 
     double Window::display()
     {
-        if (not Instance::get().m_api.is<api::NoApi>()) {
+        if (m_has_context) {
             glfwSwapBuffers(m_handle);
             util::check_glfw_error();
         }
@@ -298,7 +271,6 @@ namespace glfw_cpp
     void Window::request_close() noexcept
     {
         glfwSetWindowShouldClose(m_handle, 1);
-        Instance::log_i("(Window) Window ({:#x}) requested to close", (std::size_t)m_handle);
     }
 
     void Window::set_capture_mouse(bool value) noexcept

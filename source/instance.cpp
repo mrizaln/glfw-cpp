@@ -8,71 +8,7 @@
 #include <GLFW/glfw3.h>
 
 #include <cassert>
-#include <format>
 #include <utility>
-
-namespace
-{
-    void configure_hints(const glfw_cpp::Hint& hint) noexcept
-    {
-        using F = glfw_cpp::Flag;
-
-        const auto set_flag = [&](int flag, F bit) {
-            glfwWindowHint(flag, (hint.flags & bit) == bit ? GLFW_TRUE : GLFW_FALSE);
-        };
-
-        set_flag(GLFW_RESIZABLE, F::Resizable);
-        set_flag(GLFW_VISIBLE, F::Visible);
-        set_flag(GLFW_DECORATED, F::Decorated);
-        set_flag(GLFW_FOCUSED, F::Focused);
-        set_flag(GLFW_AUTO_ICONIFY, F::AutoIconify);
-        set_flag(GLFW_FLOATING, F::Floating);
-        set_flag(GLFW_MAXIMIZED, F::Maximized);
-        set_flag(GLFW_CENTER_CURSOR, F::CenterCursor);
-        set_flag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TransparentFramebuffer);
-        set_flag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
-        set_flag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
-
-        glfwWindowHint(GLFW_RED_BITS, hint.red_bits);
-        glfwWindowHint(GLFW_GREEN_BITS, hint.green_bits);
-        glfwWindowHint(GLFW_BLUE_BITS, hint.blue_bits);
-        glfwWindowHint(GLFW_ALPHA_BITS, hint.alpha_bits);
-        glfwWindowHint(GLFW_DEPTH_BITS, hint.depth_bits);
-        glfwWindowHint(GLFW_STENCIL_BITS, hint.stencil_bits);
-
-        glfwWindowHint(GLFW_SAMPLES, hint.samples);
-        glfwWindowHint(GLFW_REFRESH_RATE, hint.refresh_rate);
-    }
-
-    std::string_view error_to_string(int glfw_errc)
-    {
-#define CASE_ENTRY(Val)                                                                                      \
-    case Val: return #Val
-
-        switch (glfw_errc) {
-            CASE_ENTRY(GLFW_NO_ERROR);
-            CASE_ENTRY(GLFW_NOT_INITIALIZED);
-            CASE_ENTRY(GLFW_NO_CURRENT_CONTEXT);
-            CASE_ENTRY(GLFW_INVALID_ENUM);
-            CASE_ENTRY(GLFW_INVALID_VALUE);
-            CASE_ENTRY(GLFW_OUT_OF_MEMORY);
-            CASE_ENTRY(GLFW_API_UNAVAILABLE);
-            CASE_ENTRY(GLFW_VERSION_UNAVAILABLE);
-            CASE_ENTRY(GLFW_PLATFORM_ERROR);
-            CASE_ENTRY(GLFW_FORMAT_UNAVAILABLE);
-            CASE_ENTRY(GLFW_NO_WINDOW_CONTEXT);
-#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
-            CASE_ENTRY(GLFW_CURSOR_UNAVAILABLE);
-            CASE_ENTRY(GLFW_FEATURE_UNAVAILABLE);
-            CASE_ENTRY(GLFW_FEATURE_UNIMPLEMENTED);
-            CASE_ENTRY(GLFW_PLATFORM_UNAVAILABLE);
-#endif
-        default: return "UNKNOWN_ERROR";
-#undef CASE_ENTRY
-        }
-    }
-
-}
 
 // callbacks
 namespace glfw_cpp
@@ -306,15 +242,15 @@ namespace glfw_cpp
 {
     Instance::~Instance()
     {
-        run_tasks();    // flush task queue first
+        // flush task queue first (there might be window deletion request)
+        run_tasks();
 
         for (auto handle : m_windows) {
-            glfwDestroyWindow(handle);    // delete all windows
-            Instance::log_i("(Instance) Window ({:#x}) deleted", (std::size_t)handle);
+            glfwDestroyWindow(handle);
         }
 
-        glfwTerminate();    // this might fail, how should I report the failure?
-        Instance::log_i("(Instance) Successfully terminated glfw-cpp");
+        // this might fail, how should I report the failure?
+        glfwTerminate();
 
         // unregister the gloal instance pointer
         Instance::s_instance = nullptr;
@@ -324,13 +260,6 @@ namespace glfw_cpp
     {
         assert(s_instance != nullptr && "Instance not initialized!");
         return *s_instance;
-    }
-
-    void Instance::log(LogLevel level, std::string msg) noexcept
-    {
-        if (auto& instance = get(); instance.m_loggger) {
-            instance.m_loggger(level, std::move(msg));
-        }
     }
 
     void Instance::push_event(Window& window, Event event) noexcept
@@ -389,31 +318,112 @@ namespace glfw_cpp
             if (std::erase(m_windows, handle) != 0) {
                 glfwDestroyWindow(handle);
                 util::check_glfw_error();
-                Instance::log_i("(Instance) Window ({:#x}) deleted", (std::size_t)handle);
             }
         }
     }
 
+    void Instance::apply_hint(const Hint& hint)
+    {
+        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
+
+        // context
+        api.visit(util::VisitOverloaded{
+            [](const api::OpenGL& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                glfwWindowHint(GLFW_CONTEXT_CREATION_API, static_cast<int>(api.creation_api));
+                glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, static_cast<int>(api.robustness));
+                glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, static_cast<int>(api.release_behavior));
+                glfwWindowHint(GLFW_CONTEXT_DEBUG, api.debug ? GLFW_TRUE : GLFW_FALSE);
+                glfwWindowHint(GLFW_CONTEXT_NO_ERROR, api.no_error ? GLFW_TRUE : GLFW_FALSE);
+
+                if (api.version_major >= 3 and api.version_minor >= 0) {
+                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat ? GLFW_TRUE : GLFW_FALSE);
+                }
+                if (api.version_major >= 3 and api.version_minor >= 3) {
+                    glfwWindowHint(GLFW_OPENGL_PROFILE, static_cast<int>(api.profile));
+                }
+            },
+            [](const api::OpenGLES& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                glfwWindowHint(GLFW_CONTEXT_CREATION_API, static_cast<int>(api.creation_api));
+                glfwWindowHint(GLFW_CONTEXT_ROBUSTNESS, static_cast<int>(api.robustness));
+                glfwWindowHint(GLFW_CONTEXT_RELEASE_BEHAVIOR, static_cast<int>(api.release_behavior));
+                glfwWindowHint(GLFW_CONTEXT_DEBUG, api.debug ? GLFW_TRUE : GLFW_FALSE);
+                glfwWindowHint(GLFW_CONTEXT_NO_ERROR, api.no_error ? GLFW_TRUE : GLFW_FALSE);
+            },
+            [](const api::NoApi&) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
+            },
+        });
+
+        // window
+        glfwWindowHint(GLFW_RESIZABLE, win.resizable ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_VISIBLE, win.visible ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_DECORATED, win.decorated ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUSED, win.focused ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_AUTO_ICONIFY, win.auto_iconify ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_FLOATING, win.floating ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_MAXIMIZED, win.maximized ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_CENTER_CURSOR, win.center_cursor ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_TRANSPARENT_FRAMEBUFFER, win.transparent_framebuffer ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_FOCUS_ON_SHOW, win.focus_on_show ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_SCALE_TO_MONITOR, win.scale_to_monitor ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_SCALE_FRAMEBUFFER, win.scale_framebuffer ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_MOUSE_PASSTHROUGH, win.mouse_passthrough ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_POSITION_X, win.position_x);
+        glfwWindowHint(GLFW_POSITION_Y, win.position_y);
+
+        // framebuffer
+        glfwWindowHint(GLFW_RED_BITS, fb.red_bits);
+        glfwWindowHint(GLFW_GREEN_BITS, fb.green_bits);
+        glfwWindowHint(GLFW_BLUE_BITS, fb.blue_bits);
+        glfwWindowHint(GLFW_ALPHA_BITS, fb.alpha_bits);
+        glfwWindowHint(GLFW_DEPTH_BITS, fb.depth_bits);
+        glfwWindowHint(GLFW_STENCIL_BITS, fb.stencil_bits);
+        glfwWindowHint(GLFW_SAMPLES, fb.samples);
+        glfwWindowHint(GLFW_STEREO, fb.stereo ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_SRGB_CAPABLE, fb.srgb_capable ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_DOUBLEBUFFER, fb.doublebuffer ? GLFW_TRUE : GLFW_FALSE);
+
+        // monitor
+        glfwWindowHint(GLFW_REFRESH_RATE, mon.refresh_rate);
+
+        // win32
+        glfwWindowHint(GLFW_WIN32_KEYBOARD_MENU, win32.keyboard_menu ? GLFW_TRUE : GLFW_FALSE);
+        glfwWindowHint(GLFW_WIN32_SHOWDEFAULT, win32.showdefault ? GLFW_TRUE : GLFW_FALSE);
+
+        // cocoa
+        glfwWindowHintString(GLFW_COCOA_FRAME_NAME, cocoa.frame_name);
+        glfwWindowHint(GLFW_COCOA_GRAPHICS_SWITCHING, cocoa.graphics_switching ? GLFW_TRUE : GLFW_FALSE);
+
+        // wayland
+        glfwWindowHintString(GLFW_WAYLAND_APP_ID, wl.app_id);
+
+        // x11
+        glfwWindowHintString(GLFW_X11_CLASS_NAME, x11.class_name);
+        glfwWindowHintString(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+    }
+
     Window Instance::create_window(
-        const Hint&      hint,
-        std::string_view title,
         int              width,
         int              height,
-        bool             bind_immediately
+        std::string_view title,
+        GLFWmonitor*     monitor,
+        GLFWwindow*      share
     )
     {
         validate_access();
-        configure_hints(hint);
-        util::check_glfw_error();
 
-        const auto handle = glfwCreateWindow(width, height, title.data(), hint.monitor, hint.share);
+        const auto handle = glfwCreateWindow(width, height, title.data(), monitor, share);
         if (handle == nullptr) {
-            Instance::log_c("(Instance) Window creation failed");
             util::throw_glfw_error();
         }
         m_windows.emplace_back(handle);
-
-        Instance::log_i("(Instance) Window ({:#x}) created", (std::size_t)handle);
 
         glfwSetWindowPosCallback(handle, window_pos_callback);
         glfwSetWindowSizeCallback(handle, window_size_callback);
@@ -439,6 +449,8 @@ namespace glfw_cpp
         glfwGetCursorPos(handle, &x_cursor, &y_cursor);
         glfwGetFramebufferSize(handle, &fb_width, &fb_height);
 
+        util::check_glfw_error();
+
         auto properties = Properties{
             .title              = { title.begin(), title.end() },
             .position           = { x_pos, y_pos },
@@ -447,22 +459,27 @@ namespace glfw_cpp
             .cursor_position    = { x_cursor, y_cursor },
             .mouse_button_state = {},
             .key_state          = {},
-            .monitor            = hint.monitor,
+            .monitor            = monitor,
         };
 
         auto attributes = Attributes{
-            .iconified     = 0,
-            .maximized     = (hint.flags & Flag::Maximized) == Flag::Maximized,
-            .focused       = (hint.flags & Flag::Focused) == Flag::Focused,
-            .visible       = (hint.flags & Flag::Visible) == Flag::Visible,
-            .hovered       = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-            .resizable     = (hint.flags & Flag::Resizable) == Flag::Resizable,
-            .floating      = (hint.flags & Flag::Floating) == Flag::Floating,
-            .auto_iconify  = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
-            .focus_on_show = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
+            .focused                 = glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE,
+            .iconified               = glfwGetWindowAttrib(handle, GLFW_ICONIFIED) == GLFW_TRUE,
+            .maximized               = glfwGetWindowAttrib(handle, GLFW_MAXIMIZED) == GLFW_TRUE,
+            .hovered                 = glfwGetWindowAttrib(handle, GLFW_HOVERED) == GLFW_TRUE,
+            .visible                 = glfwGetWindowAttrib(handle, GLFW_VISIBLE) == GLFW_TRUE,
+            .resizable               = glfwGetWindowAttrib(handle, GLFW_RESIZABLE) == GLFW_TRUE,
+            .decorated               = glfwGetWindowAttrib(handle, GLFW_DECORATED) == GLFW_TRUE,
+            .auto_iconify            = glfwGetWindowAttrib(handle, GLFW_AUTO_ICONIFY) == GLFW_TRUE,
+            .floating                = glfwGetWindowAttrib(handle, GLFW_FLOATING) == GLFW_TRUE,
+            .transparent_framebuffer = glfwGetWindowAttrib(handle, GLFW_TRANSPARENT_FRAMEBUFFER) == GLFW_TRUE,
+            .focus_on_show           = glfwGetWindowAttrib(handle, GLFW_FOCUS_ON_SHOW) == GLFW_TRUE,
+            .mouse_passthrough       = glfwGetWindowAttrib(handle, GLFW_MOUSE_PASSTHROUGH) == GLFW_TRUE,
         };
 
-        return Window{ handle, std::move(properties), std::move(attributes), bind_immediately };
+        util::check_glfw_error();
+
+        return Window{ handle, std::move(properties), std::move(attributes) };
     }
 
     bool Instance::has_window_opened() const noexcept
@@ -518,7 +535,7 @@ namespace glfw_cpp
         m_task_queue.emplace_back(std::move(task));
     }
 
-    std::unique_ptr<Instance> init(Api&& api, Instance::LogFun&& logger)
+    std::unique_ptr<Instance> init(const InitHint& hint)
     {
         if (Instance::s_instance) {
             throw AlreadyInitialized{};
@@ -530,61 +547,25 @@ namespace glfw_cpp
         // register the newly created instance to the global pointer
         Instance::s_instance = instance.get();
 
-        instance->m_api                = std::move(api);
-        instance->m_loggger            = std::move(logger);
-        instance->m_attached_thread_id = std::this_thread::get_id();
-
         glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::log_c("[{}|{:#010x}] {}", error_to_string(err), err, msg);
+            auto& instance = Instance::get();
+            if (instance.m_callback) {
+                instance.m_callback(err, msg);
+            }
         });
+
+        glfwInitHint(GLFW_PLATFORM, static_cast<int>(hint.platform));
+        glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, hint.joystick_hat_buttons ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, static_cast<int>(hint.angle_platform_type));
+        glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, hint.cocoa_chdir_resource ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_COCOA_MENUBAR, hint.cocoa_menubar ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_WAYLAND_LIBDECOR, static_cast<int>(hint.wayland_libdecor));
+        glfwInitHint(GLFW_X11_XCB_VULKAN_SURFACE, hint.x11_xcb_vulkan_surface ? GLFW_TRUE : GLFW_FALSE);
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
             util::throw_glfw_error();
         }
-
-        instance->m_api.visit(util::VisitOverloaded{
-            [](api::OpenGL& api) {
-                if (api.loader == nullptr) {
-#if not __EMSCRIPTEN__
-                    throw EmptyLoader{};
-#endif
-                }
-
-                auto gl_profile = [&] {
-                    using P = glfw_cpp::api::gl::Profile;
-                    switch (api.profile) {
-                    case P::Core: return GLFW_OPENGL_CORE_PROFILE;
-                    case P::Compat: return GLFW_OPENGL_COMPAT_PROFILE;
-                    case P::Any: return GLFW_OPENGL_ANY_PROFILE;
-                    default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
-                    }
-                }();
-
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.minor);
-
-                if (api.major >= 3 && api.minor >= 0) {
-                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
-                }
-
-                if (api.major >= 3 && api.minor >= 2) {
-                    glfwWindowHint(GLFW_OPENGL_PROFILE, gl_profile);
-                }
-            },
-            [](api::OpenGLES& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.minor);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-            },
-            [](api::NoApi&) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
-            },
-        });
-
-        Instance::log_i("(Instance) Successfully initialized glfw-cpp");
 
         return instance;
     }
@@ -608,5 +589,6 @@ namespace glfw_cpp
         auto current = glfwGetCurrentContext();
         util::check_glfw_error();
         return current;
+        glfwGetProcAddress;
     }
 }

@@ -39,17 +39,21 @@ namespace glfw_cpp
         auto   operator<=>(const CursorPosition&) const = default;
     };
 
+    // TODO: context related attributes and framebuffer related attributes
     struct Attributes
     {
-        unsigned int iconified     : 1 = 0;
-        unsigned int maximized     : 1 = 0;
-        unsigned int focused       : 1 = 0;
-        unsigned int visible       : 1 = 0;
-        unsigned int hovered       : 1 = 0;
-        unsigned int resizable     : 1 = 0;
-        unsigned int floating      : 1 = 0;
-        unsigned int auto_iconify  : 1 = 0;
-        unsigned int focus_on_show : 1 = 0;
+        unsigned int focused                 : 1 = 0;
+        unsigned int iconified               : 1 = 0;
+        unsigned int maximized               : 1 = 0;
+        unsigned int hovered                 : 1 = 0;
+        unsigned int visible                 : 1 = 0;
+        unsigned int resizable               : 1 = 0;
+        unsigned int decorated               : 1 = 0;    // TODO: implement setter and updates
+        unsigned int auto_iconify            : 1 = 0;
+        unsigned int floating                : 1 = 0;
+        unsigned int transparent_framebuffer : 1 = 0;    // TODO: implement setter and updates
+        unsigned int focus_on_show           : 1 = 0;
+        unsigned int mouse_passthrough       : 1 = 0;    // TODO: implement setter and updates
 
         bool operator==(const Attributes&) const = default;
     };
@@ -435,7 +439,7 @@ namespace glfw_cpp
         Handle handle() const noexcept { return m_handle; }
 
     private:
-        Window(Handle handle, Properties&& properties, Attributes&& attributes, bool make_current);
+        Window(Handle handle, Properties&& properties, Attributes&& attributes);
 
         void push_event(Event&& event) noexcept;
         void process_queued_tasks() noexcept;
@@ -450,6 +454,7 @@ namespace glfw_cpp
         double     m_delta_time      = 0.0;
         bool       m_vsync           = true;
         bool       m_capture_mouse   = false;
+        bool       m_has_context     = false;
 
         // queues
         EventQueue                      m_event_queue_front = EventQueue{ s_default_eventqueue_size };
