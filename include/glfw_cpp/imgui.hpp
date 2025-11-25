@@ -53,8 +53,14 @@ namespace glfw_cpp::imgui
             return *this;
         }
 
+        /**
+         * @brief Check if handle is initialized.
+         */
         bool is_initialized() const noexcept { return m_window != nullptr; }
 
+        /**
+         * @brief Creates new imgui frame.
+         */
         void new_frame() const noexcept { ImGui_ImplGlfw_NewFrame(); }
 
         /**
@@ -70,6 +76,14 @@ namespace glfw_cpp::imgui
             }
         }
 
+        /**
+         * @brief Process events from window.
+         *
+         * @param event The event queue from window.
+         *
+         * Since glfw_cpp already installs all the callback to GLFW internals and accumulate it into a queue
+         * for each window, we need to send the events to imgui manually.
+         */
         void process_events(const EventQueue& event)
         {
             using namespace event;
@@ -100,14 +114,10 @@ namespace glfw_cpp::imgui
     };
 
     /**
-     * @brief Initialize imgui for opengl while also registering the window to the interceptor.
+     * @brief Initialize imgui for opengl without installing a callback.
      *
-     * @param window The window to register.
-     *
-     * @return The imgui context for glfw (proper RAII).
-     *
-     * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
-     * this function.
+     * @param window The window imgui will belong to.
+     * @return An imgui handle for glfw (proper RAII).
      */
     inline ImguiHandle init_for_opengl(GLFWwindow* window) noexcept
     {
@@ -116,14 +126,10 @@ namespace glfw_cpp::imgui
     }
 
     /**
-     * @brief Initialize imgui for vulkan while also registering the window to the interceptor.
+     * @brief Initialize imgui for vulkan without installing a callback.
      *
-     * @param window The window to register.
-     *
-     * @return The imgui context for glfw (proper RAII).
-     *
-     * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
-     * this function.
+     * @param window The window imgui will belong to.
+     * @return An imgui handle for glfw (proper RAII).
      */
     inline ImguiHandle init_for_vulkan(GLFWwindow* window) noexcept
     {
@@ -132,15 +138,10 @@ namespace glfw_cpp::imgui
     }
 
     /**
-     * @brief Initialize imgui for other while also registering the window to the interceptor.
+     * @brief Initialize imgui for other without installing a callback.
      *
-     * @param interceptor The interceptor to use.
-     * @param window The window to register.
-     *
-     * @return The imgui context for glfw (proper RAII).
-     *
-     * @note Make sure the interceptor is registered to the `WindowManager` the `Window` is in before calling
-     * this function.
+     * @param window The window imgui will belong to.
+     * @return An imgui handle for glfw (proper RAII).
      */
     inline ImguiHandle init_for_other(GLFWwindow* window) noexcept
     {

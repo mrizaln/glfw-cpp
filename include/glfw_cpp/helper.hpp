@@ -134,16 +134,26 @@ namespace glfw_cpp::helper::variant
 
 namespace glfw_cpp::helper::meta
 {
+    /**
+     * @brief Make an optional or a value depending on the `Opt` parameter.
+     *
+     * @tparam T The type to be wrapped into optional or itself.
+     */
     template <bool Opt, typename T>
     using MayOpt = std::conditional_t<Opt, std::optional<T>, T>;
 
+    /**
+     * @brief Use `std::nullopt` or `value` depeding on `Opt` parameter.
+     *
+     * @param value The value ot be used in the case of `Opt` being false.
+     */
     template <bool Opt, std::move_constructible T>
-    constexpr MayOpt<Opt, T> may_opt(T t)
+    constexpr MayOpt<Opt, T> may_opt(T value)
     {
         if constexpr (Opt) {
             return std::nullopt;
         } else {
-            return std::move(t);
+            return std::move(value);
         }
     }
 }

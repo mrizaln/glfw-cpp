@@ -37,6 +37,10 @@ namespace glfw_cpp
             Compat = 0x00032002,
         };
 
+        /**
+         * @enum CreationApi
+         * @brief Specifies context creation API to use to create the context.
+         */
         enum class CreationApi : int
         {
             Native = 0x00036001,
@@ -44,6 +48,10 @@ namespace glfw_cpp
             OSMesa = 0x00036003,
         };
 
+        /**
+         * @enum Robustness
+         * @brief Specifies the robustness strategy to be used by the context.
+         */
         enum class Robustness : int
         {
             NoRobustness        = 0,
@@ -51,6 +59,10 @@ namespace glfw_cpp
             LoseContextOnReset  = 0x00031002,
         };
 
+        /**
+         * @enum Robustness
+         * @brief specifies the release behavior to be used by the context.
+         */
         enum class ReleaseBehavior : int
         {
             Any   = 0,
@@ -67,39 +79,46 @@ namespace glfw_cpp
         /**
          * @struct OpenGL
          * @brief Describe the OpenGL version to use.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         *
+         * The field `forward_compat` only makes sense for OpenGL 3.0+.
+         * The field `profile` only makes sense for OpenGL 3.2+.
          */
-        template <bool O = false>
+        template <bool Opt = false>
         struct OpenGL
         {
-            MayOpt<O, int>  version_major  = may_opt<O>(1);
-            MayOpt<O, int>  version_minor  = may_opt<O>(0);
-            MayOpt<O, bool> forward_compat = may_opt<O>(true);    // OpenGL 3.0+
+            MayOpt<Opt, int>  version_major  = may_opt<Opt>(1);
+            MayOpt<Opt, int>  version_minor  = may_opt<Opt>(0);
+            MayOpt<Opt, bool> forward_compat = may_opt<Opt>(true);
 
-            MayOpt<O, gl::Profile>         profile          = may_opt<O>(gl::Profile::Core);    // OpenGL 3.2+
-            MayOpt<O, gl::CreationApi>     creation_api     = may_opt<O>(gl::CreationApi::Native);
-            MayOpt<O, gl::Robustness>      robustness       = may_opt<O>(gl::Robustness::NoRobustness);
-            MayOpt<O, gl::ReleaseBehavior> release_behavior = may_opt<O>(gl::ReleaseBehavior::Any);
+            MayOpt<Opt, gl::Profile>         profile          = may_opt<Opt>(gl::Profile::Core);
+            MayOpt<Opt, gl::CreationApi>     creation_api     = may_opt<Opt>(gl::CreationApi::Native);
+            MayOpt<Opt, gl::Robustness>      robustness       = may_opt<Opt>(gl::Robustness::NoRobustness);
+            MayOpt<Opt, gl::ReleaseBehavior> release_behavior = may_opt<Opt>(gl::ReleaseBehavior::Any);
 
-            MayOpt<O, bool> debug    = may_opt<O>(false);
-            MayOpt<O, bool> no_error = may_opt<O>(false);
+            MayOpt<Opt, bool> debug    = may_opt<Opt>(false);
+            MayOpt<Opt, bool> no_error = may_opt<Opt>(false);
         };
 
         /**
          * @struct OpenGLES
          * @brief Describe the OpenGLES version to use.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool O = false>
+        template <bool Opt = false>
         struct OpenGLES
         {
-            MayOpt<O, int> version_major = may_opt<O>(1);
-            MayOpt<O, int> version_minor = may_opt<O>(0);
+            MayOpt<Opt, int> version_major = may_opt<Opt>(1);
+            MayOpt<Opt, int> version_minor = may_opt<Opt>(0);
 
-            MayOpt<O, gl::CreationApi>     creation_api     = may_opt<O>(gl::CreationApi::Native);
-            MayOpt<O, gl::Robustness>      robustness       = may_opt<O>(gl::Robustness::NoRobustness);
-            MayOpt<O, gl::ReleaseBehavior> release_behavior = may_opt<O>(gl::ReleaseBehavior::Any);
+            MayOpt<Opt, gl::CreationApi>     creation_api     = may_opt<Opt>(gl::CreationApi::Native);
+            MayOpt<Opt, gl::Robustness>      robustness       = may_opt<Opt>(gl::Robustness::NoRobustness);
+            MayOpt<Opt, gl::ReleaseBehavior> release_behavior = may_opt<Opt>(gl::ReleaseBehavior::Any);
 
-            MayOpt<O, bool> debug    = may_opt<O>(false);
-            MayOpt<O, bool> no_error = may_opt<O>(false);
+            MayOpt<Opt, bool> debug    = may_opt<Opt>(false);
+            MayOpt<Opt, bool> no_error = may_opt<Opt>(false);
         };
 
         /**
@@ -110,8 +129,8 @@ namespace glfw_cpp
         {
         };
 
-        template <bool O = false>
-        using Variant = std::variant<OpenGL<O>, OpenGLES<O>, NoApi>;
+        template <bool Opt = false>
+        using Variant = std::variant<OpenGL<Opt>, OpenGLES<Opt>, NoApi>;
 
         template <typename T>
         concept Api = helper::variant::VariantMember<T, Variant<false>>
@@ -127,98 +146,160 @@ namespace glfw_cpp
          * @struct Api
          * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no
          * API).
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool O = false>
-        struct Api : helper::variant::VariantWrapper<api::Variant<O>>
+        template <bool Opt = false>
+        struct Api : helper::variant::VariantWrapper<api::Variant<Opt>>
         {
-            using helper::variant::VariantWrapper<api::Variant<O>>::VariantWrapper;
+            using helper::variant::VariantWrapper<api::Variant<Opt>>::VariantWrapper;
         };
 
-        template <bool O = false>
+        /**
+         * @struct Window
+         * @brief Window related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         */
+        template <bool Opt = false>
         struct Window
         {
-            MayOpt<O, bool> resizable               = may_opt<O>(true);
-            MayOpt<O, bool> visible                 = may_opt<O>(true);
-            MayOpt<O, bool> decorated               = may_opt<O>(true);
-            MayOpt<O, bool> focused                 = may_opt<O>(true);
-            MayOpt<O, bool> auto_iconify            = may_opt<O>(true);
-            MayOpt<O, bool> floating                = may_opt<O>(false);
-            MayOpt<O, bool> maximized               = may_opt<O>(false);
-            MayOpt<O, bool> center_cursor           = may_opt<O>(true);
-            MayOpt<O, bool> transparent_framebuffer = may_opt<O>(false);
-            MayOpt<O, bool> focus_on_show           = may_opt<O>(true);
-            MayOpt<O, bool> scale_to_monitor        = may_opt<O>(false);
-            MayOpt<O, bool> scale_framebuffer       = may_opt<O>(true);
-            MayOpt<O, bool> mouse_passthrough       = may_opt<O>(false);
-            MayOpt<O, int>  position_x              = may_opt<O>(constant::any_position);
-            MayOpt<O, int>  position_y              = may_opt<O>(constant::any_position);
+            MayOpt<Opt, bool> resizable               = may_opt<Opt>(true);
+            MayOpt<Opt, bool> visible                 = may_opt<Opt>(true);
+            MayOpt<Opt, bool> decorated               = may_opt<Opt>(true);
+            MayOpt<Opt, bool> focused                 = may_opt<Opt>(true);
+            MayOpt<Opt, bool> auto_iconify            = may_opt<Opt>(true);
+            MayOpt<Opt, bool> floating                = may_opt<Opt>(false);
+            MayOpt<Opt, bool> maximized               = may_opt<Opt>(false);
+            MayOpt<Opt, bool> center_cursor           = may_opt<Opt>(true);
+            MayOpt<Opt, bool> transparent_framebuffer = may_opt<Opt>(false);
+            MayOpt<Opt, bool> focus_on_show           = may_opt<Opt>(true);
+            MayOpt<Opt, bool> scale_to_monitor        = may_opt<Opt>(false);
+            MayOpt<Opt, bool> scale_framebuffer       = may_opt<Opt>(true);
+            MayOpt<Opt, bool> mouse_passthrough       = may_opt<Opt>(false);
+            MayOpt<Opt, int>  position_x              = may_opt<Opt>(constant::any_position);
+            MayOpt<Opt, int>  position_y              = may_opt<Opt>(constant::any_position);
         };
 
-        template <bool O = false>
+        /**
+         * @struct Framebuffer
+         * @brief Framebuffer related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         */
+        template <bool Opt = false>
         struct Framebuffer
         {
-            MayOpt<O, int>  red_bits     = may_opt<O>(8);
-            MayOpt<O, int>  green_bits   = may_opt<O>(8);
-            MayOpt<O, int>  blue_bits    = may_opt<O>(8);
-            MayOpt<O, int>  alpha_bits   = may_opt<O>(8);
-            MayOpt<O, int>  depth_bits   = may_opt<O>(24);
-            MayOpt<O, int>  stencil_bits = may_opt<O>(8);
-            MayOpt<O, int>  samples      = may_opt<O>(0);
-            MayOpt<O, bool> stereo       = may_opt<O>(false);
-            MayOpt<O, bool> srgb_capable = may_opt<O>(false);
-            MayOpt<O, bool> doublebuffer = may_opt<O>(true);
+            MayOpt<Opt, int>  red_bits     = may_opt<Opt>(8);
+            MayOpt<Opt, int>  green_bits   = may_opt<Opt>(8);
+            MayOpt<Opt, int>  blue_bits    = may_opt<Opt>(8);
+            MayOpt<Opt, int>  alpha_bits   = may_opt<Opt>(8);
+            MayOpt<Opt, int>  depth_bits   = may_opt<Opt>(24);
+            MayOpt<Opt, int>  stencil_bits = may_opt<Opt>(8);
+            MayOpt<Opt, int>  samples      = may_opt<Opt>(0);
+            MayOpt<Opt, bool> stereo       = may_opt<Opt>(false);
+            MayOpt<Opt, bool> srgb_capable = may_opt<Opt>(false);
+            MayOpt<Opt, bool> doublebuffer = may_opt<Opt>(true);
         };
 
-        template <bool O = false>
+        /**
+         * @struct Monitor
+         * @brief Monitor related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         */
+        template <bool Opt = false>
         struct Monitor
         {
-            MayOpt<O, int> refresh_rate = may_opt<O>(constant::dont_care);
+            MayOpt<Opt, int> refresh_rate = may_opt<Opt>(constant::dont_care);
         };
 
-        template <bool O = false>
+        /**
+         * @struct Win32
+         * @brief Win32 (Windows) plaform related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         *
+         * The hints will be ignored if the platform used is not Win32.
+         */
+        template <bool Opt = false>
         struct Win32
         {
-            MayOpt<O, bool> keyboard_menu = may_opt<O>(false);
-            MayOpt<O, bool> showdefault   = may_opt<O>(false);
+            MayOpt<Opt, bool> keyboard_menu = may_opt<Opt>(false);
+            MayOpt<Opt, bool> showdefault   = may_opt<Opt>(false);
         };
 
-        template <bool O = false>
+        /**
+         * @struct Cocoa
+         * @brief Cocoa (macOS) plaform related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         *
+         * The hints will be ignored if the platform used is not Win32.
+         */
+        template <bool Opt = false>
         struct Cocoa
         {
-            MayOpt<O, const char*> frame_name         = may_opt<O>("");
-            MayOpt<O, bool>        graphics_switching = may_opt<O>(false);
+            MayOpt<Opt, const char*> frame_name         = may_opt<Opt>("");
+            MayOpt<Opt, bool>        graphics_switching = may_opt<Opt>(false);
         };
 
-        template <bool O = false>
+        /**
+         * @struct Wayland
+         * @brief Wayland (Linux) plaform related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         *
+         * The hints will be ignored if the platform used is not Win32.
+         */
+        template <bool Opt = false>
         struct Wayland
         {
-            MayOpt<O, const char*> app_id = may_opt<O>("");
+            MayOpt<Opt, const char*> app_id = may_opt<Opt>("");
         };
 
-        template <bool O = false>
+        /**
+         * @struct X11
+         * @brief X11 (Linux) plaform related hints for window creation.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         *
+         * The hints will be ignored if the platform used is not Win32.
+         */
+        template <bool Opt = false>
         struct X11
         {
-            MayOpt<O, const char*> class_name    = may_opt<O>("");
-            MayOpt<O, const char*> instance_name = may_opt<O>("");
+            MayOpt<Opt, const char*> class_name    = may_opt<Opt>("");
+            MayOpt<Opt, const char*> instance_name = may_opt<Opt>("");
         };
     }
 
-    template <bool O = false>
+    /**
+     * @struct Hint
+     * @brief Window creation hints.
+     *
+     * @tparam Opt Indicates whether to use optional fields or not.
+     */
+    template <bool Opt = false>
     struct Hint
     {
-        hint::Api<O>         api         = api::OpenGL<O>{};
-        hint::Window<O>      window      = {};
-        hint::Framebuffer<O> framebuffer = {};
-        hint::Monitor<O>     monitor     = {};
-        hint::Win32<O>       win32       = {};
-        hint::Cocoa<O>       cocoa       = {};
-        hint::Wayland<O>     wayland     = {};
-        hint::X11<O>         x11         = {};
+        hint::Api<Opt>         api         = api::OpenGL<Opt>{};
+        hint::Window<Opt>      window      = {};
+        hint::Framebuffer<Opt> framebuffer = {};
+        hint::Monitor<Opt>     monitor     = {};
+        hint::Win32<Opt>       win32       = {};
+        hint::Cocoa<Opt>       cocoa       = {};
+        hint::Wayland<Opt>     wayland     = {};
+        hint::X11<Opt>         x11         = {};
     };
 
     using FullHint    = Hint<false>;
     using PartialHint = Hint<true>;
 
+    /**
+     * @enum Platform
+     * @brief Specifies the platform to use for windowing and input.
+     */
     enum class Platform : int
     {
         Any     = 0x00060000,
@@ -229,6 +310,13 @@ namespace glfw_cpp
         Null    = 0x00060005,
     };
 
+    /**
+     * @enum AnglePlatform
+     * @brief specifies the platform type (rendering backend) to request when using OpenGL ES and EGL via
+     * ANGLE.
+     *
+     * See ANGLE repo: https://chromium.googlesource.com/angle/angle/.
+     */
     enum class AnglePlatform : int
     {
         None     = 0x00037001,
@@ -240,12 +328,21 @@ namespace glfw_cpp
         Metal    = 0x00037007,
     };
 
+    /**
+     * @enum WaylandLibdecor
+     * @brief Specifies whether to use libdecor for window decorations where available.
+     */
     enum class WaylandLibdecor : int
     {
         Prefer  = 0x00038001,
         Disable = 0x00038002,
     };
 
+    /**
+     * @class InitHint
+     * @brief Initialization hints are set before `glfwInit` and affect how the library behaves until
+     * termination.
+     */
     struct InitHint
     {
         Platform        platform               = Platform::Any;
