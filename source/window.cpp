@@ -161,11 +161,11 @@ namespace glfw_cpp
         });
     }
 
-    void Window::set_floating(bool value)
+    void Window::set_decorated(bool value)
     {
-        m_attributes.floating = value;
+        m_attributes.decorated = value;
         Instance::get().enqueue_task([this, value] {
-            glfwSetWindowAttrib(m_handle, GLFW_FLOATING, value ? GLFW_TRUE : GLFW_FALSE);
+            glfwSetWindowAttrib(m_handle, GLFW_RESIZABLE, value ? GLFW_TRUE : GLFW_FALSE);
         });
     }
 
@@ -177,11 +177,27 @@ namespace glfw_cpp
         });
     }
 
+    void Window::set_floating(bool value)
+    {
+        m_attributes.floating = value;
+        Instance::get().enqueue_task([this, value] {
+            glfwSetWindowAttrib(m_handle, GLFW_FLOATING, value ? GLFW_TRUE : GLFW_FALSE);
+        });
+    }
+
     void Window::set_focus_on_show(bool value)
     {
         m_attributes.focus_on_show = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_FOCUS_ON_SHOW, value ? GLFW_TRUE : GLFW_FALSE);
+        });
+    }
+
+    void Window::set_mouse_passthrough(bool value)
+    {
+        m_attributes.mouse_passthrough = value;
+        Instance::get().enqueue_task([this, value] {
+            glfwSetWindowAttrib(m_handle, GLFW_MOUSE_PASSTHROUGH, value ? GLFW_TRUE : GLFW_FALSE);
         });
     }
 

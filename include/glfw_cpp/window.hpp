@@ -39,7 +39,7 @@ namespace glfw_cpp
         auto   operator<=>(const CursorPosition&) const = default;
     };
 
-    // TODO: context related attributes and framebuffer related attributes
+    // TODO: add context related attributes and framebuffer related attributes
     struct Attributes
     {
         unsigned int focused                 : 1 = 0;
@@ -48,12 +48,12 @@ namespace glfw_cpp
         unsigned int hovered                 : 1 = 0;
         unsigned int visible                 : 1 = 0;
         unsigned int resizable               : 1 = 0;
-        unsigned int decorated               : 1 = 0;    // TODO: implement setter and updates
+        unsigned int decorated               : 1 = 0;
         unsigned int auto_iconify            : 1 = 0;
         unsigned int floating                : 1 = 0;
-        unsigned int transparent_framebuffer : 1 = 0;    // TODO: implement setter and updates
+        unsigned int transparent_framebuffer : 1 = 0;    // TODO: add opacity operations
         unsigned int focus_on_show           : 1 = 0;
-        unsigned int mouse_passthrough       : 1 = 0;    // TODO: implement setter and updates
+        unsigned int mouse_passthrough       : 1 = 0;
 
         bool operator==(const Attributes&) const = default;
     };
@@ -166,15 +166,6 @@ namespace glfw_cpp
         void set_vsync(bool value);
 
         /**
-         * @brief Toggle window vertical sync (vsync).
-         *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
-         *
-         * Corresponds to `glfwSwapInterval`.
-         */
-        void toggle_vsync() { set_vsync(!is_vsync_enabled()); }
-
-        /**
          * @brief Set whether the window should be resizable by the user.
          *
          * @param value True to make the window resizable, false to disable.
@@ -184,14 +175,13 @@ namespace glfw_cpp
         void set_resizable(bool value);
 
         /**
-         * @brief Set whether the window should be floating or not.
+         * @brief Set whether the window should have decoration such as a border, a close widget, etc.
          *
-         * @param value True to make it floating, false to disable.
+         * @param value True to make the window decorated, false to disable decoration.
          *
-         * Also known as always-on-top.
-         * Corresponds to setting `GLFW_FLOATING` attribute.
+         * Corresponds to setting `GLFW_DECORATED` attribute.
          */
-        void set_floating(bool value);
+        void set_decorated(bool value);
 
         /**
          * @brief Set whether the window on fullscreen should iconify on focus loss, a close widget, etc.
@@ -203,6 +193,16 @@ namespace glfw_cpp
         void set_auto_iconify(bool value);
 
         /**
+         * @brief Set whether the window should be floating or not.
+         *
+         * @param value True to make it floating, false to disable.
+         *
+         * Corresponds to setting `GLFW_FLOATING` attribute.
+         * Also known as always-on-top.
+         */
+        void set_floating(bool value);
+
+        /**
          * @brief Set whether the window will be given input focus when window is shown from hidden state.
          *
          * @param value True to make it auto focus, false to disable.
@@ -210,6 +210,15 @@ namespace glfw_cpp
          * Corresponds to setting `GLFW_FOCUS_ON_SHOW` attribute.
          */
         void set_focus_on_show(bool value);
+
+        /**
+         * @brief Set whether the window is transparent to mouse input.
+         *
+         * @param value True to pass through mouse input, false to disable.
+         *
+         * Corresponds to setting `GLFW_MOUSE_PASSTHROUGH` attribute.
+         */
+        void set_mouse_passthrough(bool value);
 
         /**
          * @brief Set window size.
@@ -389,11 +398,6 @@ namespace glfw_cpp
          * @param value True to capture the mouse, false to release it.
          */
         void set_capture_mouse(bool value) noexcept;
-
-        /**
-         * @brief Toggle the mouse capture state.
-         */
-        void toggle_capture_mouse() noexcept { set_capture_mouse(!is_mouse_captured()); }
 
         /**
          * @brief Resize the event queue to the new size.
