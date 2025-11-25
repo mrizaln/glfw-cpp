@@ -1,12 +1,11 @@
-#ifndef INPUT_HPP_354TKEJR8H
-#define INPUT_HPP_354TKEJR8H
+#ifndef GLFW_CPP_INPUT_HPP
+#define GLFW_CPP_INPUT_HPP
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <initializer_list>
 #include <span>
-#include <string_view>
 #include <vector>
 
 namespace glfw_cpp
@@ -665,4 +664,4 @@ namespace glfw_cpp
     }
 }
 
-#endif /* end of include guard: INPUT_HPP_354TKEJR8H */
+#endif /* end of include guard: GLFW_CPP_INPUT_HPP */

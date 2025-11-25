@@ -1,5 +1,5 @@
-#ifndef WINDOW_HPP_IROQWEOX
-#define WINDOW_HPP_IROQWEOX
+#ifndef GLFW_CPP_WINDOW_HPP
+#define GLFW_CPP_WINDOW_HPP
 
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/input.hpp"
@@ -464,4 +464,4 @@ namespace glfw_cpp
     };
 }
 
-#endif /* end of include guard: WINDOW_HPP_IROQWEOX */
+#endif /* end of include guard: GLFW_CPP_WINDOW_HPP */

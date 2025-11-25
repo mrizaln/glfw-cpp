@@ -1,5 +1,5 @@
-#ifndef HELPER_HPP_3479TGFOWUEA6R
-#define HELPER_HPP_3479TGFOWUEA6R
+#ifndef GLFW_CPP_HELPER_HPP
+#define GLFW_CPP_HELPER_HPP
 
 #include <concepts>
 #include <utility>
@@ -202,4 +202,4 @@ namespace glfw_cpp::helper::variant
     };
 }
 
-#endif /* end of include guard: HELPER_HPP_3479TGFOWUEA6R */
+#endif /* end of include guard: GLFW_CPP_HELPER_HPP */

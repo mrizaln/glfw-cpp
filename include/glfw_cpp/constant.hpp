@@ -1,5 +1,5 @@
-#ifndef CONSTANT_HPP_UGI527S3R8
-#define CONSTANT_HPP_UGI527S3R8
+#ifndef GLFW_CPP_CONSTANT_HPP
+#define GLFW_CPP_CONSTANT_HPP
 
 #include <concepts>
 
@@ -14,4 +14,4 @@ namespace glfw_cpp::inline constant
     static constexpr auto any_position   = any_position_v<int>;
 }
 
-#endif /* end of include guard: CONSTANT_HPP_UGI527S3R8 */
+#endif /* end of include guard: GLFW_CPP_CONSTANT_HPP */

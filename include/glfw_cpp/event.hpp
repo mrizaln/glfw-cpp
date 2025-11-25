@@ -1,5 +1,5 @@
-#ifndef EVENT_HPP_Q439GUKLHFWE
-#define EVENT_HPP_Q439GUKLHFWE
+#ifndef GLFW_CPP_EVENT_HPP
+#define GLFW_CPP_EVENT_HPP
 
 #include "glfw_cpp/helper.hpp"
 #include "glfw_cpp/input.hpp"
@@ -627,4 +627,4 @@ namespace glfw_cpp
     }
 }
 
-#endif /* end of include guard: EVENT_HPP_Q439GUKLHFWE */
+#endif /* end of include guard: GLFW_CPP_EVENT_HPP */

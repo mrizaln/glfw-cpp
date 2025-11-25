@@ -1,5 +1,5 @@
-#ifndef INSTANCE_HPP_AO39EW8FOEW
-#define INSTANCE_HPP_AO39EW8FOEW
+#ifndef GLFW_CPP_INSTANCE_HPP
+#define GLFW_CPP_INSTANCE_HPP
 
 #include "glfw_cpp/helper.hpp"
 
@@ -558,4 +558,4 @@ namespace glfw_cpp
     uint64_t get_timer_frequency();
 }
 
-#endif /* end of include guard: INSTANCE_HPP_AO39EW8FOEW */
+#endif /* end of include guard: GLFW_CPP_INSTANCE_HPP */

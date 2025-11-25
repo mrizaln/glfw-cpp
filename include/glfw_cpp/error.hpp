@@ -1,5 +1,5 @@
-#ifndef ERROR_HPP_32QWETF9D8
-#define ERROR_HPP_32QWETF9D8
+#ifndef GLFW_CPP_ERROR_HPP
+#define GLFW_CPP_ERROR_HPP
 
 #include <format>
 #include <stdexcept>
@@ -288,4 +288,4 @@ namespace glfw_cpp
     // ---------------
 }
 
-#endif /* end of include guard: ERROR_HPP_32QWETF9D8 */
+#endif /* end of include guard: GLFW_CPP_ERROR_HPP */

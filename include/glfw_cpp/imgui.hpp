@@ -1,5 +1,5 @@
-#ifndef IMGUI_HPP_4W9EF8DHU
-#define IMGUI_HPP_4W9EF8DHU
+#ifndef GLFW_CPP_IMGUI_HPP
+#define GLFW_CPP_IMGUI_HPP
 
 #include "glfw_cpp/event.hpp"
 
@@ -149,4 +149,4 @@ namespace glfw_cpp::imgui
     }
 }
 
-#endif /* end of include guard: IMGUI_HPP_4W9EF8DHU */
+#endif /* end of include guard: GLFW_CPP_IMGUI_HPP */
