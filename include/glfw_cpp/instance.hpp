@@ -61,40 +61,45 @@ namespace glfw_cpp
 
     namespace api
     {
+        using helper::meta::may_opt;
+        using helper::meta::MayOpt;
+
         /**
          * @struct OpenGL
          * @brief Describe the OpenGL version to use.
          */
+        template <bool O = false>
         struct OpenGL
         {
-            int  version_major  = 1;
-            int  version_minor  = 0;
-            bool forward_compat = true;    // for OpenGL 3.0 and above
+            MayOpt<O, int>  version_major  = may_opt<O>(1);
+            MayOpt<O, int>  version_minor  = may_opt<O>(0);
+            MayOpt<O, bool> forward_compat = may_opt<O>(true);    // OpenGL 3.0+
 
-            gl::Profile         profile          = gl::Profile::Core;    // for OpenGL 3.2 and above
-            gl::CreationApi     creation_api     = gl::CreationApi::Native;
-            gl::Robustness      robustness       = gl::Robustness::NoRobustness;
-            gl::ReleaseBehavior release_behavior = gl::ReleaseBehavior::Any;
+            MayOpt<O, gl::Profile>         profile          = may_opt<O>(gl::Profile::Core);    // OpenGL 3.2+
+            MayOpt<O, gl::CreationApi>     creation_api     = may_opt<O>(gl::CreationApi::Native);
+            MayOpt<O, gl::Robustness>      robustness       = may_opt<O>(gl::Robustness::NoRobustness);
+            MayOpt<O, gl::ReleaseBehavior> release_behavior = may_opt<O>(gl::ReleaseBehavior::Any);
 
-            bool debug    = false;
-            bool no_error = false;
+            MayOpt<O, bool> debug    = may_opt<O>(false);
+            MayOpt<O, bool> no_error = may_opt<O>(false);
         };
 
         /**
          * @struct OpenGLES
          * @brief Describe the OpenGLES version to use.
          */
+        template <bool O = false>
         struct OpenGLES
         {
-            int version_major = 1;
-            int version_minor = 0;
+            MayOpt<O, int> version_major = may_opt<O>(1);
+            MayOpt<O, int> version_minor = may_opt<O>(0);
 
-            gl::CreationApi     creation_api     = gl::CreationApi::Native;
-            gl::Robustness      robustness       = gl::Robustness::NoRobustness;
-            gl::ReleaseBehavior release_behavior = gl::ReleaseBehavior::Any;
+            MayOpt<O, gl::CreationApi>     creation_api     = may_opt<O>(gl::CreationApi::Native);
+            MayOpt<O, gl::Robustness>      robustness       = may_opt<O>(gl::Robustness::NoRobustness);
+            MayOpt<O, gl::ReleaseBehavior> release_behavior = may_opt<O>(gl::ReleaseBehavior::Any);
 
-            bool debug    = false;
-            bool no_error = false;
+            MayOpt<O, bool> debug    = may_opt<O>(false);
+            MayOpt<O, bool> no_error = may_opt<O>(false);
         };
 
         /**
@@ -105,97 +110,114 @@ namespace glfw_cpp
         {
         };
 
-        using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
+        template <bool O = false>
+        using Variant = std::variant<OpenGL<O>, OpenGLES<O>, NoApi>;
 
         template <typename T>
-        concept Api = helper::variant::VariantMember<T, Variant>;
+        concept Api = helper::variant::VariantMember<T, Variant<false>>
+                   or helper::variant::VariantMember<T, Variant<true>>;
     }
 
     namespace hint
     {
+        using helper::meta::may_opt;
+        using helper::meta::MayOpt;
+
         /**
          * @struct Api
          * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no
          * API).
          */
-        struct Api : helper::variant::VariantWrapper<api::Variant>
+        template <bool O = false>
+        struct Api : helper::variant::VariantWrapper<api::Variant<O>>
         {
-            using VariantWrapper::VariantWrapper;
+            using helper::variant::VariantWrapper<api::Variant<O>>::VariantWrapper;
         };
 
+        template <bool O = false>
         struct Window
         {
-            bool resizable               = true;
-            bool visible                 = true;
-            bool decorated               = true;
-            bool focused                 = true;
-            bool auto_iconify            = true;
-            bool floating                = false;
-            bool maximized               = false;
-            bool center_cursor           = true;
-            bool transparent_framebuffer = false;
-            bool focus_on_show           = true;
-            bool scale_to_monitor        = false;
-            bool scale_framebuffer       = true;
-            bool mouse_passthrough       = false;
-            int  position_x              = constant::any_position;
-            int  position_y              = constant::any_position;
+            MayOpt<O, bool> resizable               = may_opt<O>(true);
+            MayOpt<O, bool> visible                 = may_opt<O>(true);
+            MayOpt<O, bool> decorated               = may_opt<O>(true);
+            MayOpt<O, bool> focused                 = may_opt<O>(true);
+            MayOpt<O, bool> auto_iconify            = may_opt<O>(true);
+            MayOpt<O, bool> floating                = may_opt<O>(false);
+            MayOpt<O, bool> maximized               = may_opt<O>(false);
+            MayOpt<O, bool> center_cursor           = may_opt<O>(true);
+            MayOpt<O, bool> transparent_framebuffer = may_opt<O>(false);
+            MayOpt<O, bool> focus_on_show           = may_opt<O>(true);
+            MayOpt<O, bool> scale_to_monitor        = may_opt<O>(false);
+            MayOpt<O, bool> scale_framebuffer       = may_opt<O>(true);
+            MayOpt<O, bool> mouse_passthrough       = may_opt<O>(false);
+            MayOpt<O, int>  position_x              = may_opt<O>(constant::any_position);
+            MayOpt<O, int>  position_y              = may_opt<O>(constant::any_position);
         };
 
+        template <bool O = false>
         struct Framebuffer
         {
-            int  red_bits     = 8;
-            int  green_bits   = 8;
-            int  blue_bits    = 8;
-            int  alpha_bits   = 8;
-            int  depth_bits   = 24;
-            int  stencil_bits = 8;
-            int  samples      = 0;
-            bool stereo       = false;
-            bool srgb_capable = false;
-            bool doublebuffer = true;
+            MayOpt<O, int>  red_bits     = may_opt<O>(8);
+            MayOpt<O, int>  green_bits   = may_opt<O>(8);
+            MayOpt<O, int>  blue_bits    = may_opt<O>(8);
+            MayOpt<O, int>  alpha_bits   = may_opt<O>(8);
+            MayOpt<O, int>  depth_bits   = may_opt<O>(24);
+            MayOpt<O, int>  stencil_bits = may_opt<O>(8);
+            MayOpt<O, int>  samples      = may_opt<O>(0);
+            MayOpt<O, bool> stereo       = may_opt<O>(false);
+            MayOpt<O, bool> srgb_capable = may_opt<O>(false);
+            MayOpt<O, bool> doublebuffer = may_opt<O>(true);
         };
 
+        template <bool O = false>
         struct Monitor
         {
-            int refresh_rate = constant::dont_care;
+            MayOpt<O, int> refresh_rate = may_opt<O>(constant::dont_care);
         };
 
+        template <bool O = false>
         struct Win32
         {
-            bool keyboard_menu = false;
-            bool showdefault   = false;
+            MayOpt<O, bool> keyboard_menu = may_opt<O>(false);
+            MayOpt<O, bool> showdefault   = may_opt<O>(false);
         };
 
+        template <bool O = false>
         struct Cocoa
         {
-            const char* frame_name         = "";
-            bool        graphics_switching = false;
+            MayOpt<O, const char*> frame_name         = may_opt<O>("");
+            MayOpt<O, bool>        graphics_switching = may_opt<O>(false);
         };
 
+        template <bool O = false>
         struct Wayland
         {
-            const char* app_id = "";
+            MayOpt<O, const char*> app_id = may_opt<O>("");
         };
 
+        template <bool O = false>
         struct X11
         {
-            const char* class_name    = "";
-            const char* instance_name = "";
+            MayOpt<O, const char*> class_name    = may_opt<O>("");
+            MayOpt<O, const char*> instance_name = may_opt<O>("");
         };
     }
 
+    template <bool O = false>
     struct Hint
     {
-        hint::Api         api         = api::OpenGL{};
-        hint::Window      window      = {};
-        hint::Framebuffer framebuffer = {};
-        hint::Monitor     monitor     = {};
-        hint::Win32       win32       = {};
-        hint::Cocoa       cocoa       = {};
-        hint::Wayland     wayland     = {};
-        hint::X11         x11         = {};
+        hint::Api<O>         api         = api::OpenGL<O>{};
+        hint::Window<O>      window      = {};
+        hint::Framebuffer<O> framebuffer = {};
+        hint::Monitor<O>     monitor     = {};
+        hint::Win32<O>       win32       = {};
+        hint::Cocoa<O>       cocoa       = {};
+        hint::Wayland<O>     wayland     = {};
+        hint::X11<O>         x11         = {};
     };
+
+    using FullHint    = Hint<false>;
+    using PartialHint = Hint<true>;
 
     enum class Platform : int
     {
@@ -254,7 +276,7 @@ namespace glfw_cpp
         Instance& operator=(const Instance&) = delete;
 
         /**
-         * @brief Apply window creation hints.
+         * @brief Apply window creation hints (fully).
          *
          * @param hint The hints to be applied.
          *
@@ -265,7 +287,21 @@ namespace glfw_cpp
          * This function does not check whether the specified hint values are valid. If you set hints to
          * invalid values this will instead be reported by the next call to `create_window`.
          */
-        void apply_hint(const Hint& hint);
+        void apply_hint(const FullHint& hint);
+
+        /**
+         * @brief Apply window creation hints (partially).
+         *
+         * @param hint The hints to be applied.
+         *
+         * The hints sticks to the instance. The value set won't be changed unless a new hint is applied. To
+         * get the same effect as setting the hint as default (`glfwDefaultWindowHints`) pass a default
+         * constructed `Hint`.
+         *
+         * This function does not check whether the specified hint values are valid. If you set hints to
+         * invalid values this will instead be reported by the next call to `create_window`.
+         */
+        void apply_hint_some(const PartialHint& hint);
 
         /**
          * @brief Create a window.

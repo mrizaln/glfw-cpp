@@ -2,6 +2,8 @@
 #define GLFW_CPP_HELPER_HPP
 
 #include <concepts>
+#include <optional>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -200,6 +202,22 @@ namespace glfw_cpp::helper::variant
 
         Var variant;
     };
+}
+
+namespace glfw_cpp::helper::meta
+{
+    template <bool Opt, typename T>
+    using MayOpt = std::conditional_t<Opt, std::optional<T>, T>;
+
+    template <bool Opt, std::move_constructible T>
+    constexpr MayOpt<Opt, T> may_opt(T t)
+    {
+        if constexpr (Opt) {
+            return std::nullopt;
+        } else {
+            return std::move(t);
+        }
+    }
 }
 
 #endif /* end of include guard: GLFW_CPP_HELPER_HPP */
