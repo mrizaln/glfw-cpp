@@ -599,6 +599,5 @@ namespace glfw_cpp
         auto current = glfwGetCurrentContext();
         util::check_glfw_error();
         return current;
-        glfwGetProcAddress;
     }
 }

@@ -1,7 +1,7 @@
 #ifndef INSTANCE_HPP_AO39EW8FOEW
 #define INSTANCE_HPP_AO39EW8FOEW
 
-#include "glfw_cpp/detail/helper.hpp"
+#include "glfw_cpp/helper.hpp"
 
 #include "glfw_cpp/constant.hpp"
 
@@ -19,7 +19,7 @@ namespace glfw_cpp
 {
     class Window;
     class IEventInterceptor;
-    class Event;
+    struct Event;
 
     namespace gl
     {
@@ -108,7 +108,7 @@ namespace glfw_cpp
         using Variant = std::variant<OpenGL, OpenGLES, NoApi>;
 
         template <typename T>
-        concept Api = detail::traits::VarTrait<Variant>::template is_elem<T>();
+        concept Api = helper::variant::VariantMember<T, Variant>;
     }
 
     namespace hint
@@ -118,16 +118,9 @@ namespace glfw_cpp
          * @brief Describe the underlying graphics API to use with GLFW (variant of OpenGL, OpenGLES, or no
          * API).
          */
-        class Api : public detail::variants::VariantBase<api::Variant>
+        struct Api : helper::variant::VariantWrapper<api::Variant>
         {
-        public:
-            Api() = default;
-
-            template <typename T>
-            Api(T&& t)
-                : VariantBase{ std::forward<T>(t) }
-            {
-            }
+            using VariantWrapper::VariantWrapper;
         };
 
         struct Window
