@@ -1,9 +1,9 @@
 #ifndef GLFW_CPP_INSTANCE_HPP
 #define GLFW_CPP_INSTANCE_HPP
 
-#include "glfw_cpp/helper.hpp"
-
 #include "glfw_cpp/constant.hpp"
+#include "glfw_cpp/error.hpp"
+#include "glfw_cpp/helper.hpp"
 
 #include <chrono>
 #include <functional>
@@ -85,7 +85,7 @@ namespace glfw_cpp
          * The field `forward_compat` only makes sense for OpenGL 3.0+.
          * The field `profile` only makes sense for OpenGL 3.2+.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct OpenGL
         {
             MayOpt<Opt, int>  version_major  = may_opt<Opt>(1);
@@ -107,7 +107,7 @@ namespace glfw_cpp
          *
          * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct OpenGLES
         {
             MayOpt<Opt, int> version_major = may_opt<Opt>(1);
@@ -129,7 +129,7 @@ namespace glfw_cpp
         {
         };
 
-        template <bool Opt = false>
+        template <bool Opt = true>
         using Variant = std::variant<OpenGL<Opt>, OpenGLES<Opt>, NoApi>;
 
         template <typename T>
@@ -149,7 +149,7 @@ namespace glfw_cpp
          *
          * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Api : helper::variant::VariantWrapper<api::Variant<Opt>>
         {
             using helper::variant::VariantWrapper<api::Variant<Opt>>::VariantWrapper;
@@ -161,7 +161,7 @@ namespace glfw_cpp
          *
          * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Window
         {
             MayOpt<Opt, bool> resizable               = may_opt<Opt>(true);
@@ -187,7 +187,7 @@ namespace glfw_cpp
          *
          * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Framebuffer
         {
             MayOpt<Opt, int>  red_bits     = may_opt<Opt>(8);
@@ -208,7 +208,7 @@ namespace glfw_cpp
          *
          * @tparam Opt Indicates whether to use optional fields or not.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Monitor
         {
             MayOpt<Opt, int> refresh_rate = may_opt<Opt>(constant::dont_care);
@@ -222,7 +222,7 @@ namespace glfw_cpp
          *
          * The hints will be ignored if the platform used is not Win32.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Win32
         {
             MayOpt<Opt, bool> keyboard_menu = may_opt<Opt>(false);
@@ -237,7 +237,7 @@ namespace glfw_cpp
          *
          * The hints will be ignored if the platform used is not Win32.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Cocoa
         {
             MayOpt<Opt, const char*> frame_name         = may_opt<Opt>("");
@@ -252,7 +252,7 @@ namespace glfw_cpp
          *
          * The hints will be ignored if the platform used is not Win32.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct Wayland
         {
             MayOpt<Opt, const char*> app_id = may_opt<Opt>("");
@@ -266,7 +266,7 @@ namespace glfw_cpp
          *
          * The hints will be ignored if the platform used is not Win32.
          */
-        template <bool Opt = false>
+        template <bool Opt = true>
         struct X11
         {
             MayOpt<Opt, const char*> class_name    = may_opt<Opt>("");
@@ -280,7 +280,7 @@ namespace glfw_cpp
      *
      * @tparam Opt Indicates whether to use optional fields or not.
      */
-    template <bool Opt = false>
+    template <bool Opt = true>
     struct Hint
     {
         hint::Api<Opt>         api         = api::OpenGL<Opt>{};
@@ -364,7 +364,7 @@ namespace glfw_cpp
         friend Window;
         friend std::unique_ptr<Instance> init(const InitHint&);
 
-        using ErrorCallback = std::function<void(int, std::string_view)>;
+        using ErrorCallback = std::function<void(ErrorCode, std::string_view)>;
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -373,32 +373,36 @@ namespace glfw_cpp
         Instance& operator=(const Instance&) = delete;
 
         /**
-         * @brief Apply window creation hints (fully).
-         *
-         * @param hint The hints to be applied.
-         *
-         * The hints sticks to the instance. The value set won't be changed unless a new hint is applied. To
-         * get the same effect as setting the hint as default (`glfwDefaultWindowHints`) pass a default
-         * constructed `Hint`.
-         *
-         * This function does not check whether the specified hint values are valid. If you set hints to
-         * invalid values this will instead be reported by the next call to `create_window`.
-         */
-        void apply_hint(const FullHint& hint);
-
-        /**
          * @brief Apply window creation hints (partially).
          *
          * @param hint The hints to be applied.
          *
-         * The hints sticks to the instance. The value set won't be changed unless a new hint is applied. To
-         * get the same effect as setting the hint as default (`glfwDefaultWindowHints`) pass a default
-         * constructed `Hint`.
+         * The hints sticks to the instance. The values set won't be changed unless a new hint is applied.
          *
          * This function does not check whether the specified hint values are valid. If you set hints to
          * invalid values this will instead be reported by the next call to `create_window`.
          */
-        void apply_hint_some(const PartialHint& hint);
+        void apply_hint(const PartialHint& hint);
+
+        /**
+         * @brief Apply window creation hints (fully).
+         *
+         * @param hint The hints to be applied.
+         *
+         * The hints sticks to the instance. The value set won't be changed unless a new hint is applied.
+         *
+         * This function does not check whether the specified hint values are valid. If you set hints to
+         * invalid values this will instead be reported by the next call to `create_window`.
+         *
+         * Calling this function with default constructed argument should be equal to calling
+         * `apply_hint_default()`.
+         */
+        void apply_hint_full(const FullHint& hint);
+
+        /**
+         * @brief Resets the hints to its default values.
+         */
+        void apply_hint_default();
 
         /**
          * @brief Create a window.
@@ -423,8 +427,8 @@ namespace glfw_cpp
             int              width,
             int              height,
             std::string_view title,
-            GLFWmonitor*     monitor,
-            GLFWwindow*      share
+            GLFWmonitor*     monitor = nullptr,
+            GLFWwindow*      share   = nullptr
         );
 
         /**
@@ -443,17 +447,14 @@ namespace glfw_cpp
         }
 
         /**
-         * @brief Set logger for glfw-cpp.
+         * @brief Set error callback for glfw-cpp.
          *
-         * @param logger The new logger function.
+         * @param callback Callback to be installed into glfw-cpp.
          *
-         * This function replaces the logger used by glfw-cpp used to log its debug information and the
-         * underlying GLFW errors. You can set the argument to nullptr to effectively turn off the logger.
+         * You can set the argument to `nullptr` to effectively turn off the callback. By default the value
+         * for the callback is `nullptr`.
          */
-        void set_error_callback(std::function<void(int, std::string_view)> callback) noexcept
-        {
-            m_callback = callback;
-        }
+        void set_error_callback(ErrorCallback callback) noexcept { m_callback = callback; }
 
         /**
          * @brief Check if any window is still open.
