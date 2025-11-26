@@ -8,7 +8,6 @@ class Recipe(ConanFile):
     generators = ["CMakeDeps"]
     requires = [
         "fmt/10.2.1",
-        "glad/0.1.36",
         "glbinding/3.3.0",
         "glfw/3.4",
         "glm/0.9.9.8",

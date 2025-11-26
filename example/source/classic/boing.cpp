@@ -29,12 +29,17 @@
  * a hidden computer or VCR.
  *****************************************************************************/
 
-#include <exception>
-#include <iostream>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 
-#include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
+
 #include <linmath.h>
+
+#include <cstdio>
+#include <exception>
+
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 /*****************************************************************************
  * Various declarations and macros
@@ -252,12 +257,12 @@ void handleKeyEvent(glfw_cpp::Window& window, const glfw_cpp::event::KeyPressed&
     // should be fullscreen and off (but I haven't implemented adding monitor)
     // TODO: change to fullscreen toggle
     if ((key == K::Enter && mods.test(M::Alt)) || (key == K::F11 && mods.test(M::Alt))) {
-        if (window.properties().attribute.maximized) {
+        if (window.attributes().maximized) {
             window.restore();
-            std::cout << "restore\n";
+            printf("restore\n");
         } else {
             window.maximize();
-            std::cout << "maximize\n";
+            printf("maximize\n");
         }
     }
 }
@@ -614,17 +619,18 @@ void drawGrid(void)
 
 int main(void)
 try {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            // default OpenGL
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto level, auto msg) { std::cout << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg); }
-    );
+    auto glfw = glfw_cpp::init({});
 
-    auto window = glfw->create_window({}, "Boing | classic Amiga demo (glfw-cpp)", 400, 400);
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
+
+    auto window = glfw->create_window(400, 400, "Boing | classic Amiga demo (glfw-cpp)");
 
     window.lock_current_aspect_ratio();
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     reshape(window.properties().dimensions.width, window.properties().dimensions.height);
     init();
@@ -647,7 +653,7 @@ try {
 
         glfw->poll_events();
     });
-} catch (std::exception& e) {
-    std::cerr << "Exception occurred: " << e.what() << '\n';
+} catch (const std::exception& e) {
+    fprintf(stderr, "Exception occurred: %s\n", e.what());
     return 1;
 }

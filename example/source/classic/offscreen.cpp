@@ -26,15 +26,21 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <linmath.h>
+
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include <stb_image_write.h>
+
 #include <exception>
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-#include <linmath.h>
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include <stb_image_write.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 struct Vertex
 {
@@ -78,27 +84,24 @@ static const char* fragment_shader_text = R"glsl(
 
 int main()
 try {
-    auto api = glfw_cpp::api::OpenGL{
-        .major  = 2,
-        .minor  = 0,
-        .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-    };
-    auto logger = [](auto level, auto msg) {
-        if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-            fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
-        }
-    };
+    auto glfw = glfw_cpp::init({ .cocoa_menubar = false });
 
-    using Flag = glfw_cpp::Flag;
-    auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Visible };    // make not visible
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
 
-    // TODO: implement
-    // glfwInitHint(GLFW_COCOA_MENUBAR, GLFW_FALSE);
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 2,
+            .version_minor = 0,
+        },
+        .window = { .visible = false },
+    });
 
-    auto glfw   = glfw_cpp::init(api, logger);
-    auto window = glfw->create_window(hint, "Simple offscreen example (glfw-cpp)", 800, 600);
+    auto window = glfw->create_window(800, 600, "Simple offscreen example (glfw-cpp)");
 
-    window.bind();
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     // NOTE: OpenGL error checks have been omitted for brevity
 

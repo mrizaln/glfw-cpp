@@ -26,13 +26,18 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <linmath.h>
+
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-#include <linmath.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 typedef struct Vertex
 {
@@ -77,22 +82,25 @@ static const char* fragment_shader_text = R"glsl(
 
 int main()
 {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            .major          = 3,
-            .minor          = 3,
-            .profile        = glfw_cpp::api::gl::Profile::Core,
-            .forward_compat = true,
-            .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-                fprintf(stderr, "%s\n", msg.c_str());
-            }
-        }
-    );
+    auto glfw = glfw_cpp::init({});
 
-    auto window = glfw->create_window({}, "OpenGL Triangle (glfw-cpp)", 640, 480);
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
+
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major  = 3,
+            .version_minor  = 3,
+            .forward_compat = true,
+            .profile        = glfw_cpp::gl::Profile::Core,
+        },
+    });
+
+    auto window = glfw->create_window(640, 480, "OpenGL Triangle (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     // NOTE: OpenGL error checks have been omitted for brevity
 

@@ -26,6 +26,11 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
 #include <cassert>
 #include <cmath>
 #include <cstddef>
@@ -33,8 +38,7 @@
 #include <cstdlib>
 #include <exception>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 /* Map height updates */
 #define MAX_CIRCLE_SIZE         (5.0f)
@@ -130,7 +134,7 @@ static GLuint make_shader(GLenum type, const char* text)
         glShaderSource(shader, 1, (const GLchar**)&text, NULL);
         glCompileShader(shader);
         glGetShaderiv(shader, GL_COMPILE_STATUS, &shader_ok);
-        if (shader_ok != GL_TRUE) {
+        if (shader_ok != 1) {
             fprintf(
                 stderr,
                 "ERROR: Failed to compile %s shader\n",
@@ -169,7 +173,7 @@ static GLuint make_shader_program(const char* vs_text, const char* fs_text)
                 glLinkProgram(program);
                 glGetProgramiv(program, GL_LINK_STATUS, &program_ok);
 
-                if (program_ok != GL_TRUE) {
+                if (program_ok != 1) {
                     fprintf(stderr, "ERROR, failed to link shader program\n");
                     glGetProgramInfoLog(program, 8192, &log_length, info_log);
                     fprintf(stderr, "ERROR: \n%s\n\n", info_log);
@@ -374,24 +378,28 @@ static void update_mesh()
 int main()
 
 try {
-    auto api = glfw_cpp::api::OpenGL{
-        .major          = 3,
-        .minor          = 2,
-        .profile        = glfw_cpp::api::gl::Profile::Core,
-        .forward_compat = true,
-        .loader         = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-    };
-    auto logger = [](auto level, auto msg) {
-        if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-            fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
-        }
-    };
+    auto glfw = glfw_cpp::init({});
 
-    using Flag = glfw_cpp::Flag;
-    auto hint  = glfw_cpp::Hint{ .flags = Flag::Default & ~Flag::Resizable };
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp error [%s]: %s\n", to_string(code).data(), msg.data());
+    });
 
-    auto glfw   = glfw_cpp::init(api, logger);
-    auto window = glfw->create_window(hint, "GLFW OpenGL3 Heightmap demo (glfw-cpp)", 800, 600);
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 3,
+            .version_minor = 2,
+            .forward_compat = true,
+            .profile       = glfw_cpp::gl::Profile::Core,
+        },
+        .window = {
+            .resizable = false,
+        },
+    });
+
+    auto window = glfw->create_window(800, 600, "GLFW OpenGL3 Heightmap demo (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     /* Prepare opengl resources for rendering */
     GLuint shader_program = make_shader_program(vertex_shader_text, fragment_shader_text);
@@ -441,7 +449,7 @@ try {
         using KC     = glfw_cpp::KeyCode;
         using KS     = glfw_cpp::KeyState;
 
-        for (const auto& event : window.poll()) {
+        for (const auto& event : window.swap_events()) {
             if (auto* e = event.get_if<ev::KeyPressed>()) {
                 if (e->key == KC::Escape && e->state == KS::Press) {
                     window.request_close();
@@ -455,7 +463,7 @@ try {
         glClear(GL_COLOR_BUFFER_BIT);
         glDrawElements(GL_LINES, 2 * MAP_NUM_LINES, GL_UNSIGNED_INT, 0);
 
-        window.display();
+        window.swap_buffers();
         glfw->poll_events();
 
         /* Check the frame rate and update the heightmap if needed */

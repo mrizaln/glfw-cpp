@@ -14,11 +14,16 @@
 #define _USE_MATH_DEFINES
 #endif
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <linmath.h>
+
 #include <cstdio>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-#include <linmath.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 // Maximum delta T to allow for differential calculations
 #define MAX_DELTA_T 0.01
@@ -287,8 +292,8 @@ void mouse_button_callback(glfw_cpp::Window& window, const glfw_cpp::event::Butt
 
     if (action == MS::Press) {
         window.set_capture_mouse(true);
-        cursorX = window.properties().cursor.x;
-        cursorY = window.properties().cursor.y;
+        cursorX = window.properties().cursor_position.x;
+        cursorY = window.properties().cursor_position.y;
     } else {
         window.set_capture_mouse(false);
     }
@@ -355,18 +360,16 @@ void framebuffer_size_callback(const glfw_cpp::event::FramebufferResized& event)
 
 int main()
 {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-                fprintf(stderr, "%s\n", msg.c_str());
-            }
-        }
-    );
+    auto glfw = glfw_cpp::init({});
 
-    auto window = glfw->create_window({}, "Wave Simulation (glfw-cpp)", 640, 480);
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
+
+    auto window = glfw->create_window(640, 480, "Wave Simulation (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     auto [width, height] = window.properties().framebuffer_size;
     framebuffer_size_callback({ width, height, 0, 0 });

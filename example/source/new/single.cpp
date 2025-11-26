@@ -1,30 +1,53 @@
-#include <glad/glad.h>
+#include <fmt/core.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <cmath>
 #include <iostream>
 
+using namespace gl;    // from <glbinding/gl/gl.h>
+
 int main()
 {
-    namespace api = glfw_cpp::api;
+    // Calls `glfwInit()` internally and returns an `std::unique_ptr<Instance>` that will call
+    // `glfwTerminate()` on destruction. You can pass initialization hints here as argument.
+    auto glfw = glfw_cpp::init({ .platform = glfw_cpp::Platform::Any });
 
-    // `glfw_cpp::init()` calls `glfwInit()` internally and returns an `glfw_cpp::Instance::Unique` that will
-    // call `glfwTerminate()` on destruction. Note that the graphics API can't be changed later, this is a
-    // design choice.
-    auto instance = glfw_cpp::init(api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = api::gl::Profile::Core,
-        .loader  = [](api::gl::Context, api::gl::GetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    // Set error callback for glfw functions.
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
 
-    // graphics API hints are omitted from the `WindowHint` since it's already set at initialization. Only
-    // other relevant hints are included.
-    using F   = glfw_cpp::Flag;
-    auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Focused };    // use default hint but not focused
+    // Window creation hints are aggregated into one struct. the function will only set what you explicitly
+    // set here.
+    glfw->apply_hint({
+        .api    = glfw_cpp::api::OpenGLES{ .version_major = 2, .version_minor = 0 },
+        .window = { .focused = false },
+    });
 
-    // creates a window
-    auto window = instance->create_window(hint, "Hello glfw-cpp", 800, 600);
+    // Window creation signature is the same but the last 2 arguments has its default value set to `nullptr`.
+    auto window = glfw->create_window(800, 600, "Hello glfw-cpp");
+
+    // make context current and load gl, use `get_current()` to get current context
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
+
+    // The `Window::run()` function is special function that loops over the lambda until close request
+    // dispatched. Window will swap the buffer after calling the lambda in every iteration. Events from
+    // `glfwPollEvents()` are aggregated into `EventQueue` that gets passed into the lambda which you can
+    // process; no need for callbacks.
+
+    // the underlying mechanism is just this:
+    /*
+        while (not window.should_close()) {
+            const auto& evets = window.swap_events();    // swap events enqueued by `glfw_cpp::poll_events()`
+
+            // event handling and rendering goes here...
+
+            window.swap_buffers();    // swap buffers; may block until screen refresh if vsync is on
+        }
+    */
 
     window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
         using K      = glfw_cpp::KeyCode;
@@ -32,6 +55,9 @@ int main()
 
         // handling events
 
+        // `EventQueue` contains multiple `Event` which was just a variant you can visit. To make things
+        // easier the class also have visit member function (which is what being used below). You can always
+        // use range-based for loop if you want to.
         {
             // clang-format off
             events.visit(ev::Overload{
@@ -42,7 +68,7 @@ int main()
             // clang-format on
         }
 
-        // `glfw_cpp::Window` keep a copy of (almost) every properties of the window (like pressed keys) in
+        // `Window` keeps a copy of (almost) every properties of the window (like pressed keys) in
         // itself. You can query it for continuous key input (for movement) for example.
         {
             const auto& keys = window.properties().key_state;
@@ -69,6 +95,6 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // poll events from the OS
-        instance->poll_events();
+        glfw->poll_events();
     });
 }

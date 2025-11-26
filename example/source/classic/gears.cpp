@@ -24,12 +24,16 @@
  *   - Convert to glfw-cpp (and C++)
  */
 
-#include <cmath>
-#include <exception>
-#include <iostream>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 
-#include <glad/glad.h>
 #include <glfw_cpp/glfw_cpp.hpp>
+
+#include <cmath>
+#include <cstdio>
+#include <exception>
+
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 /**
 
@@ -288,38 +292,39 @@ static void init()
 /* program entry */
 int main()
 try {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            // default OpenGL
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto level, auto msg) { std::cerr << std::format("glfw-cpp [{}]: {}\n", to_string(level), msg); }
-    );
+    auto glfw = glfw_cpp::init({});
 
-    using Flag = glfw_cpp::Flag;
-    auto hint  = glfw_cpp::Hint{ .flags = Flag::Default | Flag::TransparentFramebuffer, .depth_bits = 16 };
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
 
-    auto window = glfw->create_window(hint, "Gears (glfw-cpp)", 300, 300);
+    glfw->apply_hint({
+        .window      = { .transparent_framebuffer = true },
+        .framebuffer = { .depth_bits = 16 },
+    });
+
+    auto window = glfw->create_window(300, 300, "Gears (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     reshape(window.properties().dimensions.width, window.properties().dimensions.height);
     init();
 
     window.run([&](auto&& events) {
         namespace ev = glfw_cpp::event;
-        for (const glfw_cpp::Event& event : events) {
-            if (auto* e = event.get_if<ev::FramebufferResized>()) {
-                reshape(e->width, e->height);
-            } else if (auto* e = event.get_if<ev::KeyPressed>()) {
-                key(window, *e);
-            }
-        }
+        events.visit(ev::Overload{
+            [&](const ev::FramebufferResized& e) { reshape(e.width, e.height); },
+            [&](const ev::KeyPressed& e) { key(window, e); },
+            [&](const auto&) { /* do nothing */ },
+        });
 
         draw();
         animate();
 
         glfw->poll_events();
     });
-} catch (std::exception& e) {
-    std::cerr << "Exception occurred: " << e.what() << '\n';
+} catch (const std::exception& e) {
+    fprintf(stderr, "Exception occurred: %s\n", e.what());
     return 1;
 }

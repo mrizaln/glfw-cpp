@@ -16,7 +16,7 @@ endfunction()
 # cmake-format: off
 create_an_executable(single
   DO_SANITIZE
-  LIBS fmt::fmt glad::glad glfw-cpp khrplatform::khrplatform)
+  LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(multi
   DO_SANITIZE
@@ -28,7 +28,7 @@ create_an_executable(multi_single_thread
 
 create_an_executable(multi_multi_thread
   DO_SANITIZE
-  LIBS fmt::fmt glad::glad glfw-cpp khrplatform::khrplatform)
+  LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(monitor
   DO_SANITIZE

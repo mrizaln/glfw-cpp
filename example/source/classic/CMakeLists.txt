@@ -3,7 +3,7 @@ function(create_an_executable NAME)
   target_compile_options(${NAME} PRIVATE -Wall -Wextra -Wconversion)
   target_link_libraries(
     ${NAME}
-    PRIVATE glad::glad
+    PRIVATE glbinding::glbinding
             linmath.h::linmath.h
             glfw-cpp
             stb::stb

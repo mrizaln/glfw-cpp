@@ -26,13 +26,18 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <linmath.h>
+
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-#include <linmath.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 typedef struct Vertex
 {
@@ -74,34 +79,24 @@ static const char* fragment_shader_text = R"glsl(
 
 int main()
 {
-    // glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_EGL_CONTEXT_API);
+    auto glfw = glfw_cpp::init({});
 
-    // GLFWwindow* window = glfwCreateWindow(640, 480, "OpenGL ES 2.0 Triangle (EGL)", NULL, NULL);
-    // if (!window)
-    // {
-    //     glfwWindowHint(GLFW_CONTEXT_CREATION_API, GLFW_NATIVE_CONTEXT_API);
-    //     window = glfwCreateWindow(640, 480, "OpenGL ES 2.0 Triangle", NULL, NULL);
-    //     if (!window)
-    //     {
-    //         glfwTerminate();
-    //         exit(EXIT_FAILURE);
-    //     }
-    // }
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
 
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGLES{
-            .major  = 2,
-            .minor  = 0,
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGLES{
+            .version_major  = 2,
+            .version_minor  = 0,
+            .creation_api   = glfw_cpp::gl::CreationApi::Native,
         },
-        [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-                fprintf(stderr, "%s\n", msg.c_str());
-            }
-        }
-    );
+    });
 
-    auto window = glfw->create_window({}, "OpenGL ES 2.0 Triangle (glfw-cpp)", 640, 480);
+    auto window = glfw->create_window(640, 480, "OpenGL ES 2.0 Triangle (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     GLuint vertex_buffer;
     glGenBuffers(1, &vertex_buffer);

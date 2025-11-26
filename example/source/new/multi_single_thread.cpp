@@ -1,13 +1,16 @@
 #include <fmt/core.h>
-#include <fmt/std.h>
+
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
+
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <array>
 #include <chrono>
 #include <cmath>
 #include <ranges>
+
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 using Clock = std::chrono::steady_clock;
 
@@ -20,26 +23,43 @@ float to_fps(Clock::duration duration)
 
 int main()
 {
-    auto glfw = glfw_cpp::init(glfw_cpp::api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = glfw_cpp::api::gl::Profile::Core,
-        .loader  = [](auto ctx, auto proc) { glbinding::initialize((glbinding::ContextHandle)ctx, proc); },
+    auto glfw = glfw_cpp::init({});
+
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    });
+
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 3,
+            .version_minor = 3,
+            .profile       = glfw_cpp::gl::Profile::Core,
+        },
     });
 
     // default constructed windows will have nullptr as its handle
     auto windows = std::array<glfw_cpp::Window, 3>{};
 
     for (auto i : std::views::iota(0u, windows.size())) {
-        windows[i] = glfw->create_window({}, fmt::format("Hello glfw-cpp {}", i), 800, 600, false);
+        windows[i] = glfw->create_window(800, 600, fmt::format("Hello glfw-cpp {}", i));
+
+        glfw_cpp::make_current(windows[i].handle());
+        glbinding::initialize(i, glfw_cpp::get_proc_address);    // initialize current context with handle i
+
         windows[i].set_vsync(false);
     }
 
     auto now = Clock::now();
 
     while (glfw->has_window_opened()) {
-        for (auto& win : windows) {
+        for (auto i : std::views::iota(0u, windows.size())) {
+            auto& win = windows[i];
+
             auto delta = win.use([&](const glfw_cpp::EventQueue& events) {
+                // see https://glbinding.org/ for more detail
+                glbinding::useCurrentContext();    // use current active context
+                // glbinding::useContext(i);       // or use the handle registerned beforehand
+
                 events.visit(glfw_cpp::event::Overload{
                     [&](const glfw_cpp::event::KeyPressed& e) {
                         e.key == glfw_cpp::KeyCode::Q ? win.request_close() : void();
@@ -56,9 +76,10 @@ int main()
                 const float g = (std::cos(13.0F / 8.0F * time) + 1.0F) * 0.2F + 0.3F;
                 const float b = (std::sin(41.0F / 8.0F * time) + 1.5F) * 0.2F;
 
-                gl::glClearColor(r, g, b, 1.0F);
-                gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+                glClearColor(r, g, b, 1.0F);
+                glClear(GL_COLOR_BUFFER_BIT);
             });
+
             if (!delta.has_value()) {
                 win.hide();
             }
