@@ -34,6 +34,7 @@ namespace glfw_cpp
         , m_delta_time        { other.m_delta_time }
         , m_vsync             { other.m_vsync }
         , m_capture_mouse     { other.m_capture_mouse }
+        , m_has_context       { other.m_has_context }
         , m_event_queue_front { std::move(other.m_event_queue_front) }
         , m_event_queue_back  { std::move(other.m_event_queue_back) }
         , m_task_queue        { std::move(other.m_task_queue) }
@@ -64,6 +65,7 @@ namespace glfw_cpp
         m_delta_time        = other.m_delta_time;
         m_vsync             = other.m_vsync;
         m_capture_mouse     = other.m_capture_mouse;
+        m_has_context       = other.m_has_context;
         m_event_queue_front = std::move(other.m_event_queue_front);
         m_event_queue_back  = std::move(other.m_event_queue_back);
         m_task_queue        = std::move(other.m_task_queue);
