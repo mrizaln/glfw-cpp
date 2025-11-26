@@ -10,6 +10,7 @@ namespace glfw_cpp
     {
         // glfw error codes (these ones are from the GLFW library itself)
         // docs: https://www.glfw.org/docs/latest/group__errors.html
+        NoError              = 0x00000000,
         NotInitialized       = 0x00010001,
         NoCurrentContext     = 0x00010002,
         InvalidEnum          = 0x00010003,
@@ -37,6 +38,7 @@ namespace glfw_cpp
     {
         // clang-format off
         switch (code) {
+        case ErrorCode::NoError:              return "NoError";
         case ErrorCode::NotInitialized:       return "NotInitialized";
         case ErrorCode::NoCurrentContext:     return "NoCurrentContext";
         case ErrorCode::InvalidEnum:          return "InvalidEnum";
