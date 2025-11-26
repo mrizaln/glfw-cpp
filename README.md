@@ -9,9 +9,10 @@ This wrapper is customized for my needs and isn't a direct one-to-one port of th
 ## Features
 
 - RAII handles
-- Easy multi-window
+- Easy multi-threading (one window/context per thread)
 - Vulkan support
 - Emscripten support
+- No callback
 
 ## Dependencies
 
@@ -28,21 +29,23 @@ You can clone this repository (or add as submodule) inside your project. I recom
 
 ```cmake
 # If you are using FetchContent
+# -----------------------------
 include(FetchContent)
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
   GIT_TAG v0.11.0)
 
-option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)       # enable Vulkan support (requires Vulkan loader and headers)
+option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)        # enable Vulkan support (requires Vulkan loader and headers)
 # option(GLFW_CPP_EMSCRIPTEN_PORT "emscripten port" ON)    # enable GLFW port for emscripten (mutually exclusive with above)
+
 FetchContent_MakeAvailable(glfw-cpp)
 
-# # If you clone/submodule the repository
+# # If you clone/submodule the repository instead do this
 # add_subdirectory(path/to/the/cloned/repository)
 
 add_executable(main main.cpp)
-target_link_libraries(main PRIVATE glfw-cpp)  # you don't need to link to glfw here, glfw-cpp already link to it
+target_link_libraries(main PRIVATE glfw-cpp ...)  # you don't need to link to glfw here, glfw-cpp already link to it
 ```
 
 ### Option
@@ -53,97 +56,87 @@ This library also supports web/wasm platform. The support is possible thanks to 
 
 ### Example
 
-Using this library is as simple as
-
-> [single.cpp](./example/source/new/single.cpp)
+> [multi_multi_thread.cpp](./example/source/new/multi_multi_thread.cpp)
 
 ```cpp
-#include <glad/glad.h>
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <cmath>
-#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <thread>
+
+using namespace gl;    // from <glbinding/gl/g.h>
+
+void window_thread(glfw_cpp::Window&& window)
+{
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
+
+    auto multiplier = 1.0f / static_cast<float>(std::rand() % 10 + 1);
+    auto elapsed    = 0.0f;
+
+    while (not window.should_close()) {
+        // swap events enqueued by glfw_cpp::poll_events()
+        window.swap_events().visit(glfw_cpp::event::Overload{
+            [&](const glfw_cpp::event::KeyPressed& e) {
+                if (e.key == glfw_cpp::KeyCode::Q and e.state == glfw_cpp::KeyState::Press) {
+                    window.request_close();
+                }
+            },
+            [&](const glfw_cpp::event::FramebufferResized& e) { glViewport(0, 0, e.width, e.height); },
+            [&](const auto&) { /* do nothing */ },
+        });
+
+        elapsed += static_cast<float>(window.delta_time());
+
+        const auto r = (std::sin(multiplier * 23.0f / 8.0f * elapsed) + 1.0f) * 0.1f + 0.4f;
+        const auto g = (std::cos(multiplier * 13.0f / 8.0f * elapsed) + 1.0f) * 0.2f + 0.3f;
+        const auto b = (std::sin(multiplier * 41.0f / 8.0f * elapsed) + 1.5f) * 0.2f;
+
+        glClearColor(r, g, b, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        window.swap_buffers();
+    };
+}
 
 int main()
 {
-    namespace api = glfw_cpp::api;
+    std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    // `init()` calls `glfwInit()` internally and returns an `Instance::Unique` that will call `glfwTerminate()`
-    // on destruction. Note that the graphics API can't be changed later, this is a design choice.
-    auto instance = glfw_cpp::init(api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = api::gl::Profile::Core,
-        .loader  = [](api::gl::Context, api::gl::GetProc proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    auto glfw = glfw_cpp::init({});
+
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 3,
+            .version_minor = 3,
+            .profile       = glfw_cpp::gl::Profile::Core,
+        },
     });
 
-    // `WindowManager` is responsible for managing windows (think of window group). The only way to construct
-    // `Window` is through this `glfw_cpp::Instance::create_window_manager()` function which returns a
-    // `std::shared_ptr<WindowManager>`. Each window created with this instance claims ownership of it.
-    auto wm = instance->create_window_manager();
+    auto window1 = glfw->create_window(800, 600, "Hello glfw-cpp 1");
+    auto window2 = glfw->create_window(800, 600, "Hello glfw-cpp 2");
+    auto window3 = glfw->create_window(800, 600, "Hello glfw-cpp 3");
+    auto window4 = glfw->create_window(800, 600, "Hello glfw-cpp 4");
 
-    // Graphics API hints are omitted from the `WindowHint` since it's already set at initialization. Only
-    // other relevant hints are included.
-    using F   = glfw_cpp::Flag;
-    auto hint = glfw_cpp::Hint{ .flags = F::Default ^ F::Resizable };    // use default hint but not resizable
+    auto thread1 = std::jthread{ window_thread, std::move(window1) };
+    auto thread2 = std::jthread{ window_thread, std::move(window2) };
+    auto thread3 = std::jthread{ window_thread, std::move(window3) };
+    auto thread4 = std::jthread{ window_thread, std::move(window4) };
 
-    auto window = wm->create_window(hint, "Learn glfw-cpp", 800, 600);
-
-    // This member function is a helper for making an infinite loop until close is requested
-    window.run([&, elapsed = 0.0F](const glfw_cpp::EventQueue& events) mutable {
-        using K      = glfw_cpp::KeyCode;
-        namespace ev = glfw_cpp::event;
-
-        // Events are represented as std::variant-like structure which you can visit using the `visit()`
-        // member function. glfw_cpp also provides a helper for struct for overload pattern like below.
-        {
-            events.visit(ev::Overload{
-                [&](const ev::KeyPressed&         e) { if (e.key == K::Q) window.request_close();           },
-                [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height);                 },
-                [&](const auto&                   e) { std::cout << "event happened " << (void*)&e << '\n'; },  // catch-all case
-            });
-        }
-
-        // `glfw_cpp::Window` keeps a copy of (almost) every properties of the window (like pressed keys) in
-        // itself. You can query it directly.
-        {
-            const auto& keys = window.properties().key_state;
-
-            if (keys.all_pressed({ K::H, K::J, K::L, K::K })) {
-                std::cout << "HJKL key pressed all at once\n";
-            }
-
-            if (keys.is_pressed(K::LeftShift) && keys.any_pressed({ K::W, K::A, K::S, K::D })) {
-                std::cout << "WASD key pressed with shift key being held\n";
-            } else if (keys.any_pressed({ K::W, K::A, K::S, K::D })) {
-                std::cout << "WASD key pressed\n";
-            }
-        }
-
-        // Delta time is time between calls to `Window::display` which is after current lambda in the case of `Window::run`
-        elapsed += static_cast<float>(window.delta_time());
-
-        // OpenGL stuff
-        {
-            const float r = (std::sin(23.0F / 8.0F * elapsed) + 1.0F) * 0.1F + 0.4F;
-            const float g = (std::cos(13.0F / 8.0F * elapsed) + 1.0F) * 0.2F + 0.3F;
-            const float b = (std::sin(41.0F / 8.0F * elapsed) + 1.5F) * 0.2F;
-
-            glClearColor(r, g, b, 1.0F);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-
-        // Poll events from the OS. This must be done from main thread.
-        wm->poll_events();
-    });
+    while (glfw->has_window_opened()) {
+        using glfw_cpp::operator""_fps;
+        glfw->poll_events(120_fps);   // automatically queue events to its windows
+    }
 }
 ```
 
-> Make sure that `glfw_cpp::Instance` outlive `glfw_cpp::WindowManager` and `glfw_cpp::Window`s in order for the program to be well defined and not crashing.
-
 No manual cleanup necessary!
 
-The above example is a single-threaded, one window example. For a multi-window and multithreaded example, you can see [here](./example/source/new/multi.cpp) or [here](./example/source/new/multi_multi_manager.cpp) (I also use a different OpenGL loader library there). For emscripten example, see [this one](./example/source/emscripten/main.cpp).
+The above example is multi threaded with one context and one window per thread. For emscripten example, see [this one](./example/source/emscripten/main.cpp). For other examples, head to [example](./example) directory.
 
 ## Documentation
 
@@ -152,6 +145,5 @@ The project is documented using Doxygen. There is a Doxygen configuration in [do
 From the root of the project, just run this command (require `doxygen` binary to be installed). The output of the HTML page is in `docs/doxygen/html`
 
 ```sh
-cd docs
 doxygen docs/Doxygen
 ```
