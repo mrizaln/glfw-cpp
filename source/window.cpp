@@ -12,7 +12,6 @@
 #include <functional>
 #include <mutex>
 #include <utility>
-#include <vector>
 
 namespace glfw_cpp
 {
@@ -37,7 +36,6 @@ namespace glfw_cpp
         , m_has_context       { other.m_has_context }
         , m_event_queue_front { std::move(other.m_event_queue_front) }
         , m_event_queue_back  { std::move(other.m_event_queue_back) }
-        , m_task_queue        { std::move(other.m_task_queue) }
     // clang-format on
     {
         glfwSetWindowUserPointer(m_handle, this);
@@ -68,7 +66,6 @@ namespace glfw_cpp
         m_has_context       = other.m_has_context;
         m_event_queue_front = std::move(other.m_event_queue_front);
         m_event_queue_back  = std::move(other.m_event_queue_back);
-        m_task_queue        = std::move(other.m_task_queue);
 
         if (m_handle != nullptr) {
             glfwSetWindowUserPointer(m_handle, this);
@@ -259,18 +256,15 @@ namespace glfw_cpp
         return glfwWindowShouldClose(m_handle) == GLFW_TRUE;
     }
 
-    // TODO: confirm if there is not data race on m_event_queue_front since it returned freely here despite
-    // the m_event_queue_back locked on push_event() function
-    const EventQueue& Window::poll() noexcept
+    const EventQueue& Window::swap_events() noexcept
     {
-        process_queued_tasks();
         std::scoped_lock lock{ m_queue_mutex };
         m_event_queue_front.swap(m_event_queue_back);
         m_event_queue_back.reset();
         return m_event_queue_front;
     }
 
-    double Window::display()
+    double Window::swap_buffers()
     {
         if (m_has_context) {
             glfwSwapBuffers(m_handle);
@@ -278,12 +272,6 @@ namespace glfw_cpp
         }
         update_delta_time();
         return m_delta_time;
-    }
-
-    void Window::enqueue_task(Fun<void(Window&)>&& func) noexcept
-    {
-        std::scoped_lock lock{ m_queue_mutex };
-        m_task_queue.push_back(std::move(func));
     }
 
     void Window::request_close() noexcept
@@ -338,18 +326,6 @@ namespace glfw_cpp
         });
 
         m_event_queue_back.push(std::move(event));
-    }
-
-    void Window::process_queued_tasks() noexcept
-    {
-        auto queue = [&] {
-            std::scoped_lock lock{ m_queue_mutex };
-            return std::exchange(m_task_queue, {});
-        }();
-
-        for (auto& func : queue) {
-            func(*this);
-        }
     }
 
     void Window::update_delta_time() noexcept

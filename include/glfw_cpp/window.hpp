@@ -10,7 +10,6 @@
 #include <mutex>
 #include <optional>
 #include <string>
-#include <vector>
 
 struct GLFWwindow;
 
@@ -284,18 +283,15 @@ namespace glfw_cpp
 
         /**
          * @brief Swap the front and back event queue, then return the front queue.
-         *
-         * Besides of swapping the event queue double buffer, this function also runs tasks queued with
-         * `glfw_cpp::Window::enqueue_task`.
          */
-        const EventQueue& poll() noexcept;
+        const EventQueue& swap_events() noexcept;
 
         /**
-         * @brief See last events queued before call to `poll()`
+         * @brief See last events queued before call to `swap_events()`
          *
-         * This function just returns the last events happened before call to `poll()` it does not update the
-         * events, and if consecutive call to this function happen while there is no `poll()` in between,
-         * there will be no change to the event queue.
+         * This function just returns the last events happened before call to `swap_events()` it does not
+         * update the events, and if consecutive call to this function happen while there is no
+         * `swap_events()` in between, there will be no change to the event queue.
          */
         const EventQueue& events() noexcept { return m_event_queue_front; }
 
@@ -308,7 +304,7 @@ namespace glfw_cpp
          * @return The time taken between the last call to this function and the current call.
          *
          * This function corresponds to `glfwSwapBuffers`. This function also updates the delta time recorded
-         * on the window instance (delta time defined as interval between calls to `display()`).
+         * on the window instance (delta time defined as interval between calls to `swap_buffers()`).
          *
          * If you are using emscripten, this function will not block the execution regardless the vsync
          * option. But instead it will return immediately since `glfwSwapBuffers` is not implemented for wasm
@@ -316,19 +312,19 @@ namespace glfw_cpp
          * automatically. Instead, you need to manage the update frequency yourself. Calling this function is
          * still required though to update the delta time stored in this window instance.
          */
-        double display();
+        double swap_buffers();
 
         /**
-         * @brief Use window, check if the window should close, poll events, and display the window at the
-         * same time.
+         * @brief Use window, check if the window should close, swap events, and swap the window buffers at
+         * the same time.
          *
-         * @param func The function to be called between polling events and displaying the window.
+         * @param func The function to be called between swapping events and swapping buffers.
          * @return std::nullopt if the window should close, otherwise the time it takes between the last call
-         * to `display()` (whether through this function or directly) and the current call.
+         * to `swap_buffers()` (whether through this function or directly) and the current call.
          *
-         * This function is a convenience function that combines the `should_close()`, `poll()`, and
-         * `display()` functions. It will bind the window at the beginning of the function and unbind it at
-         * the end.
+         * This function is a convenience function that combines the `should_close()`, `swap_events()`, and
+         * `swap_buffers()` functions. It will bind the window at the beginning of the function and unbind it
+         * at the end.
          */
         std::optional<double> use(std::invocable<const EventQueue&> auto&& func)
         {
@@ -339,19 +335,19 @@ namespace glfw_cpp
             auto prev = glfw_cpp::get_current();
             glfw_cpp::make_current(handle());
 
-            const auto& events = poll();
+            const auto& events = swap_events();
             func(events);
-            auto delta = display();
+            auto delta = swap_buffers();
 
             glfw_cpp::make_current(prev);
             return delta;
         }
 
         /**
-         * @brief Run the window loop; each iteration will check if the window should close, poll events, and
-         * display the window.
+         * @brief Run the window loop; each iteration will check if the window should close, swap events, and
+         * Swap the window buffers.
          *
-         * @param func The function to be called between polling events and displaying the window.
+         * @param func The function to be called between swapping events and swapping buffers.
          *
          * This function is a convenience function that runs the window loop. Your works should be done in the
          * `func` parameter. The loop will continue until the window should close. The window will be bound
@@ -360,7 +356,7 @@ namespace glfw_cpp
          * Basically, this function is an analogue to `use` but with a loop.
          *
          * Warning! this function will loop as fast as possible in emscripten, rendering the browser unusable.
-         * Read more on `display()`.
+         * Read more on `swap_buffers()`.
          */
         void run(std::invocable<const EventQueue&> auto&& func)
         {
@@ -368,22 +364,13 @@ namespace glfw_cpp
             glfw_cpp::make_current(handle());
 
             while (!should_close()) {
-                const auto& events = poll();
+                const auto& events = swap_events();
                 func(events);
-                display();
+                swap_buffers();
             }
 
             glfw_cpp::make_current(prev);
         }
-
-        /**
-         * @brief Enqueue a task to be run in the window thread.
-         *
-         * @param func The function to be run in the window thread.
-         *
-         * The function will be ran at the time `poll()` is called.
-         */
-        void enqueue_task(Fun<void(Window&)>&& func) noexcept;
 
         /**
          * @brief Request the window to close.
@@ -446,7 +433,6 @@ namespace glfw_cpp
         Window(Handle handle, Properties&& properties, Attributes&& attributes);
 
         void push_event(Event&& event) noexcept;
-        void process_queued_tasks() noexcept;
         void update_delta_time() noexcept;
 
         Handle m_handle = nullptr;
@@ -461,10 +447,9 @@ namespace glfw_cpp
         bool       m_has_context     = false;
 
         // queues
-        EventQueue                      m_event_queue_front = EventQueue{ s_default_eventqueue_size };
-        EventQueue                      m_event_queue_back  = EventQueue{ s_default_eventqueue_size };
-        std::vector<Fun<void(Window&)>> m_task_queue;
-        mutable std::mutex              m_queue_mutex;
+        EventQueue         m_event_queue_front = EventQueue{ s_default_eventqueue_size };
+        EventQueue         m_event_queue_back  = EventQueue{ s_default_eventqueue_size };
+        mutable std::mutex m_queue_mutex;
     };
 }
 
