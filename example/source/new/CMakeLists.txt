@@ -15,23 +15,23 @@ endfunction()
 
 # cmake-format: off
 create_an_executable(single
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(multi
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS fmt::fmt glbinding::glbinding glm::glm glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(multi_single_thread
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(multi_multi_thread
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS fmt::fmt glbinding::glbinding glfw-cpp khrplatform::khrplatform)
 
 create_an_executable(monitor
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS fmt::fmt glfw-cpp)
 
 create_an_executable(vulkan
@@ -39,7 +39,7 @@ create_an_executable(vulkan
   LIBS fmt::fmt vulkan-headers::vulkan-headers Vulkan::Loader glfw-cpp)
 
 create_an_executable(imgui
-  DO_SANITIZE
+  # DO_SANITIZE
   LIBS
     fmt::fmt glbinding::glbinding glm::glm glfw-cpp khrplatform::khrplatform
     imgui::imgui imgui::bindings::glfw imgui::bindings::opengl3)

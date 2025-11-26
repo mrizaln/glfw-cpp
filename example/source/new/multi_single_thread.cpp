@@ -49,8 +49,6 @@ int main()
         windows[i].set_vsync(false);
     }
 
-    auto now = Clock::now();
-
     while (glfw->has_window_opened()) {
         for (auto i : std::views::iota(0u, windows.size())) {
             auto& win = windows[i];
@@ -87,11 +85,5 @@ int main()
 
         using glfw_cpp::operator""_fps;
         glfw->poll_events(120_fps);
-
-        auto current = Clock::now();
-        auto elapsed = current - now;
-        now          = current;
-
-        fmt::println("elapsed: {} fps", to_fps(elapsed));
     }
 }
