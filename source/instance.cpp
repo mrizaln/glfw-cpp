@@ -10,6 +10,99 @@
 #include <cassert>
 #include <utility>
 
+namespace
+{
+    template <bool Opt, typename A>
+    void apply_hint_impl(const glfw_cpp::Hint<Opt>& hint, A adapter)
+    {
+        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
+
+        auto window_hint = adapter;
+
+        // context
+        api.visit(util::VisitOverloaded{
+            [&](const glfw_cpp::api::OpenGL<Opt>& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
+                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
+                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
+                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
+                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
+
+                if (api.version_major >= 3 and api.version_minor >= 0) {
+                    window_hint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
+                }
+                if (api.version_major >= 3 and api.version_minor >= 3) {
+                    window_hint(GLFW_OPENGL_PROFILE, api.profile);
+                }
+            },
+            [&](const glfw_cpp::api::OpenGLES<Opt>& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
+                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
+                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
+                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
+                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
+            },
+            [](const glfw_cpp::api::NoApi&) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
+            },
+        });
+
+        // window
+        window_hint(GLFW_RESIZABLE, win.resizable);
+        window_hint(GLFW_VISIBLE, win.visible);
+        window_hint(GLFW_DECORATED, win.decorated);
+        window_hint(GLFW_FOCUSED, win.focused);
+        window_hint(GLFW_AUTO_ICONIFY, win.auto_iconify);
+        window_hint(GLFW_FLOATING, win.floating);
+        window_hint(GLFW_MAXIMIZED, win.maximized);
+        window_hint(GLFW_CENTER_CURSOR, win.center_cursor);
+        window_hint(GLFW_TRANSPARENT_FRAMEBUFFER, win.transparent_framebuffer);
+        window_hint(GLFW_FOCUS_ON_SHOW, win.focus_on_show);
+        window_hint(GLFW_SCALE_TO_MONITOR, win.scale_to_monitor);
+        window_hint(GLFW_SCALE_FRAMEBUFFER, win.scale_framebuffer);
+        window_hint(GLFW_MOUSE_PASSTHROUGH, win.mouse_passthrough);
+        window_hint(GLFW_POSITION_X, win.position_x);
+        window_hint(GLFW_POSITION_Y, win.position_y);
+
+        // framebuffer
+        window_hint(GLFW_RED_BITS, fb.red_bits);
+        window_hint(GLFW_GREEN_BITS, fb.green_bits);
+        window_hint(GLFW_BLUE_BITS, fb.blue_bits);
+        window_hint(GLFW_ALPHA_BITS, fb.alpha_bits);
+        window_hint(GLFW_DEPTH_BITS, fb.depth_bits);
+        window_hint(GLFW_STENCIL_BITS, fb.stencil_bits);
+        window_hint(GLFW_SAMPLES, fb.samples);
+        window_hint(GLFW_STEREO, fb.stereo);
+        window_hint(GLFW_SRGB_CAPABLE, fb.srgb_capable);
+        window_hint(GLFW_DOUBLEBUFFER, fb.doublebuffer);
+
+        // monitor
+        window_hint(GLFW_REFRESH_RATE, mon.refresh_rate);
+
+        // win32
+        window_hint(GLFW_WIN32_KEYBOARD_MENU, win32.keyboard_menu);
+        window_hint(GLFW_WIN32_SHOWDEFAULT, win32.showdefault);
+
+        // cocoa
+        window_hint(GLFW_COCOA_FRAME_NAME, cocoa.frame_name);
+        window_hint(GLFW_COCOA_GRAPHICS_SWITCHING, cocoa.graphics_switching);
+
+        // wayland
+        window_hint(GLFW_WAYLAND_APP_ID, wl.app_id);
+
+        // x11
+        window_hint(GLFW_X11_CLASS_NAME, x11.class_name);
+        window_hint(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+    }
+}
+
 // callbacks
 namespace glfw_cpp
 {
@@ -324,9 +417,7 @@ namespace glfw_cpp
 
     void Instance::apply_hint(const PartialHint& hint)
     {
-        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
-
-        auto window_hint = util::VisitOverloaded{
+        auto adapter = util::VisitOverloaded{
             [](int enumm, const std::optional<bool>& value) {
                 value ? glfwWindowHint(enumm, *value ? GLFW_TRUE : GLFW_FALSE) : void();
             },
@@ -340,182 +431,18 @@ namespace glfw_cpp
                 value ? glfwWindowHint(enumm, static_cast<int>(*value)) : void();
             },
         };
-
-        // context
-        api.visit(util::VisitOverloaded{
-            [&](const api::OpenGL<true>& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
-                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
-                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
-                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
-                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
-                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
-                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
-
-                if (api.version_major >= 3 and api.version_minor >= 0) {
-                    window_hint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
-                }
-                if (api.version_major >= 3 and api.version_minor >= 3) {
-                    window_hint(GLFW_OPENGL_PROFILE, api.profile);
-                }
-            },
-            [&](const api::OpenGLES<true>& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
-                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
-                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
-                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
-                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
-                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
-                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
-            },
-            [](const api::NoApi&) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
-            },
-        });
-
-        // window
-        window_hint(GLFW_RESIZABLE, win.resizable);
-        window_hint(GLFW_VISIBLE, win.visible);
-        window_hint(GLFW_DECORATED, win.decorated);
-        window_hint(GLFW_FOCUSED, win.focused);
-        window_hint(GLFW_AUTO_ICONIFY, win.auto_iconify);
-        window_hint(GLFW_FLOATING, win.floating);
-        window_hint(GLFW_MAXIMIZED, win.maximized);
-        window_hint(GLFW_CENTER_CURSOR, win.center_cursor);
-        window_hint(GLFW_TRANSPARENT_FRAMEBUFFER, win.transparent_framebuffer);
-        window_hint(GLFW_FOCUS_ON_SHOW, win.focus_on_show);
-        window_hint(GLFW_SCALE_TO_MONITOR, win.scale_to_monitor);
-        window_hint(GLFW_SCALE_FRAMEBUFFER, win.scale_framebuffer);
-        window_hint(GLFW_MOUSE_PASSTHROUGH, win.mouse_passthrough);
-        window_hint(GLFW_POSITION_X, win.position_x);
-        window_hint(GLFW_POSITION_Y, win.position_y);
-
-        // framebuffer
-        window_hint(GLFW_RED_BITS, fb.red_bits);
-        window_hint(GLFW_GREEN_BITS, fb.green_bits);
-        window_hint(GLFW_BLUE_BITS, fb.blue_bits);
-        window_hint(GLFW_ALPHA_BITS, fb.alpha_bits);
-        window_hint(GLFW_DEPTH_BITS, fb.depth_bits);
-        window_hint(GLFW_STENCIL_BITS, fb.stencil_bits);
-        window_hint(GLFW_SAMPLES, fb.samples);
-        window_hint(GLFW_STEREO, fb.stereo);
-        window_hint(GLFW_SRGB_CAPABLE, fb.srgb_capable);
-        window_hint(GLFW_DOUBLEBUFFER, fb.doublebuffer);
-
-        // monitor
-        window_hint(GLFW_REFRESH_RATE, mon.refresh_rate);
-
-        // win32
-        window_hint(GLFW_WIN32_KEYBOARD_MENU, win32.keyboard_menu);
-        window_hint(GLFW_WIN32_SHOWDEFAULT, win32.showdefault);
-
-        // cocoa
-        window_hint(GLFW_COCOA_FRAME_NAME, cocoa.frame_name);
-        window_hint(GLFW_COCOA_GRAPHICS_SWITCHING, cocoa.graphics_switching);
-
-        // wayland
-        window_hint(GLFW_WAYLAND_APP_ID, wl.app_id);
-
-        // x11
-        window_hint(GLFW_X11_CLASS_NAME, x11.class_name);
-        window_hint(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+        apply_hint_impl(hint, adapter);
     }
 
     void Instance::apply_hint_full(const FullHint& hint)
     {
-        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
-
-        auto window_hint = util::VisitOverloaded{
+        auto adapter = util::VisitOverloaded{
             [](int enumm, bool value) { glfwWindowHint(enumm, value ? GLFW_TRUE : GLFW_FALSE); },
             [](int enumm, int value) { glfwWindowHint(enumm, value); },
             [](int enumm, const char* value) { glfwWindowHintString(enumm, value); },
             []<typename T>(int enumm, const T& value) { glfwWindowHint(enumm, static_cast<int>(value)); },
         };
-
-        // context
-        api.visit(util::VisitOverloaded{
-            [&](const api::OpenGL<false>& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
-                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
-                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
-                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
-                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
-                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
-                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
-
-                if (api.version_major >= 3 and api.version_minor >= 0) {
-                    window_hint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
-                }
-                if (api.version_major >= 3 and api.version_minor >= 3) {
-                    window_hint(GLFW_OPENGL_PROFILE, (api.profile));
-                }
-            },
-            [&](const api::OpenGLES<false>& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
-                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
-                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
-                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
-                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
-                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
-                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
-            },
-            [](const api::NoApi&) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
-            },
-        });
-
-        // window
-        window_hint(GLFW_RESIZABLE, win.resizable);
-        window_hint(GLFW_VISIBLE, win.visible);
-        window_hint(GLFW_DECORATED, win.decorated);
-        window_hint(GLFW_FOCUSED, win.focused);
-        window_hint(GLFW_AUTO_ICONIFY, win.auto_iconify);
-        window_hint(GLFW_FLOATING, win.floating);
-        window_hint(GLFW_MAXIMIZED, win.maximized);
-        window_hint(GLFW_CENTER_CURSOR, win.center_cursor);
-        window_hint(GLFW_TRANSPARENT_FRAMEBUFFER, win.transparent_framebuffer);
-        window_hint(GLFW_FOCUS_ON_SHOW, win.focus_on_show);
-        window_hint(GLFW_SCALE_TO_MONITOR, win.scale_to_monitor);
-        window_hint(GLFW_SCALE_FRAMEBUFFER, win.scale_framebuffer);
-        window_hint(GLFW_MOUSE_PASSTHROUGH, win.mouse_passthrough);
-        window_hint(GLFW_POSITION_X, win.position_x);
-        window_hint(GLFW_POSITION_Y, win.position_y);
-
-        // framebuffer
-        window_hint(GLFW_RED_BITS, fb.red_bits);
-        window_hint(GLFW_GREEN_BITS, fb.green_bits);
-        window_hint(GLFW_BLUE_BITS, fb.blue_bits);
-        window_hint(GLFW_ALPHA_BITS, fb.alpha_bits);
-        window_hint(GLFW_DEPTH_BITS, fb.depth_bits);
-        window_hint(GLFW_STENCIL_BITS, fb.stencil_bits);
-        window_hint(GLFW_SAMPLES, fb.samples);
-        window_hint(GLFW_STEREO, fb.stereo);
-        window_hint(GLFW_SRGB_CAPABLE, fb.srgb_capable);
-        window_hint(GLFW_DOUBLEBUFFER, fb.doublebuffer);
-
-        // monitor
-        window_hint(GLFW_REFRESH_RATE, mon.refresh_rate);
-
-        // win32
-        window_hint(GLFW_WIN32_KEYBOARD_MENU, win32.keyboard_menu);
-        window_hint(GLFW_WIN32_SHOWDEFAULT, win32.showdefault);
-
-        // cocoa
-        window_hint(GLFW_COCOA_FRAME_NAME, cocoa.frame_name);
-        window_hint(GLFW_COCOA_GRAPHICS_SWITCHING, cocoa.graphics_switching);
-
-        // wayland
-        window_hint(GLFW_WAYLAND_APP_ID, wl.app_id);
-
-        // x11
-        window_hint(GLFW_X11_CLASS_NAME, x11.class_name);
-        window_hint(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+        apply_hint_impl(hint, adapter);
     }
 
     void Instance::apply_hint_default()
