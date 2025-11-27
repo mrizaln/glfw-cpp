@@ -8,67 +8,325 @@
 #include <GLFW/glfw3.h>
 
 #include <cassert>
-#include <format>
 #include <utility>
 
 namespace
 {
-    void configure_hints(const glfw_cpp::Hint& hint) noexcept
+    template <bool Opt, typename A>
+    void apply_hint_impl(const glfw_cpp::Hint<Opt>& hint, A adapter)
     {
-        using F = glfw_cpp::Flag;
+        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
 
-        const auto set_flag = [&](int flag, F bit) {
-            glfwWindowHint(flag, (hint.flags & bit) == bit ? GLFW_TRUE : GLFW_FALSE);
-        };
+        auto window_hint = adapter;
 
-        set_flag(GLFW_RESIZABLE, F::Resizable);
-        set_flag(GLFW_VISIBLE, F::Visible);
-        set_flag(GLFW_DECORATED, F::Decorated);
-        set_flag(GLFW_FOCUSED, F::Focused);
-        set_flag(GLFW_AUTO_ICONIFY, F::AutoIconify);
-        set_flag(GLFW_FLOATING, F::Floating);
-        set_flag(GLFW_MAXIMIZED, F::Maximized);
-        set_flag(GLFW_CENTER_CURSOR, F::CenterCursor);
-        set_flag(GLFW_TRANSPARENT_FRAMEBUFFER, F::TransparentFramebuffer);
-        set_flag(GLFW_FOCUS_ON_SHOW, F::FocusOnShow);
-        set_flag(GLFW_SCALE_TO_MONITOR, F::ScaleToMonitor);
+        // context
+        api.visit(util::VisitOverloaded{
+            [&](const glfw_cpp::api::OpenGL<Opt>& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
+                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
+                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
+                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
+                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
 
-        glfwWindowHint(GLFW_RED_BITS, hint.red_bits);
-        glfwWindowHint(GLFW_GREEN_BITS, hint.green_bits);
-        glfwWindowHint(GLFW_BLUE_BITS, hint.blue_bits);
-        glfwWindowHint(GLFW_ALPHA_BITS, hint.alpha_bits);
-        glfwWindowHint(GLFW_DEPTH_BITS, hint.depth_bits);
-        glfwWindowHint(GLFW_STENCIL_BITS, hint.stencil_bits);
+                if (api.version_major >= 3 and api.version_minor >= 0) {
+                    window_hint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
+                }
+                if (api.version_major >= 3 and api.version_minor >= 3) {
+                    window_hint(GLFW_OPENGL_PROFILE, api.profile);
+                }
+            },
+            [&](const glfw_cpp::api::OpenGLES<Opt>& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
+                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
+                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+                window_hint(GLFW_CONTEXT_CREATION_API, api.creation_api);
+                window_hint(GLFW_CONTEXT_ROBUSTNESS, api.robustness);
+                window_hint(GLFW_CONTEXT_RELEASE_BEHAVIOR, api.release_behavior);
+                window_hint(GLFW_CONTEXT_DEBUG, api.debug);
+                window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
+            },
+            [](const glfw_cpp::api::NoApi&) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
+            },
+        });
 
-        glfwWindowHint(GLFW_SAMPLES, hint.samples);
-        glfwWindowHint(GLFW_REFRESH_RATE, hint.refresh_rate);
+        // window
+        window_hint(GLFW_RESIZABLE, win.resizable);
+        window_hint(GLFW_VISIBLE, win.visible);
+        window_hint(GLFW_DECORATED, win.decorated);
+        window_hint(GLFW_FOCUSED, win.focused);
+        window_hint(GLFW_AUTO_ICONIFY, win.auto_iconify);
+        window_hint(GLFW_FLOATING, win.floating);
+        window_hint(GLFW_MAXIMIZED, win.maximized);
+        window_hint(GLFW_CENTER_CURSOR, win.center_cursor);
+        window_hint(GLFW_TRANSPARENT_FRAMEBUFFER, win.transparent_framebuffer);
+        window_hint(GLFW_FOCUS_ON_SHOW, win.focus_on_show);
+        window_hint(GLFW_SCALE_TO_MONITOR, win.scale_to_monitor);
+        window_hint(GLFW_SCALE_FRAMEBUFFER, win.scale_framebuffer);
+        window_hint(GLFW_MOUSE_PASSTHROUGH, win.mouse_passthrough);
+        window_hint(GLFW_POSITION_X, win.position_x);
+        window_hint(GLFW_POSITION_Y, win.position_y);
+
+        // framebuffer
+        window_hint(GLFW_RED_BITS, fb.red_bits);
+        window_hint(GLFW_GREEN_BITS, fb.green_bits);
+        window_hint(GLFW_BLUE_BITS, fb.blue_bits);
+        window_hint(GLFW_ALPHA_BITS, fb.alpha_bits);
+        window_hint(GLFW_DEPTH_BITS, fb.depth_bits);
+        window_hint(GLFW_STENCIL_BITS, fb.stencil_bits);
+        window_hint(GLFW_SAMPLES, fb.samples);
+        window_hint(GLFW_STEREO, fb.stereo);
+        window_hint(GLFW_SRGB_CAPABLE, fb.srgb_capable);
+        window_hint(GLFW_DOUBLEBUFFER, fb.doublebuffer);
+
+        // monitor
+        window_hint(GLFW_REFRESH_RATE, mon.refresh_rate);
+
+        // win32
+        window_hint(GLFW_WIN32_KEYBOARD_MENU, win32.keyboard_menu);
+        window_hint(GLFW_WIN32_SHOWDEFAULT, win32.showdefault);
+
+        // cocoa
+        window_hint(GLFW_COCOA_FRAME_NAME, cocoa.frame_name);
+        window_hint(GLFW_COCOA_GRAPHICS_SWITCHING, cocoa.graphics_switching);
+
+        // wayland
+        window_hint(GLFW_WAYLAND_APP_ID, wl.app_id);
+
+        // x11
+        window_hint(GLFW_X11_CLASS_NAME, x11.class_name);
+        window_hint(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+    }
+}
+
+// callbacks
+namespace glfw_cpp
+{
+    void Instance::window_pos_callback(GLFWwindow* window, int x, int y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().position;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                glfw_cpp::event::WindowMoved{
+                    .x  = x,
+                    .y  = y,
+                    .dx = x - prev.x,
+                    .dy = y - prev.y,
+                }
+            );
+        }
+    }
+    void Instance::window_size_callback(GLFWwindow* window, int width, int height)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().dimensions;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowResized{
+                    .width         = width,
+                    .height        = height,
+                    .width_change  = width - prev.width,
+                    .height_change = height - prev.height,
+                }
+            );
+        }
     }
 
-    std::string_view error_to_string(int glfw_errc)
+    void Instance::window_close_callback(GLFWwindow* window)
     {
-#define CASE_ENTRY(Val)                                                                                      \
-    case Val: return #Val
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(window, event::WindowClosed{});
+        }
+    }
 
-        switch (glfw_errc) {
-            CASE_ENTRY(GLFW_NO_ERROR);
-            CASE_ENTRY(GLFW_NOT_INITIALIZED);
-            CASE_ENTRY(GLFW_NO_CURRENT_CONTEXT);
-            CASE_ENTRY(GLFW_INVALID_ENUM);
-            CASE_ENTRY(GLFW_INVALID_VALUE);
-            CASE_ENTRY(GLFW_OUT_OF_MEMORY);
-            CASE_ENTRY(GLFW_API_UNAVAILABLE);
-            CASE_ENTRY(GLFW_VERSION_UNAVAILABLE);
-            CASE_ENTRY(GLFW_PLATFORM_ERROR);
-            CASE_ENTRY(GLFW_FORMAT_UNAVAILABLE);
-            CASE_ENTRY(GLFW_NO_WINDOW_CONTEXT);
-#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
-            CASE_ENTRY(GLFW_CURSOR_UNAVAILABLE);
-            CASE_ENTRY(GLFW_FEATURE_UNAVAILABLE);
-            CASE_ENTRY(GLFW_FEATURE_UNIMPLEMENTED);
-            CASE_ENTRY(GLFW_PLATFORM_UNAVAILABLE);
-#endif
-        default: return "UNKNOWN_ERROR";
-#undef CASE_ENTRY
+    void Instance::window_refresh_callback(GLFWwindow* window)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(window, event::WindowRefreshed{});
+        }
+    }
+
+    void Instance::window_focus_callback(GLFWwindow* window, int focused)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowFocused{
+                    .focused = focused == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::window_iconify_callback(GLFWwindow* window, int iconified)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowIconified{
+                    .iconified = iconified == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::framebuffer_size_callback(GLFWwindow* window, int width, int height)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().framebuffer_size;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::FramebufferResized{
+                    .width         = width,
+                    .height        = height,
+                    .width_change  = width - prev.width,
+                    .height_change = height - prev.height,
+                }
+            );
+        }
+    }
+
+    void Instance::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::ButtonPressed{
+                    .button = static_cast<MouseButton>(button),
+                    .state  = static_cast<MouseButtonState>(action),
+                    .mods   = ModifierKey{ mods },
+                }
+            );
+        }
+    }
+
+    void Instance::cursor_pos_callback(GLFWwindow* window, double x, double y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            auto  prev   = window.properties().cursor_position;
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CursorMoved{
+                    .x  = x,
+                    .y  = y,
+                    .dx = x - prev.x,
+                    .dy = y - prev.y,
+                }
+            );
+        }
+    }
+
+    void Instance::cursor_enter_callback(GLFWwindow* window, int entered)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CursorEntered{
+                    .entered = entered == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::scroll_callback(GLFWwindow* window, double x, double y)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::Scrolled{
+                    .dx = x,
+                    .dy = y,
+                }
+            );
+        }
+    }
+
+    void Instance::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::KeyPressed{
+                    .key      = static_cast<KeyCode>(key),
+                    .scancode = scancode,
+                    .state    = static_cast<KeyState>(action),
+                    .mods     = ModifierKey{ mods },
+                }
+            );
+        }
+    }
+
+    void Instance::char_callback(GLFWwindow* window, unsigned int codepoint)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::CharInput{
+                    .codepoint = codepoint,
+                }
+            );
+        }
+    }
+
+    void Instance::file_drop_callback(GLFWwindow* window, int count, const char** paths)
+    {
+        auto paths_vec = std::vector<std::filesystem::path>(static_cast<std::size_t>(count));
+        for (std::size_t i = 0; i < paths_vec.size(); ++i) {
+            paths_vec[i] = std::filesystem::path{ paths[i] };
+        }
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::FileDropped{
+                    .files = std::move(paths_vec),
+                }
+            );
+        }
+    }
+
+    void Instance::window_maximize_callback(GLFWwindow* window, int maximized)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowMaximized{
+                    .maximized = maximized == GLFW_TRUE,
+                }
+            );
+        }
+    }
+
+    void Instance::window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
+    {
+        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
+            glfw_cpp::Instance::get().push_event(
+                window,
+                event::WindowScaleChanged{
+                    .x = xscale,
+                    .y = yscale,
+                }
+            );
         }
     }
 }
@@ -77,15 +335,15 @@ namespace glfw_cpp
 {
     Instance::~Instance()
     {
-        run_tasks();    // flush task queue first
+        // flush task queue first (there might be window deletion request)
+        run_tasks();
 
         for (auto handle : m_windows) {
-            glfwDestroyWindow(handle);    // delete all windows
-            Instance::log_i("(Instance) Window ({:#x}) deleted", (std::size_t)handle);
+            glfwDestroyWindow(handle);
         }
 
-        glfwTerminate();    // this might fail, how should I report the failure?
-        Instance::log_i("(Instance) Successfully terminated glfw-cpp");
+        // this might fail, how should I report the failure?
+        glfwTerminate();
 
         // unregister the gloal instance pointer
         Instance::s_instance = nullptr;
@@ -97,41 +355,39 @@ namespace glfw_cpp
         return *s_instance;
     }
 
-    void Instance::log(LogLevel level, std::string msg) noexcept
+    void Instance::push_event(Window& window, Event event) noexcept
     {
-        if (auto& instance = get(); instance.m_loggger) {
-            instance.m_loggger(level, std::move(msg));
-        }
-    }
+        auto forward = true;
 
-    bool Instance::send_intercept_event(Window& window, Event& event) noexcept
-    {
-        if (!m_event_interceptor) {
-            return true;
+        if (m_event_interceptor) {
+            auto& intr = *m_event_interceptor;
+
+            forward = event.visit(event::Overload{
+                // clang-format off
+                [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
+                [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
+                [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
+                [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
+                [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
+                [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
+                [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
+                [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
+                [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
+                [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
+                [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
+                [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
+                [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
+                [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
+                [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
+                [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
+                [&](event::Empty&                   ) { return true; /* always true                      */ },
+                // clang-format on
+            });
         }
 
-        auto& intr = *m_event_interceptor;
-        return event.visit(event::Overload{
-            // clang-format off
-            [&](event::WindowMoved&        event) { return intr.on_window_moved        (window, event); },
-            [&](event::WindowResized&      event) { return intr.on_window_resized      (window, event); },
-            [&](event::WindowClosed&       event) { return intr.on_window_closed       (window, event); },
-            [&](event::WindowRefreshed&    event) { return intr.on_window_refreshed    (window, event); },
-            [&](event::WindowFocused&      event) { return intr.on_window_focused      (window, event); },
-            [&](event::WindowIconified&    event) { return intr.on_window_iconified    (window, event); },
-            [&](event::WindowMaximized&    event) { return intr.on_window_maximized    (window, event); },
-            [&](event::WindowScaleChanged& event) { return intr.on_window_scale_changed(window, event); },
-            [&](event::FramebufferResized& event) { return intr.on_framebuffer_resized (window, event); },
-            [&](event::ButtonPressed&      event) { return intr.on_button_pressed      (window, event); },
-            [&](event::CursorMoved&        event) { return intr.on_cursor_moved        (window, event); },
-            [&](event::CursorEntered&      event) { return intr.on_cursor_entered      (window, event); },
-            [&](event::Scrolled&           event) { return intr.on_scrolled            (window, event); },
-            [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
-            [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
-            [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
-            [&](event::Empty&                   ) { return true; /* always true                   */ },
-            // clang-format on
-        });
+        if (forward) {
+            window.push_event(std::move(event));
+        }
     }
 
     void Instance::validate_access() const
@@ -155,48 +411,77 @@ namespace glfw_cpp
             if (std::erase(m_windows, handle) != 0) {
                 glfwDestroyWindow(handle);
                 util::check_glfw_error();
-                Instance::log_i("(Instance) Window ({:#x}) deleted", (std::size_t)handle);
             }
         }
     }
 
+    void Instance::apply_hint(const PartialHint& hint)
+    {
+        auto adapter = util::VisitOverloaded{
+            [](int enumm, const std::optional<bool>& value) {
+                value ? glfwWindowHint(enumm, *value ? GLFW_TRUE : GLFW_FALSE) : void();
+            },
+            [](int enumm, const std::optional<int>& value) {
+                value ? glfwWindowHint(enumm, *value) : void();
+            },
+            [](int enumm, const std::optional<const char*>& value) {
+                value ? glfwWindowHintString(enumm, *value) : void();
+            },
+            []<typename T>(int enumm, const std::optional<T>& value) {
+                value ? glfwWindowHint(enumm, static_cast<int>(*value)) : void();
+            },
+        };
+        apply_hint_impl(hint, adapter);
+    }
+
+    void Instance::apply_hint_full(const FullHint& hint)
+    {
+        auto adapter = util::VisitOverloaded{
+            [](int enumm, bool value) { glfwWindowHint(enumm, value ? GLFW_TRUE : GLFW_FALSE); },
+            [](int enumm, int value) { glfwWindowHint(enumm, value); },
+            [](int enumm, const char* value) { glfwWindowHintString(enumm, value); },
+            []<typename T>(int enumm, const T& value) { glfwWindowHint(enumm, static_cast<int>(value)); },
+        };
+        apply_hint_impl(hint, adapter);
+    }
+
+    void Instance::apply_hint_default()
+    {
+        glfwDefaultWindowHints();
+    }
+
     Window Instance::create_window(
-        const Hint&      hint,
-        std::string_view title,
         int              width,
         int              height,
-        bool             bind_immediately
+        std::string_view title,
+        GLFWmonitor*     monitor,
+        GLFWwindow*      share
     )
     {
         validate_access();
-        configure_hints(hint);
-        util::check_glfw_error();
 
-        const auto handle = glfwCreateWindow(width, height, title.data(), hint.monitor, hint.share);
+        const auto handle = glfwCreateWindow(width, height, title.data(), monitor, share);
         if (handle == nullptr) {
-            Instance::log_c("(Instance) Window creation failed");
             util::throw_glfw_error();
         }
         m_windows.emplace_back(handle);
 
-        Instance::log_i("(Instance) Window ({:#x}) created", (std::size_t)handle);
-
-        glfwSetWindowPosCallback(handle, Window::window_pos_callback);
-        glfwSetWindowSizeCallback(handle, Window::window_size_callback);
-        glfwSetWindowCloseCallback(handle, Window::window_close_callback);
-        glfwSetWindowRefreshCallback(handle, Window::window_refresh_callback);
-        glfwSetWindowFocusCallback(handle, Window::window_focus_callback);
-        glfwSetWindowIconifyCallback(handle, Window::window_iconify_callback);
-        glfwSetFramebufferSizeCallback(handle, Window::framebuffer_size_callback);
-        glfwSetMouseButtonCallback(handle, Window::mouse_button_callback);
-        glfwSetCursorPosCallback(handle, Window::cursor_pos_callback);
-        glfwSetCursorEnterCallback(handle, Window::cursor_enter_callback);
-        glfwSetScrollCallback(handle, Window::scroll_callback);
-        glfwSetKeyCallback(handle, Window::key_callback);
-        glfwSetCharCallback(handle, Window::char_callback);
-        glfwSetDropCallback(handle, Window::file_drop_callback);
-        glfwSetWindowMaximizeCallback(handle, Window::window_maximize_callback);
-        glfwSetWindowContentScaleCallback(handle, Window::window_content_scale_callback);
+        glfwSetWindowPosCallback(handle, window_pos_callback);
+        glfwSetWindowSizeCallback(handle, window_size_callback);
+        glfwSetWindowCloseCallback(handle, window_close_callback);
+        glfwSetWindowRefreshCallback(handle, window_refresh_callback);
+        glfwSetWindowFocusCallback(handle, window_focus_callback);
+        glfwSetWindowIconifyCallback(handle, window_iconify_callback);
+        glfwSetFramebufferSizeCallback(handle, framebuffer_size_callback);
+        glfwSetMouseButtonCallback(handle, mouse_button_callback);
+        glfwSetCursorPosCallback(handle, cursor_pos_callback);
+        glfwSetCursorEnterCallback(handle, cursor_enter_callback);
+        glfwSetScrollCallback(handle, scroll_callback);
+        glfwSetKeyCallback(handle, key_callback);
+        glfwSetCharCallback(handle, char_callback);
+        glfwSetDropCallback(handle, file_drop_callback);
+        glfwSetWindowMaximizeCallback(handle, window_maximize_callback);
+        glfwSetWindowContentScaleCallback(handle, window_content_scale_callback);
 
         int    x_pos, y_pos, real_width, real_height, fb_width, fb_height;
         double x_cursor, y_cursor;
@@ -205,27 +490,37 @@ namespace glfw_cpp
         glfwGetCursorPos(handle, &x_cursor, &y_cursor);
         glfwGetFramebufferSize(handle, &fb_width, &fb_height);
 
-        return Window{ handle, Properties{
+        util::check_glfw_error();
+
+        auto properties = Properties{
             .title              = { title.begin(), title.end() },
-            .pos                = { x_pos, y_pos },
+            .position           = { x_pos, y_pos },
             .dimensions         = { real_width, real_height },
             .framebuffer_size   = { fb_width, fb_height },
-            .cursor             = { x_cursor, y_cursor },
-            .attribute          = {
-                .iconified      = 0,
-                .maximized      = (hint.flags & Flag::Maximized) == Flag::Maximized,
-                .focused        = (hint.flags & Flag::Focused) == Flag::Focused,
-                .visible        = (hint.flags & Flag::Visible) == Flag::Visible,
-                .hovered        = (unsigned int)glfwGetWindowAttrib(handle, GLFW_HOVERED),
-                .resizable      = (hint.flags & Flag::Resizable) == Flag::Resizable,
-                .floating       = (hint.flags & Flag::Floating) == Flag::Floating,
-                .auto_iconify   = (hint.flags & Flag::AutoIconify) == Flag::AutoIconify,
-                .focus_on_show  = (hint.flags & Flag::FocusOnShow) == Flag::FocusOnShow,
-            },
+            .cursor_position    = { x_cursor, y_cursor },
             .mouse_button_state = {},
             .key_state          = {},
-            .monitor            = hint.monitor,
-        }, bind_immediately };
+            .monitor            = monitor,
+        };
+
+        auto attributes = Attributes{
+            .focused                 = glfwGetWindowAttrib(handle, GLFW_FOCUSED) == GLFW_TRUE,
+            .iconified               = glfwGetWindowAttrib(handle, GLFW_ICONIFIED) == GLFW_TRUE,
+            .maximized               = glfwGetWindowAttrib(handle, GLFW_MAXIMIZED) == GLFW_TRUE,
+            .hovered                 = glfwGetWindowAttrib(handle, GLFW_HOVERED) == GLFW_TRUE,
+            .visible                 = glfwGetWindowAttrib(handle, GLFW_VISIBLE) == GLFW_TRUE,
+            .resizable               = glfwGetWindowAttrib(handle, GLFW_RESIZABLE) == GLFW_TRUE,
+            .decorated               = glfwGetWindowAttrib(handle, GLFW_DECORATED) == GLFW_TRUE,
+            .auto_iconify            = glfwGetWindowAttrib(handle, GLFW_AUTO_ICONIFY) == GLFW_TRUE,
+            .floating                = glfwGetWindowAttrib(handle, GLFW_FLOATING) == GLFW_TRUE,
+            .transparent_framebuffer = glfwGetWindowAttrib(handle, GLFW_TRANSPARENT_FRAMEBUFFER) == GLFW_TRUE,
+            .focus_on_show           = glfwGetWindowAttrib(handle, GLFW_FOCUS_ON_SHOW) == GLFW_TRUE,
+            .mouse_passthrough       = glfwGetWindowAttrib(handle, GLFW_MOUSE_PASSTHROUGH) == GLFW_TRUE,
+        };
+
+        util::check_glfw_error();
+
+        return Window{ handle, std::move(properties), std::move(attributes) };
     }
 
     bool Instance::has_window_opened() const noexcept
@@ -281,7 +576,17 @@ namespace glfw_cpp
         m_task_queue.emplace_back(std::move(task));
     }
 
-    std::unique_ptr<Instance> init(Api&& api, Instance::LogFun&& logger)
+    gl::Proc get_proc_address(const char* procname) noexcept
+    {
+        return glfwGetProcAddress(procname);
+    }
+
+    bool extension_supported(const char* extension) noexcept
+    {
+        return glfwExtensionSupported(extension) == GLFW_TRUE;
+    }
+
+    std::unique_ptr<Instance> init(const InitHint& hint)
     {
         if (Instance::s_instance) {
             throw AlreadyInitialized{};
@@ -293,62 +598,47 @@ namespace glfw_cpp
         // register the newly created instance to the global pointer
         Instance::s_instance = instance.get();
 
-        instance->m_api                = std::move(api);
-        instance->m_loggger            = std::move(logger);
-        instance->m_attached_thread_id = std::this_thread::get_id();
-
         glfwSetErrorCallback([](int err, const char* msg) {
-            Instance::log_c("[{}|{:#010x}] {}", error_to_string(err), err, msg);
+            auto& instance = Instance::get();
+            if (instance.m_callback) {
+                instance.m_callback(static_cast<ErrorCode>(err), msg);
+            }
         });
+
+        glfwInitHint(GLFW_PLATFORM, static_cast<int>(hint.platform));
+        glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, hint.joystick_hat_buttons ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, static_cast<int>(hint.angle_platform_type));
+        glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, hint.cocoa_chdir_resource ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_COCOA_MENUBAR, hint.cocoa_menubar ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_WAYLAND_LIBDECOR, static_cast<int>(hint.wayland_libdecor));
+        glfwInitHint(GLFW_X11_XCB_VULKAN_SURFACE, hint.x11_xcb_vulkan_surface ? GLFW_TRUE : GLFW_FALSE);
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
             util::throw_glfw_error();
         }
 
-        instance->m_api.visit(util::VisitOverloaded{
-            [](api::OpenGL& api) {
-                if (api.loader == nullptr) {
-#if not __EMSCRIPTEN__
-                    throw EmptyLoader{};
-#endif
-                }
-
-                auto gl_profile = [&] {
-                    using P = glfw_cpp::api::gl::Profile;
-                    switch (api.profile) {
-                    case P::Core: return GLFW_OPENGL_CORE_PROFILE;
-                    case P::Compat: return GLFW_OPENGL_COMPAT_PROFILE;
-                    case P::Any: return GLFW_OPENGL_ANY_PROFILE;
-                    default: [[unlikely]] return GLFW_OPENGL_CORE_PROFILE;
-                    }
-                }();
-
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.minor);
-
-                if (api.major >= 3 && api.minor >= 0) {
-                    glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, api.forward_compat);
-                }
-
-                if (api.major >= 3 && api.minor >= 2) {
-                    glfwWindowHint(GLFW_OPENGL_PROFILE, gl_profile);
-                }
-            },
-            [](api::OpenGLES& api) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, api.major);
-                glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, api.minor);
-                glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_ANY_PROFILE);
-            },
-            [](api::NoApi&) {
-                glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
-            },
-        });
-
-        Instance::log_i("(Instance) Successfully initialized glfw-cpp");
-
         return instance;
+    }
+
+    void make_current(GLFWwindow* window)
+    {
+#if __EMSCRIPTEN__
+        // emscripten-glfw which is the one used for this library emits an error if window is nullptr,
+        // see: https://github.com/pongasoft/emscripten-glfw/issues/24
+
+        window ? glfwMakeContextCurrent(window) : void();
+        util::check_glfw_error();
+#else
+        glfwMakeContextCurrent(window);
+        util::check_glfw_error();
+#endif
+    }
+
+    GLFWwindow* get_current()
+    {
+        auto current = glfwGetCurrentContext();
+        util::check_glfw_error();
+        return current;
     }
 }

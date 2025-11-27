@@ -1,26 +1,39 @@
+#include <fmt/core.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
-#include <glfw_cpp/extra/imgui.hpp>
 #include <glfw_cpp/glfw_cpp.hpp>
+#include <glfw_cpp/imgui.hpp>
 #include <imgui_impl_opengl3.h>
 
-auto render_thread(glfw_cpp::Window& window, glfw_cpp::extra::ImguiInterceptor& interceptor)
+using namespace gl;    // from <glbinding/gl/gl.h>
+
+auto render_thread(glfw_cpp::Window& window)
 {
-    window.bind();
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
 
     // replacing `ImGui_ImplGlfw_InitForOpenGL()`
-    auto imgui_glfw = glfw_cpp::extra::init_imgui_for_opengl(interceptor, window.handle());
+    auto imgui_glfw = glfw_cpp::imgui::init_for_opengl(window.handle());
     ImGui_ImplOpenGL3_Init();
 
-    gl::glClearColor(0.1f, 0.1f, 0.11f, 1.0f);
+    glClearColor(0.1f, 0.1f, 0.11f, 1.0f);
 
     while (not window.should_close()) {
         namespace ev = glfw_cpp::event;
-        window.poll().visit(ev::Overload{
+
+        // swap events queued by `glfw_cpp::poll_events()` or `glfw_cpp::wait_events()`
+        const auto& events = window.swap_events();
+
+        // process events manually.
+        // NOTE: imgui should not install callback because there is no synchronization between the event
+        //       pushing on `glfwPollEvents` thread and general imgui usage in this thread.
+        imgui_glfw.process_events(events);
+
+        events.visit(ev::Overload{
             [&](const ev::KeyPressed& k) {
                 using K = glfw_cpp::KeyCode;
                 using S = glfw_cpp::KeyState;
@@ -31,7 +44,7 @@ auto render_thread(glfw_cpp::Window& window, glfw_cpp::extra::ImguiInterceptor& 
             [&](const auto&) { /* do nothing */ },
         });
 
-        gl::glClear(gl::GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
         imgui_glfw.new_frame();    // replacing `ImGui_ImplGlfw_NewFrame()`
@@ -42,7 +55,7 @@ auto render_thread(glfw_cpp::Window& window, glfw_cpp::extra::ImguiInterceptor& 
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-        window.display();
+        window.swap_buffers();
     }
 
     ImGui_ImplOpenGL3_Shutdown();
@@ -51,19 +64,23 @@ auto render_thread(glfw_cpp::Window& window, glfw_cpp::extra::ImguiInterceptor& 
 
 int main()
 {
-    auto api = glfw_cpp::api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = glfw_cpp::api::gl::Profile::Core,
-        .loader  = [](auto, auto proc) { glbinding::initialize(proc); },
-    };
 
-    auto glfw        = glfw_cpp::init(api);
-    auto interceptor = glfw_cpp::extra::ImguiInterceptor{};
-    glfw->set_event_interceptor(&interceptor);
+    auto glfw = glfw_cpp::init({});
 
-    auto window        = glfw->create_window({}, "Hello ImGui from glfw-cpp", 1280, 720, false);
-    auto window_thread = std::jthread{ render_thread, std::ref(window), std::ref(interceptor) };
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    });
+
+    glfw->apply_hint({ 
+        .api = glfw_cpp::api::OpenGL{
+            .version_major   = 3,
+            .version_minor   = 3,
+            .profile         = glfw_cpp::gl::Profile::Core,
+        },
+    });
+
+    auto window        = glfw->create_window(1280, 720, "Hello ImGui from glfw-cpp", nullptr, nullptr);
+    auto window_thread = std::jthread{ render_thread, std::ref(window) };
 
     while (glfw->has_window_opened()) {
         using glfw_cpp::operator""_fps;

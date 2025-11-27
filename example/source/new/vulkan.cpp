@@ -2,6 +2,7 @@
 #include <vulkan/vulkan.hpp>    // you need to include the vulkan header first
 
 #include <fmt/core.h>
+
 #include <glfw_cpp/glfw_cpp.hpp>
 #include <glfw_cpp/vulkan.hpp>    // vulkan functionality for glfw_cpp is separated
 
@@ -1149,17 +1150,19 @@ int main()
 {
     // tip: search for glfw_cpp word inside this file to see how it is used
 
-    auto glfwLogger = [](glfw_cpp::LogLevel level, std::string&& message) {
-        fmt::println("LOG: [glfw-cpp: {}] {}", (int)level, std::move(message));
-    };
+    auto glfw = glfw_cpp::init({});
 
-    auto glfw   = glfw_cpp::init(glfw_cpp::api::NoApi{}, glfwLogger);
-    auto window = glfw->create_window({}, "Hello Vulkan from glfw-cpp", 800, 600);
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    });
 
+    glfw->apply_hint({ .api = glfw_cpp::api::NoApi{} });
+
+    auto window = glfw->create_window(800, 600, "Hello Vulkan from glfw-cpp");
     auto vulkan = Vulkan{ window, "vulkan program" };
 
     while (not window.should_close()) {
-        const auto& events = window.poll();
+        const auto& events = window.swap_events();
         for (const glfw_cpp::Event& event : events) {
             if (auto* e = event.get_if<glfw_cpp::event::KeyPressed>()) {
                 if (e->key == glfw_cpp::KeyCode::Q) {
@@ -1170,7 +1173,7 @@ int main()
 
         vulkan.drawFrame();
 
-        window.display();
+        window.swap_buffers();    // on NoApi, this function only updates delta time
         glfw->poll_events();
     }
 }

@@ -18,12 +18,17 @@
 #define _USE_MATH_DEFINES
 #endif
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <linmath.h>
+
 #include <cmath>
 #include <cstdio>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-#include <linmath.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 //========================================================================
 // Global variables
@@ -380,7 +385,7 @@ static void framebufferSizeFun(int w, int h)
 static void windowRefreshFun(glfw_cpp::Window& window)
 {
     drawAllViews();
-    window.display();
+    window.swap_buffers();
     do_redraw = 0;
 }
 
@@ -473,15 +478,17 @@ static void key_callback(glfw_cpp::Window& window, const glfw_cpp::event::KeyPre
 // TODO: fix glEnd error
 int main()
 {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto lvl, auto msg) { fprintf(stderr, "GLFW [%d]: %s\n", (int)lvl, msg.c_str()); }
-    );
+    auto glfw = glfw_cpp::init({});
 
-    auto hint   = glfw_cpp::Hint{ .samples = 4 };
-    auto window = glfw->create_window(hint, "Split view demo (glfw-cpp)", 500, 500);
+    glfw->set_error_callback([](auto code, auto message) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s", to_string(code).data(), message.data());
+    });
+    glfw->apply_hint({ .framebuffer = { .samples = 4 } });
+
+    auto window = glfw->create_window(500, 500, "Split view demo (glfw-cpp)");
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     glEnable(GL_MULTISAMPLE);
 
@@ -492,7 +499,7 @@ int main()
 
     while (glfw->has_window_opened()) {
         namespace ev = glfw_cpp::event;
-        window.poll().visit(ev::Overload{
+        window.swap_events().visit(ev::Overload{
             // clang-format off
             [&](const ev::FramebufferResized& ev) { framebufferSizeFun(ev.width, ev.height); },
             [&](const ev::WindowRefreshed&      ) { windowRefreshFun(window); },

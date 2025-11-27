@@ -1,5 +1,5 @@
-#ifndef MONITOR_HPP_F6RT4YUXEJ38H
-#define MONITOR_HPP_F6RT4YUXEJ38H
+#ifndef GLFW_CPP_MONITOR_HPP
+#define GLFW_CPP_MONITOR_HPP
 
 #include <span>
 #include <string_view>
@@ -98,4 +98,4 @@ namespace glfw_cpp
     Monitor              get_primary_monitor();
 }
 
-#endif /* end of include guard: MONITOR_HPP_F6RT4YUXEJ38H */
+#endif /* end of include guard: GLFW_CPP_MONITOR_HPP */

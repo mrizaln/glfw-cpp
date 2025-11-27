@@ -1,8 +1,7 @@
-#ifndef EVENT_HPP_Q439GUKLHFWE
-#define EVENT_HPP_Q439GUKLHFWE
+#ifndef GLFW_CPP_EVENT_HPP
+#define GLFW_CPP_EVENT_HPP
 
-#include "glfw_cpp/detail/helper.hpp"
-
+#include "glfw_cpp/helper.hpp"
 #include "glfw_cpp/input.hpp"
 #include "glfw_cpp/monitor.hpp"
 
@@ -269,7 +268,7 @@ namespace glfw_cpp
          * @brief Check whether a type is part of event types
          */
         template <typename T>
-        concept Event = detail::traits::VarTrait<Variant>::template is_elem<T>();
+        concept Event = helper::variant::VariantMember<T, Variant>;
 
         /**
          * @struct Overload
@@ -293,16 +292,9 @@ namespace glfw_cpp
      * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
      * each Window.
      */
-    class Event : public detail::variants::VariantBase<event::Variant>
+    struct Event : helper::variant::VariantWrapper<event::Variant>
     {
-    public:
-        Event() = default;
-
-        template <typename T>
-        Event(T&& t) noexcept
-            : VariantBase{ std::forward<T>(t) }
-        {
-        }
+        using VariantWrapper::VariantWrapper;
     };
 
     /**
@@ -460,8 +452,7 @@ namespace glfw_cpp
          * want to break from the loop or want the visitor to return something, then you better off writing
          * the loop yourself and use `Event::visit` traditionally.
          */
-        template <typename T>
-            requires (detail::traits::VarTrait<event::Variant>::template const_overload_exhaustive<T>())
+        template <helper::variant::ConstVisitorComplete<event::Variant> T>
         void visit(T&& visitor) const;
 
         /**
@@ -627,8 +618,7 @@ namespace glfw_cpp
     static_assert(std::forward_iterator<EventQueue::Iterator<true>>);
 
     // NOTE: the visit function must be defined in the header since it's a template
-    template <typename T>
-        requires (detail::traits::VarTrait<event::Variant>::template const_overload_exhaustive<T>())
+    template <helper::variant::ConstVisitorComplete<event::Variant> T>
     void EventQueue::visit(T&& visitor) const
     {
         for (const auto& event : *this) {
@@ -637,4 +627,4 @@ namespace glfw_cpp
     }
 }
 
-#endif /* end of include guard: EVENT_HPP_Q439GUKLHFWE */
+#endif /* end of include guard: GLFW_CPP_EVENT_HPP */

@@ -4,12 +4,13 @@
 #include <GLFW/glfw3.h>
 
 #include <fmt/core.h>
+
 #include <glfw_cpp/instance.hpp>
 #include <glfw_cpp/monitor.hpp>
 
 int main()
 {
-    auto instance = glfw_cpp::init(glfw_cpp::api::NoApi{});
+    auto instance = glfw_cpp::init({});
     auto monitors = glfw_cpp::get_monitors();
 
     for (int count = 1; auto monitor : monitors) {

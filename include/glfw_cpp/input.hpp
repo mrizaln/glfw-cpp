@@ -1,12 +1,11 @@
-#ifndef INPUT_HPP_354TKEJR8H
-#define INPUT_HPP_354TKEJR8H
+#ifndef GLFW_CPP_INPUT_HPP
+#define GLFW_CPP_INPUT_HPP
 
 #include <algorithm>
 #include <array>
 #include <cstdint>
 #include <initializer_list>
 #include <span>
-#include <string_view>
 #include <vector>
 
 namespace glfw_cpp
@@ -663,55 +662,6 @@ namespace glfw_cpp
     {
         return static_cast<int>(value);
     }
-
-    /**
-     * @brief Set the clipboard string.
-     * @param string The string to set (must be null-terminated).
-     *
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    void set_clipboard_string(const char* string);
-
-    /**
-     * @brief Get the clipboard string.
-     * @return The clipboard string.
-     *
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    std::string_view get_clipboard_string();
-
-    /**
-     * @brief Get time in seconds since the GLFW library was initialized.
-     * @return The time in seconds.
-     *
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    double get_time();
-
-    /**
-     * @brief Set the current GLFW time.
-     * @param time The time to set, in seconds.
-     *
-     * The time value must be a positive finite number less than or equal to 18446744073.0.
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    void set_time(double time);
-
-    /**
-     * @brief Get the current value of the raw timer, measured in 1 / frequency seconds.
-     * @return The timer value in microseconds.
-     *
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    uint64_t get_timer_value();
-
-    /**
-     * @brief Get the frequency, in Hz, of the raw timer.
-     * @return The timer frequency.
-     *
-     * TODO: move this function to `glfw_cpp::Instance` class
-     */
-    uint64_t get_timer_frequency();
 }
 
-#endif /* end of include guard: INPUT_HPP_354TKEJR8H */
+#endif /* end of include guard: GLFW_CPP_INPUT_HPP */

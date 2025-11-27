@@ -3,11 +3,14 @@
 
 #include <fmt/core.h>
 #include <fmt/std.h>
+
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
+
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <filesystem>
+#include <fstream>
 #include <thread>
 
 std::optional<std::string> read_file(const std::filesystem::path& path)
@@ -51,7 +54,8 @@ void handle_events(glfw_cpp::Window& window, const glfw_cpp::EventQueue& events)
 
 void thread_fun(glfw_cpp::Window&& window, std::string_view vs, std::string_view fs, float side, float color)
 {
-    window.bind();
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     auto shader = Shader{ vs, fs };
     auto plane  = Plane{ side };
@@ -62,6 +66,8 @@ void thread_fun(glfw_cpp::Window&& window, std::string_view vs, std::string_view
         gl::glClearColor(0.1F * color, 0.1F * color, 0.11F * color, 1.0F);    // NOLINT
         gl::glClear(gl::GL_COLOR_BUFFER_BIT);
 
+        // fmt::println("delta time: {}", window.delta_time());
+
         shader.use();
         plane.draw();
     });
@@ -69,21 +75,23 @@ void thread_fun(glfw_cpp::Window&& window, std::string_view vs, std::string_view
 
 int main()
 {
-    auto api = glfw_cpp::api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = glfw_cpp::api::gl::Profile::Core,
-        .loader  = [](auto ctx, auto proc) { glbinding::initialize((glbinding::ContextHandle)ctx, proc); },
-    };
-    auto log = [](auto level, auto str) { fmt::println(stderr, "[GLFW: {:<7}] {}", to_string(level), str); };
+    auto glfw = glfw_cpp::init({});
 
-    auto glfw = glfw_cpp::init(api, log);
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    });
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 3,
+            .version_minor = 3,
+            .profile       = glfw_cpp::gl::Profile::Core,
+        },
+    });
 
-    auto window1 = glfw->create_window({}, "Hello glfw-cpp 1", 800, 600, false);
+    auto window1 = glfw->create_window(800, 600, "Hello glfw-cpp 1");
 
-    using F      = glfw_cpp::Flag;
-    auto hint    = glfw_cpp::Hint{ .flags = F::Default & ~F::Resizable };
-    auto window2 = glfw->create_window(hint, "Hello glfw-cpp 2 (not resizable)", 800, 600, false);
+    glfw->apply_hint({ .window = { .resizable = false } });
+    auto window2 = glfw->create_window(800, 600, "Hello glfw-cpp 2 (not resizable)");
 
     auto vs_source = read_file("asset/shader/shader.vert").value();
     auto fs_source = read_file("asset/shader/shader.frag").value();

@@ -1,5 +1,5 @@
-#ifndef VULKAN_HPP_VGY7T48UE
-#define VULKAN_HPP_VGY7T48UE
+#ifndef GLFW_CPP_VULKAN_HPP
+#define GLFW_CPP_VULKAN_HPP
 
 #if not defined(GLFW_CPP_VULKAN_SUPPORT)
 #    error "Vulkan support is not enabled"
@@ -76,4 +76,4 @@ namespace glfw_cpp::vk
 #endif    // VULKAN_HPP
 }
 
-#endif /* end of include guard: VULKAN_HPP_VGY7T48UE */
+#endif /* end of include guard: GLFW_CPP_VULKAN_HPP */

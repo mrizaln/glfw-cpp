@@ -23,15 +23,20 @@
 //
 //========================================================================
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <getopt.h>
+
+#include <linmath.h>
+
 #include <array>
 #include <cstdio>
 #include <cstdlib>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-
-#include <getopt.h>
-#include <linmath.h>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 static const char* vertex_shader_text = R"glsl(
     #version 110
@@ -74,21 +79,25 @@ int main()
     GLuint texture, program, vertex_buffer;
     GLint  mvp_location, vpos_location, color_location, texture_location;
 
-    auto api = glfw_cpp::api::OpenGL{
-        .major  = 2,
-        .minor  = 0,
-        .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-    };
-    auto logger = [](auto level, auto msg) {
-        if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-            fprintf(stderr, "glfw-cpp error: %s\n", msg.c_str());
-        }
-    };
+    auto glfw = glfw_cpp::init({});
 
-    auto glfw    = glfw_cpp::init(api, logger);
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
+
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 2,
+            .version_minor = 0,
+        },
+    });
+
     auto windows = std::array<glfw_cpp::Window, 2>{};
 
-    windows[0] = glfw->create_window({}, "First | Sharing (glfw-cpp)", 400, 400);
+    windows[0] = glfw->create_window(400, 400, "First | Sharing (glfw-cpp)");
+
+    glfw_cpp::make_current(windows[0].handle());
+    glbinding::initialize(0, glfw_cpp::get_proc_address, true);
 
     // Create the OpenGL objects inside the first context, created above
     // All objects will be shared with the second context, created below
@@ -145,9 +154,10 @@ int main()
     glEnableVertexAttribArray(vpos_location);
     glVertexAttribPointer(vpos_location, 2, GL_FLOAT, GL_FALSE, sizeof(vertices[0]), (void*)0);
 
-    windows[1] = glfw->create_window(
-        { .share = windows[0].handle() }, "Second | Sharing (glfw-cpp)", 400, 400
-    );
+    windows[1] = glfw->create_window(400, 400, "Second | Sharing (glfw-cpp)", nullptr, windows[0].handle());
+
+    glfw_cpp::make_current(windows[1].handle());
+    glbinding::initialize(1, glfw_cpp::get_proc_address, true);
 
     // Only enable vsync for the first of the windows to be swapped to
     // avoid waiting out the interval for each window
@@ -159,7 +169,7 @@ int main()
         // int left, right;
         // glfwGetWindowFrameSize(windows[0].handle(), &left, NULL, &right, NULL);
 
-        auto& [_1, pos, dim, _2, _3, _4, _5, _6, _7] = windows[0].properties();
+        auto& [title, pos, dim, frame, cursor, mouse, keys, mon] = windows[0].properties();
         windows[1].set_window_pos(pos.x + dim.width, pos.y);
     }
 
@@ -180,15 +190,16 @@ int main()
 
         for (std::size_t i = 0; i < 2; i++) {
             if (windows[i].should_close()) {
-                if (windows[i].properties().attribute.visible) {
+                if (windows[i].attributes().visible) {
                     windows[i].hide();
                 }
                 continue;
             }
 
-            windows[i].bind();
+            glfw_cpp::make_current(windows[i].handle());
+            glbinding::useContext(i);
 
-            for (const auto& event : windows[i].poll()) {
+            for (const auto& event : windows[i].swap_events()) {
                 namespace ev = glfw_cpp::event;
                 using KC     = glfw_cpp::KeyCode;
                 using KS     = glfw_cpp::KeyState;
@@ -211,8 +222,7 @@ int main()
             glUniform3fv(color_location, 1, colors[i]);
             glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 
-            windows[i].display();
-            windows[i].unbind();
+            windows[i].swap_buffers();
         }
 
         glfw->wait_events();

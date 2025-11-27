@@ -1,16 +1,15 @@
-#ifndef WINDOW_HPP_IROQWEOX
-#define WINDOW_HPP_IROQWEOX
+#ifndef GLFW_CPP_WINDOW_HPP
+#define GLFW_CPP_WINDOW_HPP
 
 #include "glfw_cpp/event.hpp"
 #include "glfw_cpp/input.hpp"
+#include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/monitor.hpp"
 
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
-#include <thread>
-#include <vector>
 
 struct GLFWwindow;
 
@@ -39,29 +38,32 @@ namespace glfw_cpp
         auto   operator<=>(const CursorPosition&) const = default;
     };
 
-    struct Atrributes
+    // TODO: add context related attributes and framebuffer related attributes
+    struct Attributes
     {
-        unsigned int iconified     : 1 = 0;
-        unsigned int maximized     : 1 = 0;
-        unsigned int focused       : 1 = 0;
-        unsigned int visible       : 1 = 0;
-        unsigned int hovered       : 1 = 0;
-        unsigned int resizable     : 1 = 0;
-        unsigned int floating      : 1 = 0;
-        unsigned int auto_iconify  : 1 = 0;
-        unsigned int focus_on_show : 1 = 0;
+        unsigned int focused                 : 1 = 0;
+        unsigned int iconified               : 1 = 0;
+        unsigned int maximized               : 1 = 0;
+        unsigned int hovered                 : 1 = 0;
+        unsigned int visible                 : 1 = 0;
+        unsigned int resizable               : 1 = 0;
+        unsigned int decorated               : 1 = 0;
+        unsigned int auto_iconify            : 1 = 0;
+        unsigned int floating                : 1 = 0;
+        unsigned int transparent_framebuffer : 1 = 0;    // TODO: add opacity operations
+        unsigned int focus_on_show           : 1 = 0;
+        unsigned int mouse_passthrough       : 1 = 0;
 
-        bool operator==(const Atrributes&) const = default;
+        bool operator==(const Attributes&) const = default;
     };
 
     struct Properties
     {
         std::string            title;
-        Position               pos;
+        Position               position;
         Dimensions             dimensions;
         FramebufferSize        framebuffer_size;
-        CursorPosition         cursor;
-        Atrributes             attribute;
+        CursorPosition         cursor_position;
         MouseButtonStateRecord mouse_button_state;
         KeyStateRecord         key_state;
         Monitor                monitor;
@@ -98,21 +100,6 @@ namespace glfw_cpp
         Window operator=(const Window&) = delete;
 
         explicit operator bool() const noexcept { return m_handle != nullptr; }
-
-        /**
-         * @brief Bind window context to current thread (only makes sense for OpenGL and OpenGLES).
-         *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
-         * @throw glfw_cpp::AlreadyBound If the window context is already bound to other thread.
-         */
-        void bind();
-
-        /**
-         * @brief Unbind window context from current thread (only makes sense for OpenGL and OpenGLES).
-         *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
-         */
-        void unbind();
 
         /**
          * @brief Destroy the window and reset the instance to default-initialized state.
@@ -170,17 +157,67 @@ namespace glfw_cpp
          *
          * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
          *
+         * Corresponds to `glfwSwapInterval(1)` on true or `glfwSwapInterval(0)` on false.
+         *
          * If the window context is not current at the point of calling, this function will bind it
          * temporarily before restoring it to previously bound context.
          */
         void set_vsync(bool value);
 
         /**
-         * @brief Toggle window vertical sync (vsync).
+         * @brief Set whether the window should be resizable by the user.
          *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
+         * @param value True to make the window resizable, false to disable.
+         *
+         * Corresponds to setting `GLFW_RESIZABLE` attribute.
          */
-        void toggle_vsync() { set_vsync(!is_vsync_enabled()); }
+        void set_resizable(bool value);
+
+        /**
+         * @brief Set whether the window should have decoration such as a border, a close widget, etc.
+         *
+         * @param value True to make the window decorated, false to disable decoration.
+         *
+         * Corresponds to setting `GLFW_DECORATED` attribute.
+         */
+        void set_decorated(bool value);
+
+        /**
+         * @brief Set whether the window on fullscreen should iconify on focus loss, a close widget, etc.
+         *
+         * @param value True to make it auto iconify, false to disable.
+         *
+         * Corresponds to setting `GLFW_AUTO_ICONIFY` attribute.
+         */
+        void set_auto_iconify(bool value);
+
+        /**
+         * @brief Set whether the window should be floating or not.
+         *
+         * @param value True to make it floating, false to disable.
+         *
+         * Corresponds to setting `GLFW_FLOATING` attribute.
+         * Also known as always-on-top.
+         */
+        void set_floating(bool value);
+
+        /**
+         * @brief Set whether the window will be given input focus when window is shown from hidden state.
+         *
+         * @param value True to make it auto focus, false to disable.
+         *
+         * Corresponds to setting `GLFW_FOCUS_ON_SHOW` attribute.
+         */
+        void set_focus_on_show(bool value);
+
+        /**
+         * @brief Set whether the window is transparent to mouse input.
+         *
+         * @param value True to pass through mouse input, false to disable.
+         *
+         * Corresponds to setting `GLFW_MOUSE_PASSTHROUGH` attribute.
+         */
+        void set_mouse_passthrough(bool value);
 
         /**
          * @brief Set window size.
@@ -246,18 +283,15 @@ namespace glfw_cpp
 
         /**
          * @brief Swap the front and back event queue, then return the front queue.
-         *
-         * Besides of swapping the event queue double buffer, this function also runs tasks queued with
-         * `glfw_cpp::Window::enqueue_task`.
          */
-        const EventQueue& poll() noexcept;
+        const EventQueue& swap_events() noexcept;
 
         /**
-         * @brief See last events queued before call to `poll()`
+         * @brief See last events queued before call to `swap_events()`
          *
-         * This function just returns the last events happened before call to `poll()` it does not update the
-         * events, and if consecutive call to this function happen while there is no `poll()` in between,
-         * there will be no change to the event queue.
+         * This function just returns the last events happened before call to `swap_events()` it does not
+         * update the events, and if consecutive call to this function happen while there is no
+         * `swap_events()` in between, there will be no change to the event queue.
          */
         const EventQueue& events() noexcept { return m_event_queue_front; }
 
@@ -270,7 +304,7 @@ namespace glfw_cpp
          * @return The time taken between the last call to this function and the current call.
          *
          * This function corresponds to `glfwSwapBuffers`. This function also updates the delta time recorded
-         * on the window instance (delta time defined as interval between calls to `display()`).
+         * on the window instance (delta time defined as interval between calls to `swap_buffers()`).
          *
          * If you are using emscripten, this function will not block the execution regardless the vsync
          * option. But instead it will return immediately since `glfwSwapBuffers` is not implemented for wasm
@@ -278,19 +312,19 @@ namespace glfw_cpp
          * automatically. Instead, you need to manage the update frequency yourself. Calling this function is
          * still required though to update the delta time stored in this window instance.
          */
-        double display();
+        double swap_buffers();
 
         /**
-         * @brief Use window, check if the window should close, poll events, and display the window at the
-         * same time.
+         * @brief Use window, check if the window should close, swap events, and swap the window buffers at
+         * the same time.
          *
-         * @param func The function to be called between polling events and displaying the window.
+         * @param func The function to be called between swapping events and swapping buffers.
          * @return std::nullopt if the window should close, otherwise the time it takes between the last call
-         * to `display()` (whether through this function or directly) and the current call.
+         * to `swap_buffers()` (whether through this function or directly) and the current call.
          *
-         * This function is a convenience function that combines the `should_close()`, `poll()`, and
-         * `display()` functions. It will bind the window at the beginning of the function and unbind it at
-         * the end.
+         * This function is a convenience function that combines the `should_close()`, `swap_events()`, and
+         * `swap_buffers()` functions. It will bind the window at the beginning of the function and unbind it
+         * at the end.
          */
         std::optional<double> use(std::invocable<const EventQueue&> auto&& func)
         {
@@ -298,22 +332,22 @@ namespace glfw_cpp
                 return std::nullopt;
             }
 
-            bind();
+            auto prev = glfw_cpp::get_current();
+            glfw_cpp::make_current(handle());
 
-            const auto& events = poll();
+            const auto& events = swap_events();
             func(events);
-            auto delta = display();
+            auto delta = swap_buffers();
 
-            unbind();
-
+            glfw_cpp::make_current(prev);
             return delta;
         }
 
         /**
-         * @brief Run the window loop; each iteration will check if the window should close, poll events, and
-         * display the window.
+         * @brief Run the window loop; each iteration will check if the window should close, swap events, and
+         * Swap the window buffers.
          *
-         * @param func The function to be called between polling events and displaying the window.
+         * @param func The function to be called between swapping events and swapping buffers.
          *
          * This function is a convenience function that runs the window loop. Your works should be done in the
          * `func` parameter. The loop will continue until the window should close. The window will be bound
@@ -322,29 +356,21 @@ namespace glfw_cpp
          * Basically, this function is an analogue to `use` but with a loop.
          *
          * Warning! this function will loop as fast as possible in emscripten, rendering the browser unusable.
-         * Read more on `display()`.
+         * Read more on `swap_buffers()`.
          */
         void run(std::invocable<const EventQueue&> auto&& func)
         {
-            bind();
+            auto prev = glfw_cpp::get_current();
+            glfw_cpp::make_current(handle());
 
             while (!should_close()) {
-                const auto& events = poll();
+                const auto& events = swap_events();
                 func(events);
-                display();
+                swap_buffers();
             }
 
-            unbind();
+            glfw_cpp::make_current(prev);
         }
-
-        /**
-         * @brief Enqueue a task to be run in the window thread.
-         *
-         * @param func The function to be run in the window thread.
-         *
-         * The function will be ran at the time `poll()` is called.
-         */
-        void enqueue_task(Fun<void(Window&)>&& func) noexcept;
 
         /**
          * @brief Request the window to close.
@@ -361,11 +387,6 @@ namespace glfw_cpp
         void set_capture_mouse(bool value) noexcept;
 
         /**
-         * @brief Toggle the mouse capture state.
-         */
-        void toggle_capture_mouse() noexcept { set_capture_mouse(!is_mouse_captured()); }
-
-        /**
          * @brief Resize the event queue to the new size.
          *
          * @param new_size The new size of the event queue.
@@ -380,6 +401,13 @@ namespace glfw_cpp
          * @return The properties of the window.
          */
         const Properties& properties() const noexcept { return m_properties; }
+
+        /**
+         * @brief Get the attributes of the window.
+         *
+         * @return The attributes of the window.
+         */
+        const Attributes& attributes() const noexcept { return m_attributes; }
 
         /**
          * @brief Get last frame time.
@@ -401,65 +429,28 @@ namespace glfw_cpp
          */
         Handle handle() const noexcept { return m_handle; }
 
-        /**
-         * @brief Get the thread id that the window is attached to.
-         *
-         * @return The thread id that the window is attached to. If the window is not attached to any thread,
-         * it will return a default-constructed `std::thread::id`.
-         */
-        std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; };
-
     private:
-        Window(Handle handle, Properties&& properties, bool bind_immediately);
-
-        static void window_pos_callback(GLFWwindow* window, int x, int y);
-        static void window_size_callback(GLFWwindow* window, int width, int height);
-        static void window_close_callback(GLFWwindow* window);
-        static void window_refresh_callback(GLFWwindow* window);
-        static void window_focus_callback(GLFWwindow* window, int focused);
-        static void window_iconify_callback(GLFWwindow* window, int iconified);
-        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-        static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-        static void cursor_pos_callback(GLFWwindow* window, double x, double y);
-        static void cursor_enter_callback(GLFWwindow* window, int entered);
-        static void scroll_callback(GLFWwindow* window, double x, double y);
-        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-        static void char_callback(GLFWwindow* window, unsigned int codepoint);
-        static void file_drop_callback(GLFWwindow* window, int count, const char** paths);
-        static void window_maximize_callback(GLFWwindow* window, int maximized);
-        static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
-
-        // NOTE: These two callbacks are beyond glfw_cpp::Window control alone, maybe setting it in
-        //       the glfw_cpp::Instance makes more sense. But then, there's the problem of how to
-        //       'broadcast' the event to all opened windows...
-        // TODO: Implement these two callbacks
-        /*
-            static void monitor_callback(GLFWmonitor* monitor, int action);
-            static void joystick_callback(int jid, int action);
-        */
-
-        static void window_callback_helper(GLFWwindow* window, Event&& event) noexcept;
+        Window(Handle handle, Properties&& properties, Attributes&& attributes);
 
         void push_event(Event&& event) noexcept;
-        void process_queued_tasks() noexcept;
         void update_delta_time() noexcept;
 
         Handle m_handle = nullptr;
 
         // window stuff
-        std::thread::id m_attached_thread_id = {};
-        Properties      m_properties         = {};
-        double          m_last_frame_time    = 0.0;
-        double          m_delta_time         = 0.0;
-        bool            m_vsync              = true;
-        bool            m_capture_mouse      = false;
+        Properties m_properties      = {};
+        Attributes m_attributes      = {};
+        double     m_last_frame_time = 0.0;
+        double     m_delta_time      = 0.0;
+        bool       m_vsync           = true;
+        bool       m_capture_mouse   = false;
+        bool       m_has_context     = false;
 
         // queues
-        EventQueue                      m_event_queue_front = EventQueue{ s_default_eventqueue_size };
-        EventQueue                      m_event_queue_back  = EventQueue{ s_default_eventqueue_size };
-        std::vector<Fun<void(Window&)>> m_task_queue;
-        mutable std::mutex              m_queue_mutex;
+        EventQueue         m_event_queue_front = EventQueue{ s_default_eventqueue_size };
+        EventQueue         m_event_queue_back  = EventQueue{ s_default_eventqueue_size };
+        mutable std::mutex m_queue_mutex;
     };
 }
 
-#endif /* end of include guard: WINDOW_HPP_IROQWEOX */
+#endif /* end of include guard: GLFW_CPP_WINDOW_HPP */

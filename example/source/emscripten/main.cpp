@@ -1,4 +1,4 @@
-#include <GL/gl.h>
+#include <GLES2/gl2.h>
 #include <GLFW/emscripten_glfw3.h>
 #include <emscripten/emscripten.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -32,21 +32,19 @@ void println(std::format_string<Args...> fmt, Args&&... args)
 
 int main()
 {
-    auto api = glfw_cpp::api::OpenGLES{
-        .major  = 2,
-        .minor  = 0,
-        .loader = nullptr,    // in emscripten, this can be null
-    };
+    auto glfw = glfw_cpp::init({});
 
-    auto logger = [](glfw_cpp::LogLevel level, std::string message) {
-        println("{}: {}", glfw_cpp::to_string(level), message);
-    };
+    glfw->set_error_callback([](auto code, auto msg) {
+        println("glfw-cpp [{:<20}]: {}", to_string(code), msg);
+    });
 
-    auto glfw = glfw_cpp::init(api, logger);
+    glfw->apply_hint({ .api = glfw_cpp::api::OpenGLES<true>{ .version_major = 2, .version_minor = 0 } });
 
     emscripten::glfw3::SetNextWindowCanvasSelector("#canvas");
-    auto window = glfw->create_window({}, "Hello emscripten from glfw-cpp", 800, 600);
+    auto window = glfw->create_window(800, 600, "Hello emscripten from glfw-cpp", nullptr, nullptr);
     emscripten::glfw3::MakeCanvasResizable(window.handle(), "#canvas-container", "#canvas-handle");
+
+    glfw_cpp::make_current(window.handle());
 
     // unfortunately for us the variables allocated on the stack currently will be destroyed immediately after
     // set_main_loop() since it won't block. thus all relevant resources must be moved inside the lambda.
@@ -62,7 +60,7 @@ int main()
         glfw->poll_events();    // calls `glfwPollEvents`, events then sent to each active Window instance
 
         // swap the event queue
-        window.poll().visit(ev::Overload{
+        window.swap_events().visit(ev::Overload{
             [&](const ev::KeyPressed& e) {
                 if (e.state != KS::Press) {
                     return;
@@ -91,7 +89,7 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 
         // only updates delta time since glfwSwapBuffers is not implemented
-        window.display();
+        window.swap_buffers();
 
         return not window.should_close();
     });

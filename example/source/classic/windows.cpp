@@ -26,25 +26,26 @@
 // Conversion to glfw-cpp (and C++):
 //    Muhammad Rizal Nurromdhoni <mrizaln2000@gmail.com>
 
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
 #include <algorithm>
 #include <array>
 #include <cstdio>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 int main()
 {
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        [](auto level, auto msg) {
-            if ((int)level >= (int)glfw_cpp::LogLevel::Error) {
-                fprintf(stderr, "%s\n", msg.c_str());
-            }
-        }
-    );
+    auto glfw = glfw_cpp::init({});
+
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
+
+    glfw->apply_hint({ .window = { .decorated = false, .focus_on_show = false } });
 
     auto [xpos, ypos, width, height] = glfw_cpp::get_primary_monitor().work_area();
 
@@ -63,13 +64,10 @@ int main()
         };
         const int size = height / 5;
 
-        auto hint   = glfw_cpp::Hint{};
-        hint.flags &= ~glfw_cpp::Flag::Decorated;
-        if (i > 0) {
-            hint.flags &= ~glfw_cpp::Flag::FocusOnShow;
-        }
+        windows[(unsigned)i] = glfw->create_window(size, size, "Multi-Window Example (glfw-cpp)");
 
-        windows[(unsigned)i] = glfw->create_window(hint, "Multi-Window Example (glfw-cpp)", size, size);
+        glfw_cpp::make_current(windows[(unsigned)i].handle());
+        glbinding::initialize(i, glfw_cpp::get_proc_address);
 
         // set window pos will be queued inside WindowManager
         windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
@@ -83,13 +81,14 @@ int main()
     while (glfw->has_window_opened()) {
         for (unsigned i = 0; i < 4; i++) {
             if (windows[i].should_close()) {
-                if (windows[i].properties().attribute.visible) {
+                if (windows[i].attributes().visible) {
                     windows[i].hide();
                 }
                 continue;
             }
 
-            windows[i].bind();
+            glfw_cpp::make_current(windows[i].handle());
+            glbinding::useContext(i);
 
             glClear(GL_COLOR_BUFFER_BIT);
 
@@ -97,8 +96,7 @@ int main()
                 std::ranges::for_each(windows, &glfw_cpp::Window::request_close);
             }
 
-            windows[i].display();
-            windows[i].unbind();
+            windows[i].swap_buffers();
         }
 
         glfw->wait_events();

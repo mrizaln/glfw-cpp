@@ -32,6 +32,18 @@
 #define _USE_MATH_DEFINES
 #endif
 
+#include <glbinding/gl/functions-patches.h>    // for glLightModeli
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
+#include <glfw_cpp/glfw_cpp.hpp>
+
+#include <getopt.h>
+
+#include <linmath.h>
+
+#include <tinycthread.h>
+
 #include <chrono>
 #include <cmath>
 #include <cstdio>
@@ -39,22 +51,7 @@
 #include <cstring>
 #include <ctime>
 
-#include <glad/glad.h>
-#include <glfw_cpp/glfw_cpp.hpp>
-
-#include <getopt.h>
-#include <linmath.h>
-#include <tinycthread.h>
-
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>    // for glfwExtensionSupported() function
-
-// Define tokens for GL_EXT_separate_specular_color if not already defined
-#ifndef GL_EXT_separate_specular_color
-#define GL_LIGHT_MODEL_COLOR_CONTROL_EXT 0x81F8
-#define GL_SINGLE_COLOR_EXT              0x81F9
-#define GL_SEPARATE_SPECULAR_COLOR_EXT   0x81FA
-#endif    // GL_EXT_separate_specular_color
+using namespace gl;    // from <glbinding/gl/gl.h>
 
 //========================================================================
 // Type definitions
@@ -896,12 +893,11 @@ int main(int argc, char** argv)
     int    ch, width, height;
     thrd_t physics_thread = 0;
 
-    auto glfw = glfw_cpp::init(
-        glfw_cpp::api::OpenGL{
-            .loader = [](auto, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
-        },
-        nullptr
-    );
+    auto glfw = glfw_cpp::init({});
+
+    glfw->set_error_callback([](auto code, auto msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
+    });
 
     auto monitor = [&] {
         while ((ch = getopt(argc, argv, "fh")) != -1) {
@@ -913,16 +909,17 @@ int main(int argc, char** argv)
         return glfw_cpp::Monitor{};
     }();
 
-    auto hint = glfw_cpp::Hint{};
     if (monitor) {
         auto mode = monitor.current_video_mode();
 
-        hint.monitor = monitor.handle();
-
-        hint.red_bits     = mode.red_bits;
-        hint.green_bits   = mode.green_bits;
-        hint.blue_bits    = mode.blue_bits;
-        hint.refresh_rate = mode.refresh_rate;
+        glfw->apply_hint({
+            .framebuffer = {
+                .red_bits   = mode.red_bits,
+                .green_bits = mode.green_bits,
+                .blue_bits  = mode.blue_bits,
+            },
+            .monitor = { .refresh_rate = mode.refresh_rate },
+        });
 
         width  = mode.width;
         height = mode.height;
@@ -933,7 +930,7 @@ int main(int argc, char** argv)
         height = 480;
     }
 
-    auto window = glfw->create_window(hint, "Particle Engine (glfw-cpp)", width, height);
+    auto window = glfw->create_window(width, height, "Particle Engine (glfw-cpp)", monitor.handle());
 
     // Set initial aspect ratio
     window.lock_current_aspect_ratio();
@@ -941,6 +938,9 @@ int main(int argc, char** argv)
     if (monitor) {
         window.set_capture_mouse(true);
     }
+
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
     glViewport(0, 0, width, height);
     aspect_ratio = height ? (float)width / (float)height : 1.f;
@@ -985,7 +985,7 @@ int main(int argc, char** argv)
         floor_texture
     );
 
-    if (glfwExtensionSupported("GL_EXT_separate_specular_color")) {
+    if (glfw_cpp::extension_supported("GL_EXT_separate_specular_color")) {
         glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL_EXT, GL_SEPARATE_SPECULAR_COLOR_EXT);
     }
 
@@ -1017,7 +1017,7 @@ int main(int argc, char** argv)
         glfw->poll_events();
 
         // this poll returns the events from the queue
-        for (const auto& event : window.poll()) {
+        for (const auto& event : window.swap_events()) {
             namespace ev = glfw_cpp::event;
             using KC     = glfw_cpp::KeyCode;
             using KS     = glfw_cpp::KeyState;
@@ -1040,7 +1040,7 @@ int main(int argc, char** argv)
             }
         }
 
-        window.display();
+        window.swap_buffers();
     }
 
     thrd_join(physics_thread, NULL);

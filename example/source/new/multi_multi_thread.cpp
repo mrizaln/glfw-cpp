@@ -1,4 +1,8 @@
-#include <glad/glad.h>
+#include <fmt/core.h>
+
+#include <glbinding/gl/gl.h>
+#include <glbinding/glbinding.h>
+
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <cmath>
@@ -6,13 +10,14 @@
 #include <ctime>
 #include <thread>
 
-namespace glfw = glfw_cpp;
+using namespace gl;    // from <glbinding/gl/g.h>
 
-void window_thread(glfw::Window&& window)
+void window_thread(glfw_cpp::Window&& window)
 {
-    window.bind();
+    glfw_cpp::make_current(window.handle());
+    glbinding::initialize(glfw_cpp::get_proc_address);
 
-    auto mul = 1.0F / static_cast<float>(std::rand() % 10 + 1);
+    const auto mul = 1.0F / static_cast<float>(std::rand() % 10 + 1);
 
     window.run([&, elapsed = 0.0F](const auto& events) mutable {
         events.visit(glfw_cpp::event::Overload{
@@ -41,25 +46,32 @@ int main()
     // forgive me for using rand and srand, I'm lazy :D
     std::srand(static_cast<unsigned>(std::time(nullptr)));
 
-    auto glfw = glfw_cpp::init(glfw::api::OpenGL{
-        .major   = 3,
-        .minor   = 3,
-        .profile = glfw::api::gl::Profile::Core,
-        .loader  = [](auto /* handle */, auto proc) { gladLoadGLLoader((GLADloadproc)proc); },
+    auto glfw = glfw_cpp::init({});
+
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
+        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
 
-    auto window1 = glfw->create_window({}, "Hello glfw-cpp 1", 800, 600, false);
-    auto window2 = glfw->create_window({}, "Hello glfw-cpp 2", 800, 600, false);
-    auto window3 = glfw->create_window({}, "Hello glfw-cpp 3", 800, 600, false);
-    auto window4 = glfw->create_window({}, "Hello glfw-cpp 4", 800, 600, false);
+    glfw->apply_hint({
+        .api = glfw_cpp::api::OpenGL{
+            .version_major = 3,
+            .version_minor = 3,
+            .profile       = glfw_cpp::gl::Profile::Core,
+        },
+    });
 
-    auto thread11 = std::jthread{ window_thread, std::move(window1) };
-    auto thread12 = std::jthread{ window_thread, std::move(window2) };
-    auto thread21 = std::jthread{ window_thread, std::move(window3) };
-    auto thread22 = std::jthread{ window_thread, std::move(window4) };
+    auto window1 = glfw->create_window(800, 600, "Hello glfw-cpp 1");
+    auto window2 = glfw->create_window(800, 600, "Hello glfw-cpp 2");
+    auto window3 = glfw->create_window(800, 600, "Hello glfw-cpp 3");
+    auto window4 = glfw->create_window(800, 600, "Hello glfw-cpp 4");
+
+    auto thread1 = std::jthread{ window_thread, std::move(window1) };
+    auto thread2 = std::jthread{ window_thread, std::move(window2) };
+    auto thread3 = std::jthread{ window_thread, std::move(window3) };
+    auto thread4 = std::jthread{ window_thread, std::move(window4) };
 
     while (glfw->has_window_opened()) {
-        using glfw::operator""_fps;
+        using glfw_cpp::operator""_fps;
         glfw->poll_events(120_fps);
     }
 }
