@@ -9,17 +9,62 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- New `event_name()` function that gets the name of an event.
+- New `Instance::create_window` function, replacing `WindowManager::create_window`.
+- New `Instance::set_event_interceptor` function, replacing `WindowManager::set_event_interceptor`.
+- New `Instance::has_window_opened` function, replacing `WindowManager::has_window_opened`.
+- New `Instance::poll_events` function, replacing `WindowManager::poll_events`.
+- New `Instance::wait_events` function, replacing `WindowManager::wait_events`.
+- New `Window::set_resizable` function that corresponds to setting resizable attribute.
+- New `Window::set_floating` function that corresponds to setting floating attribute.
+- New `Window::set_auto_iconify` function that corresponds to setting auto-iconify attribute.
+- New `Window::set_focus_on_show` function that corresponds to setting focus-on-show attribute.
+- New `Window::set_decorated` function that corresponds to setting decorated attribute.
+- New `Window::set_mouse_passthrough` function that corresponds to setting decorated attribute.
+- New `apply_hint`, `apply_hint_full`, and `apply_hint_default` for setting window creation hints.
+- New `event_name` function that gets the name of an event.
+- New `make_current` and `get_current` function for context management replacing `Window::bind` and `Window::unbind`
+- New `get_proc_address` function for getting OpenGL functions (wrapping `glfwGetProcAddress` function).
+- New `extension_supported` function for checking OpenGL extension function existence.
+- New structs for window creation hints: `hint::Window`, `hint::Frambuffer`, `hint::Monitor`, `hint::Win32`, `hint::Cocoa`, `hint::Wayland`, `hint::X11`, `Hint`, `PartialHint`, `FullHint`.
+- New enums for GLFW initialization hints: `hint::Platform`, `hint::AnglePlatform`, `hint::WaylandLibdecor`, `InitHint`.
+- New enums for context hints: `gl::CreationApi`, `gl::Robustness`, `gl::ReleaseBehavior`.
+- New window attributes: `decorated`, `transparent_framebuffer`, `mouse_passthrough`.
+- Add GLFW constants for `GLFW_DONT_CARE` and `GLFW_ANY_POSITION` in its own namespace, `constants`.
 - Emscripten support using [`contrib.glfw3`](https://github.com/pongasoft/emscripten-glfw) port.
 - Emscripten example.
 
 ### Fixed
 
 - Missing `#ifdef` block and enumeration for error codes.
+- Queued tasks not flushed before destruction.
+- Add missing `NoError` enumerator that represents `GLFW_NO_ERROR` on `ErrorCode` enum.
 
 ### Changed
 
+- Headers guards now use a fixed pattern instead of using random letters.
+- Change the signature for `init` to `void init(const InitHint&)` to allow for setting initialization hint.
+- Window creation hints can be set like in `GLFW`, not passed in as argument each time to window creation function, through `apply_hint*` functions.
+- Move `gl` namespace to outside of `api` namespace.
+- Move `helper.hpp` and `imgui.hpp` headers to top level include.
+- Move the window creation and events polling from `WindowManager` to `Instance`.
+- ImGUI functionalities now lives in `imgui` namespace instead of `extra`.
+- Remove `extra::ImguiInterceptor` class and replace the functionality with `imgui::ImguiHandle::process_events` function, making events handling explicit for ImGUI.
+- Remove logger and replace it with error callback instead.
+- Remove logger enumeration, `LogLevel` since it is not necessary with the removal of general logging.
+- Remove the constraint of having only one kind of client context API for all windows.
+- Rename `Window::poll` to `Window::swap_events`.
+- Rename `Window::display` to `Window::swap_buffers`.
+- Rename `Window::is_vsync_enabled` to `Window::is_vsync` making it shorter.
+- Separate window's `Attribute` from `Properties`.
 - User-defined literal `_fps` now is `constexpr`.
+
+### Removed
+
+- `WindowManager` class as it is not necessary (refer to [Issue #6](https://github.com/mrizaln/glfw-cpp/issues/6)).
+- `Instance::create_window_manager` function.
+- `Window::bind` and `Window::unbind` functions for context management.
+- `Window::toggle_vsync` and `Window::toggle_capture_mouse` function since I deemed it redundant with the existence of `Window::is_vsync` and `Window::is_mouse_captured` function.
+- `Flag` enum for window hints and its bitwise operators helper.
 
 ## [0.11.0] - 2025-10-21
 
@@ -34,7 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Remove stray using declaration for `LogLevel` in `source/window_manager.cpp` file.
-- Synchronization issue on `extra::ImGuiInterceptor`.
+- Synchronization issue on `extra::ImguiInterceptor`.
 
 ### Changed
 
@@ -77,7 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Make `IEventInterceptor` and its derivatives a class.
 - Promote the severity of internal error from Error to Critical.
 - Add `ErrorCode` enumeration as an alternative type safe GLFW error code.
-- Add `ErrorCode` information inside the `Error` class that can be queried with `code()` member function.
+- Add `ErrorCode` information inside the `Error` class that can be queried with `code` member function.
 
 ## [0.9.0] - 2025-01-26
 
