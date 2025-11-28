@@ -1,7 +1,7 @@
 #ifndef GLFW_CPP_INSTANCE_HPP
 #define GLFW_CPP_INSTANCE_HPP
 
-#include "glfw_cpp/constant.hpp"
+#include "glfw_cpp/constants.hpp"
 #include "glfw_cpp/error.hpp"
 #include "glfw_cpp/helper.hpp"
 
@@ -177,8 +177,8 @@ namespace glfw_cpp
             MayOpt<Opt, bool> scale_to_monitor        = may_opt<Opt>(false);
             MayOpt<Opt, bool> scale_framebuffer       = may_opt<Opt>(true);
             MayOpt<Opt, bool> mouse_passthrough       = may_opt<Opt>(false);
-            MayOpt<Opt, int>  position_x              = may_opt<Opt>(constant::any_position);
-            MayOpt<Opt, int>  position_y              = may_opt<Opt>(constant::any_position);
+            MayOpt<Opt, int>  position_x              = may_opt<Opt>(constants::any_position);
+            MayOpt<Opt, int>  position_y              = may_opt<Opt>(constants::any_position);
         };
 
         /**
@@ -211,7 +211,7 @@ namespace glfw_cpp
         template <bool Opt = true>
         struct Monitor
         {
-            MayOpt<Opt, int> refresh_rate = may_opt<Opt>(constant::dont_care);
+            MayOpt<Opt, int> refresh_rate = may_opt<Opt>(constants::dont_care);
         };
 
         /**
@@ -486,15 +486,6 @@ namespace glfw_cpp
         void wait_events(std::optional<std::chrono::milliseconds> timeout = {});
 
         /**
-         * @brief Request to delete a window.
-         *
-         * @param handle The window handle.
-         *
-         * @thread_safety This function can be called from any thread.
-         */
-        void request_delete_window(GLFWwindow* handle) noexcept;
-
-        /**
          * @brief Enqueue a task to be processed in the main thread.
          *
          * @param task The task.
@@ -569,6 +560,15 @@ namespace glfw_cpp
          * @throw glfw_cpp::PlatformError If the underlying platform produces an error.
          */
         void run_tasks();
+
+        /**
+         * @brief Request to delete a window.
+         *
+         * @param handle The window handle.
+         *
+         * @thread_safety This function can be called from any thread.
+         */
+        void request_delete_window(GLFWwindow* handle) noexcept;
 
         std::thread::id    m_attached_thread_id = std::this_thread::get_id();
         IEventInterceptor* m_event_interceptor  = nullptr;
