@@ -272,6 +272,48 @@ namespace glfw_cpp
             MayOpt<Opt, const char*> class_name    = may_opt<Opt>("");
             MayOpt<Opt, const char*> instance_name = may_opt<Opt>("");
         };
+
+        /**
+         * @enum Platform
+         * @brief Specifies the platform to use for windowing and input.
+         */
+        enum class Platform : int
+        {
+            Any     = 0x00060000,
+            Win32   = 0x00060001,
+            Cocoa   = 0x00060002,
+            Wayland = 0x00060003,
+            X11     = 0x00060004,
+            Null    = 0x00060005,
+        };
+
+        /**
+         * @enum AnglePlatform
+         * @brief specifies the platform type (rendering backend) to request when using OpenGL ES and EGL via
+         * ANGLE.
+         *
+         * See ANGLE repo: https://chromium.googlesource.com/angle/angle/.
+         */
+        enum class AnglePlatform : int
+        {
+            None     = 0x00037001,
+            OpenGL   = 0x00037002,
+            OpenGLES = 0x00037003,
+            D3D9     = 0x00037004,
+            D3D11    = 0x00037005,
+            Vulkan   = 0x00037006,
+            Metal    = 0x00037007,
+        };
+
+        /**
+         * @enum WaylandLibdecor
+         * @brief Specifies whether to use libdecor for window decorations where available.
+         */
+        enum class WaylandLibdecor : int
+        {
+            Prefer  = 0x00038001,
+            Disable = 0x00038002,
+        };
     }
 
     /**
@@ -297,61 +339,19 @@ namespace glfw_cpp
     using PartialHint = Hint<true>;
 
     /**
-     * @enum Platform
-     * @brief Specifies the platform to use for windowing and input.
-     */
-    enum class Platform : int
-    {
-        Any     = 0x00060000,
-        Win32   = 0x00060001,
-        Cocoa   = 0x00060002,
-        Wayland = 0x00060003,
-        X11     = 0x00060004,
-        Null    = 0x00060005,
-    };
-
-    /**
-     * @enum AnglePlatform
-     * @brief specifies the platform type (rendering backend) to request when using OpenGL ES and EGL via
-     * ANGLE.
-     *
-     * See ANGLE repo: https://chromium.googlesource.com/angle/angle/.
-     */
-    enum class AnglePlatform : int
-    {
-        None     = 0x00037001,
-        OpenGL   = 0x00037002,
-        OpenGLES = 0x00037003,
-        D3D9     = 0x00037004,
-        D3D11    = 0x00037005,
-        Vulkan   = 0x00037006,
-        Metal    = 0x00037007,
-    };
-
-    /**
-     * @enum WaylandLibdecor
-     * @brief Specifies whether to use libdecor for window decorations where available.
-     */
-    enum class WaylandLibdecor : int
-    {
-        Prefer  = 0x00038001,
-        Disable = 0x00038002,
-    };
-
-    /**
      * @class InitHint
      * @brief Initialization hints are set before `glfwInit` and affect how the library behaves until
      * termination.
      */
     struct InitHint
     {
-        Platform        platform               = Platform::Any;
-        bool            joystick_hat_buttons   = true;
-        AnglePlatform   angle_platform_type    = AnglePlatform::None;
-        bool            cocoa_chdir_resource   = true;
-        bool            cocoa_menubar          = true;
-        WaylandLibdecor wayland_libdecor       = WaylandLibdecor::Prefer;
-        bool            x11_xcb_vulkan_surface = true;
+        hint::Platform        platform               = hint::Platform::Any;
+        bool                  joystick_hat_buttons   = true;
+        hint::AnglePlatform   angle_platform_type    = hint::AnglePlatform::None;
+        bool                  cocoa_chdir_resource   = true;
+        bool                  cocoa_menubar          = true;
+        hint::WaylandLibdecor wayland_libdecor       = hint::WaylandLibdecor::Prefer;
+        bool                  x11_xcb_vulkan_surface = true;
     };
 
     /**
