@@ -417,7 +417,7 @@ namespace glfw_cpp
         /**
          * @brief Check whether the window vsync is enabled.
          */
-        bool is_vsync_enabled() const noexcept { return m_vsync; }
+        bool is_vsync() const noexcept { return m_vsync; }
 
         /**
          * @brief Check whether the mouse is captured.
