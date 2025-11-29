@@ -317,13 +317,13 @@ namespace glfw_cpp
     }
 
     /**
-     * @struct Hint
+     * @struct Hints
      * @brief Window creation hints.
      *
      * @tparam Opt Indicates whether to use optional fields or not.
      */
     template <bool Opt = true>
-    struct Hint
+    struct Hints
     {
         hint::Api<Opt>         api         = api::OpenGL<Opt>{};
         hint::Window<Opt>      window      = {};
@@ -335,15 +335,15 @@ namespace glfw_cpp
         hint::X11<Opt>         x11         = {};
     };
 
-    using FullHint    = Hint<false>;
-    using PartialHint = Hint<true>;
+    using FullHints    = Hints<false>;
+    using PartialHints = Hints<true>;
 
     /**
      * @class InitHint
      * @brief Initialization hints are set before `glfwInit` and affect how the library behaves until
      * termination.
      */
-    struct InitHint
+    struct InitHints
     {
         hint::Platform        platform               = hint::Platform::Any;
         bool                  joystick_hat_buttons   = true;
@@ -362,7 +362,7 @@ namespace glfw_cpp
     {
     public:
         friend Window;
-        friend std::unique_ptr<Instance> init(const InitHint&);
+        friend std::unique_ptr<Instance> init(const InitHints&);
 
         using ErrorCallback = std::function<void(ErrorCode, std::string_view)>;
 
@@ -375,19 +375,19 @@ namespace glfw_cpp
         /**
          * @brief Apply window creation hints (partially).
          *
-         * @param hint The hints to be applied.
+         * @param hints The hints to be applied.
          *
          * The hints sticks to the instance. The values set won't be changed unless a new hint is applied.
          *
          * This function does not check whether the specified hint values are valid. If you set hints to
          * invalid values this will instead be reported by the next call to `create_window`.
          */
-        void apply_hint(const PartialHint& hint);
+        void apply_hints(const PartialHints& hints);
 
         /**
          * @brief Apply window creation hints (fully).
          *
-         * @param hint The hints to be applied.
+         * @param hints The hints to be applied.
          *
          * The hints sticks to the instance. The value set won't be changed unless a new hint is applied.
          *
@@ -395,14 +395,14 @@ namespace glfw_cpp
          * invalid values this will instead be reported by the next call to `create_window`.
          *
          * Calling this function with default constructed argument should be equal to calling
-         * `apply_hint_default()`.
+         * `apply_hints_default()`.
          */
-        void apply_hint_full(const FullHint& hint);
+        void apply_hints_full(const FullHints& hints);
 
         /**
          * @brief Resets the hints to its default values.
          */
-        void apply_hint_default();
+        void apply_hints_default();
 
         /**
          * @brief Create a window.
@@ -617,7 +617,7 @@ namespace glfw_cpp
     /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.
      *
-     * @param hint Initialization hints.
+     * @param hints Initialization hints.
      * @return A RAII handle that will terminate GLFW on destruction.
      *
      * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
@@ -627,7 +627,7 @@ namespace glfw_cpp
      *
      * Pass a default constructed hint to use default init hints.
      */
-    std::unique_ptr<Instance> init(const InitHint& hint);
+    std::unique_ptr<Instance> init(const InitHints& hints);
 
     /**
      * @brief Make the OpenGL or OpenGL ES context of the specified window current on calling thread.

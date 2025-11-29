@@ -13,9 +13,9 @@
 namespace
 {
     template <bool Opt, typename A>
-    void apply_hint_impl(const glfw_cpp::Hint<Opt>& hint, A adapter)
+    void apply_hints_impl(const glfw_cpp::Hints<Opt>& hints, A adapter)
     {
-        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hint;
+        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hints;
 
         auto window_hint = adapter;
 
@@ -415,7 +415,7 @@ namespace glfw_cpp
         }
     }
 
-    void Instance::apply_hint(const PartialHint& hint)
+    void Instance::apply_hints(const PartialHints& hints)
     {
         auto adapter = util::VisitOverloaded{
             [](int enumm, const std::optional<bool>& value) {
@@ -431,10 +431,10 @@ namespace glfw_cpp
                 value ? glfwWindowHint(enumm, static_cast<int>(*value)) : void();
             },
         };
-        apply_hint_impl(hint, adapter);
+        apply_hints_impl(hints, adapter);
     }
 
-    void Instance::apply_hint_full(const FullHint& hint)
+    void Instance::apply_hints_full(const FullHints& hints)
     {
         auto adapter = util::VisitOverloaded{
             [](int enumm, bool value) { glfwWindowHint(enumm, value ? GLFW_TRUE : GLFW_FALSE); },
@@ -442,10 +442,10 @@ namespace glfw_cpp
             [](int enumm, const char* value) { glfwWindowHintString(enumm, value); },
             []<typename T>(int enumm, const T& value) { glfwWindowHint(enumm, static_cast<int>(value)); },
         };
-        apply_hint_impl(hint, adapter);
+        apply_hints_impl(hints, adapter);
     }
 
-    void Instance::apply_hint_default()
+    void Instance::apply_hints_default()
     {
         glfwDefaultWindowHints();
     }
@@ -586,7 +586,7 @@ namespace glfw_cpp
         return glfwExtensionSupported(extension) == GLFW_TRUE;
     }
 
-    std::unique_ptr<Instance> init(const InitHint& hint)
+    std::unique_ptr<Instance> init(const InitHints& hints)
     {
         if (Instance::s_instance) {
             throw AlreadyInitialized{};
@@ -605,13 +605,13 @@ namespace glfw_cpp
             }
         });
 
-        glfwInitHint(GLFW_PLATFORM, static_cast<int>(hint.platform));
-        glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, hint.joystick_hat_buttons ? GLFW_TRUE : GLFW_FALSE);
-        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, static_cast<int>(hint.angle_platform_type));
-        glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, hint.cocoa_chdir_resource ? GLFW_TRUE : GLFW_FALSE);
-        glfwInitHint(GLFW_COCOA_MENUBAR, hint.cocoa_menubar ? GLFW_TRUE : GLFW_FALSE);
-        glfwInitHint(GLFW_WAYLAND_LIBDECOR, static_cast<int>(hint.wayland_libdecor));
-        glfwInitHint(GLFW_X11_XCB_VULKAN_SURFACE, hint.x11_xcb_vulkan_surface ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_PLATFORM, static_cast<int>(hints.platform));
+        glfwInitHint(GLFW_JOYSTICK_HAT_BUTTONS, hints.joystick_hat_buttons ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_ANGLE_PLATFORM_TYPE, static_cast<int>(hints.angle_platform_type));
+        glfwInitHint(GLFW_COCOA_CHDIR_RESOURCES, hints.cocoa_chdir_resource ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_COCOA_MENUBAR, hints.cocoa_menubar ? GLFW_TRUE : GLFW_FALSE);
+        glfwInitHint(GLFW_WAYLAND_LIBDECOR, static_cast<int>(hints.wayland_libdecor));
+        glfwInitHint(GLFW_X11_XCB_VULKAN_SURFACE, hints.x11_xcb_vulkan_surface ? GLFW_TRUE : GLFW_FALSE);
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
