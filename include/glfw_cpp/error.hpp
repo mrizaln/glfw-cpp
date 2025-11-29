@@ -27,10 +27,10 @@ namespace glfw_cpp
         PlatformUnavailable  = 0x0001000E,
 
         // glfw-cpp error codes (these ones I made up since they are not from the GLFW library)
-        AlreadyInitialized = 0x00020001,
-        AlreadyBound       = 0x00020002,
-        EmptyLoader        = 0x00020003,
-        WrongThreadAccess  = 0x00020004,
+        AlreadyInitialized = 0x000F0001,
+        AlreadyBound       = 0x000F0002,
+        EmptyLoader        = 0x000F0003,
+        WrongThreadAccess  = 0x000F0004,
         UnknownError       = 0x000FFFFF,
     };
 
