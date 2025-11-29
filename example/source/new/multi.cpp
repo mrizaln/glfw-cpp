@@ -80,7 +80,7 @@ int main()
     glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
         fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
-    glfw->apply_hint({
+    glfw->apply_hints({
         .api = glfw_cpp::api::OpenGL{
             .version_major = 3,
             .version_minor = 3,
@@ -90,7 +90,7 @@ int main()
 
     auto window1 = glfw->create_window(800, 600, "Hello glfw-cpp 1");
 
-    glfw->apply_hint({ .window = { .resizable = false } });
+    glfw->apply_hints({ .window = { .resizable = false } });
     auto window2 = glfw->create_window(800, 600, "Hello glfw-cpp 2 (not resizable)");
 
     auto vs_source = read_file("asset/shader/shader.vert").value();

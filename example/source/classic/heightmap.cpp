@@ -384,7 +384,7 @@ try {
         fprintf(stderr, "glfw-cpp error [%s]: %s\n", to_string(code).data(), msg.data());
     });
 
-    glfw->apply_hint({
+    glfw->apply_hints({
         .api = glfw_cpp::api::OpenGL{
             .version_major = 3,
             .version_minor = 2,

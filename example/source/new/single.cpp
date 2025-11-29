@@ -12,7 +12,7 @@ int main()
 {
     // Calls `glfwInit()` internally and returns an `std::unique_ptr<Instance>` that will call
     // `glfwTerminate()` on destruction. You can pass initialization hints here as argument.
-    auto glfw = glfw_cpp::init({ .platform = glfw_cpp::Platform::Any });
+    auto glfw = glfw_cpp::init({ .platform = glfw_cpp::hint::Platform::Any });
 
     // Set error callback for glfw functions.
     glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
@@ -21,7 +21,7 @@ int main()
 
     // Window creation hints are aggregated into one struct. the function will only set what you explicitly
     // set here.
-    glfw->apply_hint({
+    glfw->apply_hints({
         .api    = glfw_cpp::api::OpenGLES{ .version_major = 2, .version_minor = 0 },
         .window = { .focused = false },
     });

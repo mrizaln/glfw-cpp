@@ -71,7 +71,7 @@ int main()
         fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
 
-    glfw->apply_hint({ 
+    glfw->apply_hints({ 
         .api = glfw_cpp::api::OpenGL{
             .version_major   = 3,
             .version_minor   = 3,

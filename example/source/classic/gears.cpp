@@ -298,7 +298,7 @@ try {
         fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
     });
 
-    glfw->apply_hint({
+    glfw->apply_hints({
         .window      = { .transparent_framebuffer = true },
         .framebuffer = { .depth_bits = 16 },
     });

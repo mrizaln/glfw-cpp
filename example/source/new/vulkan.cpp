@@ -1156,7 +1156,7 @@ int main()
         fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
 
-    glfw->apply_hint({ .api = glfw_cpp::api::NoApi{} });
+    glfw->apply_hints({ .api = glfw_cpp::api::NoApi{} });
 
     auto window = glfw->create_window(800, 600, "Hello Vulkan from glfw-cpp");
     auto vulkan = Vulkan{ window, "vulkan program" };

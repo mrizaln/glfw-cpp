@@ -483,7 +483,7 @@ int main()
     glfw->set_error_callback([](auto code, auto message) {
         fprintf(stderr, "glfw-cpp [%20s]: %s", to_string(code).data(), message.data());
     });
-    glfw->apply_hint({ .framebuffer = { .samples = 4 } });
+    glfw->apply_hints({ .framebuffer = { .samples = 4 } });
 
     auto window = glfw->create_window(500, 500, "Split view demo (glfw-cpp)");
 

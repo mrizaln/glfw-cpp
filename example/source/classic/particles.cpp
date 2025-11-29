@@ -912,7 +912,7 @@ int main(int argc, char** argv)
     if (monitor) {
         auto mode = monitor.current_video_mode();
 
-        glfw->apply_hint({
+        glfw->apply_hints({
             .framebuffer = {
                 .red_bits   = mode.red_bits,
                 .green_bits = mode.green_bits,

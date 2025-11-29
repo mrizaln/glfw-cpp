@@ -45,7 +45,7 @@ int main()
         fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
     });
 
-    glfw->apply_hint({ .window = { .decorated = false, .focus_on_show = false } });
+    glfw->apply_hints({ .window = { .decorated = false, .focus_on_show = false } });
 
     auto [xpos, ypos, width, height] = glfw_cpp::get_primary_monitor().work_area();
 

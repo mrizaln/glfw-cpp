@@ -35,10 +35,10 @@ int main()
     auto glfw = glfw_cpp::init({});
 
     glfw->set_error_callback([](auto code, auto msg) {
-        println("glfw-cpp [{:<20}]: {}", to_string(code), msg);
+        println("glfw-cpp [{:-^20}]: {}", to_string(code), msg);
     });
 
-    glfw->apply_hint({ .api = glfw_cpp::api::OpenGLES<true>{ .version_major = 2, .version_minor = 0 } });
+    glfw->apply_hints({ .api = glfw_cpp::api::OpenGLES<true>{ .version_major = 2, .version_minor = 0 } });
 
     emscripten::glfw3::SetNextWindowCanvasSelector("#canvas");
     auto window = glfw->create_window(800, 600, "Hello emscripten from glfw-cpp", nullptr, nullptr);

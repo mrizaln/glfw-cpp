@@ -85,7 +85,7 @@ int main()
         fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
     });
 
-    glfw->apply_hint({
+    glfw->apply_hints({
         .api = glfw_cpp::api::OpenGL{
             .version_major = 2,
             .version_minor = 0,
