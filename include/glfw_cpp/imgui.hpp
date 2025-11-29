@@ -46,10 +46,9 @@ namespace glfw_cpp::imgui
         ImguiHandle& operator=(ImguiHandle&& other) noexcept
         {
             if (this != &other) {
-                ImGui_ImplGlfw_Shutdown();
+                shutdown();
                 m_window = std::exchange(other.m_window, nullptr);
             }
-
             return *this;
         }
 
