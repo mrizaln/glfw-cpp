@@ -135,7 +135,7 @@ namespace glfw_cpp
         m_vsync = value;
 
         if (not m_has_context) {
-            throw NoWindowContext{ "Window has no associated context" };
+            throw error::NoWindowContext{ "Window has no associated context" };
         }
 
         // 0 = immediate update, 1 = update synchronized with vertical retrace

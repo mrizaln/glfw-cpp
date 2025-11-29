@@ -62,7 +62,10 @@ namespace glfw_cpp
         }
         // clang-format on
     }
+}
 
+namespace glfw_cpp::error
+{
     class Error : public std::runtime_error
     {
     public:

@@ -393,7 +393,7 @@ namespace glfw_cpp
     void Instance::validate_access() const
     {
         if (m_attached_thread_id != std::this_thread::get_id()) {
-            throw WrongThreadAccess{
+            throw error::WrongThreadAccess{
                 util::get_thread_num(m_attached_thread_id),
                 util::get_thread_num(std::this_thread::get_id()),
             };
@@ -589,7 +589,7 @@ namespace glfw_cpp
     std::unique_ptr<Instance> init(const InitHints& hints)
     {
         if (Instance::s_instance) {
-            throw AlreadyInitialized{};
+            throw error::AlreadyInitialized{};
         }
 
         // bare new since the constructor is private
