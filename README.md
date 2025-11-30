@@ -8,11 +8,12 @@ This wrapper is customized for my needs and isn't a direct one-to-one port of th
 
 ## Features
 
-- RAII handles
-- Easy multi-threading (one window/context per thread)
-- Vulkan support
-- Emscripten support
-- No callback
+- RAII handles.
+- Easy multi-threading (one window/context per thread).
+- Poll based event handling instead of callback-based (`swap_events`).
+- No namespace pollution from including GLFW.
+- Vulkan support.
+- Emscripten support.
 
 ## Dependencies
 
@@ -34,7 +35,7 @@ include(FetchContent)
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
-  GIT_TAG v0.11.0)
+  GIT_TAG v0.12.0)
 
 option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)        # enable Vulkan support (requires Vulkan loader and headers)
 # option(GLFW_CPP_EMSCRIPTEN_PORT "emscripten port" ON)    # enable GLFW port for emscripten (mutually exclusive with above)

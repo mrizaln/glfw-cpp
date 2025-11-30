@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.0]
+
 ### Added
 
 - New `Instance::create_window` function, replacing `WindowManager::create_window`.
@@ -22,10 +24,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `Window::set_decorated` function that corresponds to setting decorated attribute.
 - New `Window::set_mouse_passthrough` function that corresponds to setting decorated attribute.
 - New `apply_hints`, `apply_hints_full`, and `apply_hints_default` for setting window creation hints.
-- New `event_name` function that gets the name of an event.
 - New `make_current` and `get_current` function for context management replacing `Window::bind` and `Window::unbind`
 - New `get_proc_address` function for getting OpenGL functions (wrapping `glfwGetProcAddress` function).
 - New `extension_supported` function for checking OpenGL extension function existence.
+- New `event_name` function that gets the name of an event.
 - New structs for window creation hints: `hint::Window`, `hint::Frambuffer`, `hint::Monitor`, `hint::Win32`, `hint::Cocoa`, `hint::Wayland`, `hint::X11`, `Hints`, `PartialHints`, `FullHints`.
 - New enums for GLFW initialization hints: `hint::Platform`, `hint::AnglePlatform`, `hint::WaylandLibdecor`, `InitHints`.
 - New enums for context hints: `gl::CreationApi`, `gl::Robustness`, `gl::ReleaseBehavior`.
@@ -288,7 +290,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New examples code.
 - New README.md.
 
-[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.11.0...HEAD
+[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.0...HEAD
+[0.12.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.9.0...v0.10.0
 [0.9.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.8.0...v0.9.0
