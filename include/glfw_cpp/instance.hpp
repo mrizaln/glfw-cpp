@@ -362,9 +362,11 @@ namespace glfw_cpp
     {
     public:
         friend Window;
-        friend std::unique_ptr<Instance> init(const InitHints&);
 
         using ErrorCallback = std::function<void(ErrorCode, std::string_view)>;
+        using Unique        = std::unique_ptr<Instance>;
+
+        friend Unique init(const InitHints&);
 
         ~Instance();
         Instance& operator=(Instance&&)      = delete;
@@ -627,7 +629,7 @@ namespace glfw_cpp
      *
      * Pass a default constructed hint to use default init hints.
      */
-    std::unique_ptr<Instance> init(const InitHints& hints);
+    Instance::Unique init(const InitHints& hints);
 
     /**
      * @brief Make the OpenGL or OpenGL ES context of the specified window current on calling thread.

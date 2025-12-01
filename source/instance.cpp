@@ -586,7 +586,7 @@ namespace glfw_cpp
         return glfwExtensionSupported(extension) == GLFW_TRUE;
     }
 
-    std::unique_ptr<Instance> init(const InitHints& hints)
+    Instance::Unique init(const InitHints& hints)
     {
         if (Instance::s_instance) {
             throw error::AlreadyInitialized{};
