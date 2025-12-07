@@ -58,12 +58,10 @@ namespace util
         case GLFW_PLATFORM_ERROR:        throw glfw_cpp::error::PlatformError       { err };
         case GLFW_FORMAT_UNAVAILABLE:    throw glfw_cpp::error::FormatUnavailable   { err };
         case GLFW_NO_WINDOW_CONTEXT:     throw glfw_cpp::error::NoWindowContext     { err };
-#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
         case GLFW_CURSOR_UNAVAILABLE:    throw glfw_cpp::error::CursorUnavailable   { err };
         case GLFW_FEATURE_UNAVAILABLE:   throw glfw_cpp::error::FeatureUnavailable  { err };
         case GLFW_FEATURE_UNIMPLEMENTED: throw glfw_cpp::error::FeatureUnimplemented{ err };
         case GLFW_PLATFORM_UNAVAILABLE:  throw glfw_cpp::error::PlatformUnavailable { err };
-#endif
         default:                         throw glfw_cpp::error::UnknownError        { "(Unhandled GLFW error code={:#010x}) {}", err_code, err};
         }
         // clang-format on
@@ -87,12 +85,10 @@ namespace util
         case GLFW_PLATFORM_ERROR:        throw glfw_cpp::error::PlatformError       { err };
         case GLFW_FORMAT_UNAVAILABLE:    throw glfw_cpp::error::FormatUnavailable   { err };
         case GLFW_NO_WINDOW_CONTEXT:     throw glfw_cpp::error::NoWindowContext     { err };
-#if GLFW_VERSION_MAJOR >= 3 && GLFW_VERSION_MINOR >= 4
         case GLFW_CURSOR_UNAVAILABLE:    throw glfw_cpp::error::CursorUnavailable   { err };
         case GLFW_FEATURE_UNAVAILABLE:   throw glfw_cpp::error::FeatureUnavailable  { err };
         case GLFW_FEATURE_UNIMPLEMENTED: throw glfw_cpp::error::FeatureUnimplemented{ err };
         case GLFW_PLATFORM_UNAVAILABLE:  throw glfw_cpp::error::PlatformUnavailable { err };
-#endif
         default:                         throw glfw_cpp::error::UnknownError        { "(Unhandled GLFW error code={:#010x}) {}", err_code, err};
         }
         // clang-format on

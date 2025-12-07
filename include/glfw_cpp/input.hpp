@@ -15,7 +15,7 @@ namespace glfw_cpp
      * @brief Key codes for keyboard input.
      *
      * This enum is a replacement of macros used in GLFW C header file. The integer values are directly
-     * translated from the source [here](https://www.glfw.org/docs/3.3/group__keys.html)
+     * translated from the source [here](https://www.glfw.org/docs/3.4/group__keys.html)
      */
     enum class KeyCode : int
     {
@@ -150,7 +150,7 @@ namespace glfw_cpp
      * @brief Key states for keyboard input.
      *
      * This enum is a replacement of macros used in GLFW C header file. The integer values are directly
-     * translated from the source [here](https://www.glfw.org/docs/3.3/group__input.html)
+     * translated from the source [here](https://www.glfw.org/docs/3.4/group__input.html)
      */
     enum class KeyState : int
     {
@@ -164,7 +164,7 @@ namespace glfw_cpp
      * @brief Mouse button codes for mouse input.
      *
      * This enum is a replacement of macros used in GLFW C header file. The integer values are directly
-     * translated from the source [here](https://www.glfw.org/docs/3.3/group__buttons.html)
+     * translated from the source [here](https://www.glfw.org/docs/3.4/group__buttons.html)
      */
     enum class MouseButton : int
     {
@@ -191,7 +191,7 @@ namespace glfw_cpp
      * @brief Mouse button states for mouse input.
      *
      * This enum is a replacement of macros used in GLFW C header file. The integer values are directly
-     * translated from the source [here](https://www.glfw.org/docs/3.3/group__input.html)
+     * translated from the source [here](https://www.glfw.org/docs/3.4/group__input.html)
      */
     enum class MouseButtonState : int
     {
@@ -204,7 +204,7 @@ namespace glfw_cpp
      * @brief Modifier key codes for keyboard input.
      *
      * This class is a replacement of macros used in GLFW C header file. The integer values are directly
-     * translated from the source [here](https://www.glfw.org/docs/3.3/group__mods.html)
+     * translated from the source [here](https://www.glfw.org/docs/3.4/group__mods.html)
      */
     class ModifierKey
     {
@@ -216,7 +216,7 @@ namespace glfw_cpp
          * @brief Modifier key codes.
          *
          * This enum is a replacement of macros used in GLFW C header file. The integer values are directly
-         * translated from the source [here](https://www.glfw.org/docs/3.3/group__mods.html)
+         * translated from the source [here](https://www.glfw.org/docs/3.4/group__mods.html)
          */
         enum Bit : Base
         {

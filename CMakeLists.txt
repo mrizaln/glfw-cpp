@@ -22,7 +22,7 @@ if(GLFW_CPP_EMSCRIPTEN_PORT)
         message(STATUS "glfw-cpp: GLFW_CPP_EMSCRIPTEN_PORT option set - emscripten port enabled.")
     endif()
 else()
-    find_package(glfw3 3.3 REQUIRED)
+    find_package(glfw3 3.4 REQUIRED)
 endif()
 
 set(glfw-cpp_SOURCES

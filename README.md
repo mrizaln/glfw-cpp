@@ -18,7 +18,7 @@ This wrapper is customized for my needs and isn't a direct one-to-one port of th
 ## Dependencies
 
 - C++20
-- GLFW 3.3+
+- GLFW 3.4
 
 You can use your system package manager or c++ package manager like Conan (see [example](./example)) or even manually clone the [GLFW](https://github.com/glfw/glfw) repository and call `add_subdirectory` to add the GLFW dependency.
 
