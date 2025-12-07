@@ -499,6 +499,13 @@ namespace glfw_cpp
         void enqueue_task(std::function<void()>&& task) noexcept;
 
         /**
+         * @brief Return the platform that was selected during initialization.
+         *
+         * Enumerator `hint::Platform::Any` won't be produced by this function.
+         */
+        hint::Platform platform() const noexcept;
+
+        /**
          * @brief Get the thread id this instance is attached to.
          */
         std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; }
@@ -591,6 +598,16 @@ namespace glfw_cpp
         namespace chr = std::chrono;
         return chr::duration_cast<chr::milliseconds>(chr::milliseconds{ 1000 } / fps);
     }
+
+    /**
+     * @brief Check whether GLFW was compiled with support for specified platform.
+     *
+     * @param platform The platform to query.
+     * @return True if platform is supported, false otherwise.
+     *
+     * @throw error::InvalidValue if `hint::Platform::Any` is passed as argument.
+     */
+    bool platform_supported(hint::Platform platform);
 
     /**
      * @brief Return the address of the specified OpenGL or OpenGLES core or extension function.

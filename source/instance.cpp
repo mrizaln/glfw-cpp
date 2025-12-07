@@ -576,6 +576,20 @@ namespace glfw_cpp
         m_task_queue.emplace_back(std::move(task));
     }
 
+    hint::Platform Instance::platform() const noexcept
+    {
+        auto platform = glfwGetPlatform();
+        assert(platform != 0);
+        return static_cast<hint::Platform>(platform);
+    }
+
+    bool platform_supported(hint::Platform platform)
+    {
+        auto res = glfwPlatformSupported(static_cast<int>(platform));
+        util::check_glfw_error();
+        return res;
+    }
+
     gl::Proc get_proc_address(const char* procname) noexcept
     {
         return glfwGetProcAddress(procname);
