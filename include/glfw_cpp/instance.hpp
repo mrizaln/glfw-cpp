@@ -417,13 +417,13 @@ namespace glfw_cpp
          *
          * @thread_safety This function must be called from the main thread.
          *
-         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
-         * @throw glfw_cpp::InvalidValue if a hint has invalid value.
-         * @throw glfw_cpp::ApiUnavailable The requested client API is unavailable.
-         * @throw glfw_cpp::VersionUnavailable if the requested client API version is unavailable.
-         * @throw glfw_cpp::FormatUnavailable The requested format is unavailable.
-         * @throw glfw_cpp::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
-         * @throw glfw_cpp::PlatformError A platform-specific error occurred.
+         * @throw error::WrongThreadAccess The function is called not from the main thread.
+         * @throw error::InvalidValue if a hint has invalid value.
+         * @throw error::ApiUnavailable The requested client API is unavailable.
+         * @throw error::VersionUnavailable if the requested client API version is unavailable.
+         * @throw error::FormatUnavailable The requested format is unavailable.
+         * @throw error::NoWindowContext The specified window does not have an OpenGL or OpenGL ES context.
+         * @throw error::PlatformError A platform-specific error occurred.
          */
         Window create_window(
             int              width,
@@ -472,7 +472,7 @@ namespace glfw_cpp
          *
          * @thread_safety This function must be called from the main thread.
          *
-         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         * @throw error::WrongThreadAccess The function is called not from the main thread.
          */
         void poll_events(std::optional<std::chrono::milliseconds> poll_rate = {});
 
@@ -483,7 +483,7 @@ namespace glfw_cpp
          *
          * @thread_safety This function must be called from the main thread.
          *
-         * @throw glfw_cpp::WrongThreadAccess The function is called not from the main thread.
+         * @throw error::WrongThreadAccess The function is called not from the main thread.
          */
         void wait_events(std::optional<std::chrono::milliseconds> timeout = {});
 
@@ -549,7 +549,7 @@ namespace glfw_cpp
         /**
          * @brief Check whether caller thread is the same as attached thread.
          *
-         * @throw glfw_cpp::WrongThreadAccess If this function is not called from attached_thread_id.
+         * @throw error::WrongThreadAccess If this function is not called from attached_thread_id.
          */
         void validate_access() const;
 
@@ -566,7 +566,7 @@ namespace glfw_cpp
         /**
          * @brief Run queued tasks.
          *
-         * @throw glfw_cpp::PlatformError If the underlying platform produces an error.
+         * @throw error::PlatformError If the underlying platform produces an error.
          */
         void run_tasks();
 
@@ -639,9 +639,9 @@ namespace glfw_cpp
      * @param hints Initialization hints.
      * @return A RAII handle that will terminate GLFW on destruction.
      *
-     * @throw glfw_cpp::AlreadyInitialized if GLFW is already initialized.
-     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
-     * @throw glfw_cpp::PlatformUnavailable if platform can't be detected; if `Platform::Any` was set, GLFW
+     * @throw error::AlreadyInitialized if GLFW is already initialized.
+     * @throw error::PlatformError if a platform-specific error occurred.
+     * @throw error::PlatformUnavailable if platform can't be detected; if `Platform::Any` was set, GLFW
      * can only detect null platform.
      *
      * Pass a default constructed hint to use default init hints.
@@ -653,16 +653,16 @@ namespace glfw_cpp
      *
      * @param context The window whose context to make current (pass null to detach).
      *
-     * @throw glfw_cpp::NotInitialized if GLFW is not initialized.
-     * @throw glfw_cpp::NoWindowContext if the window doesn't have OpenGL or OpenGL ES context.
-     * @throw glfw_cpp::PlatformError if a platform-specific error occurred.
+     * @throw error::NotInitialized if GLFW is not initialized.
+     * @throw error::NoWindowContext if the window doesn't have OpenGL or OpenGL ES context.
+     * @throw error::PlatformError if a platform-specific error occurred.
      */
     void make_current(GLFWwindow* window);
 
     /**
      * @brief Get window handle whose context is current.
      *
-     * @throw glfw_cpp::NotInitialized if GLFW is not initialized.
+     * @throw error::NotInitialized if GLFW is not initialized.
      */
     GLFWwindow* get_current();
 

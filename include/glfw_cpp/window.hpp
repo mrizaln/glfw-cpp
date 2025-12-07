@@ -155,7 +155,7 @@ namespace glfw_cpp
          *
          * @param value True to enable vsync, false to disable.
          *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
+         * @throw error::NoWindowContext If the window doesn't have a context (i.e. Api::NoApi).
          *
          * Corresponds to `glfwSwapInterval(1)` on true or `glfwSwapInterval(0)` on false.
          *
@@ -242,8 +242,8 @@ namespace glfw_cpp
         /**
          * @brief Get current window aspect ratio.
          *
-         * You could have use `glfw_cpp::Window::Properties::Dimension` to get the width and height of the
-         * window then calculate the aspect ratio yourself, or you could use this function.
+         * You could have use `glfw_cpp::Dimensions` to get the width and height of the window then calculate
+         * the aspect ratio yourself, or you could use this function.
          */
         float aspect_ratio() const noexcept;
 
@@ -298,8 +298,8 @@ namespace glfw_cpp
         /**
          * @brief Swap the framebuffer of the window.
          *
-         * @throw glfw_cpp::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
-         * @throw glfw_cpp::PlatformError If platform-specific error occurs.
+         * @throw error::NoWindowContext If the window doesn't have a context (e.g. Api::NoApi).
+         * @throw error::PlatformError If platform-specific error occurs.
          *
          * @return The time taken between the last call to this function and the current call.
          *
