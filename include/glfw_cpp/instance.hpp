@@ -615,11 +615,47 @@ namespace glfw_cpp
      * @param procname The name of the function in ASCII.
      * @return The address of the function, or `nullptr` if an error occurred.
      *
-     * This function is a wrapper of `glfwGetProcAddress` function. The error will be logged but this function
-     * won't throw to preserve the behavior from the underlying function. The possible error is
-     * `GLFW_NO_CURRENT_CONTEXT` so make sure to have context current when calling this function.
+     * @throw error::NotInitialized If GLFW is not initialized.
+     * @throw error::NoCurrentContext If there is no context current at the time this function called.
+     * @throw error::PlatformError If a platform-specific error occurred.
+     *
+     * If you need to call this function from C (which can't handle exception) you may want to use `noexcept`
+     * version of this function: `get_proc_address_noexcept()`. This is not uncommon if you for example use
+     * glad for the OpenGL loader.
      */
-    gl::Proc get_proc_address(const char* procname) noexcept;
+    gl::Proc get_proc_address(const char* procname);
+
+    /**
+     * @brief Return the address of the specified OpenGL or OpenGLES core or extension function.
+     *
+     * @param procname The name of the function in ASCII.
+     * @return The address of the function, or `nullptr` if an error occurred.
+     *
+     * The error will be logged but this function won't throw to preserve the behavior from the underlying
+     * function. The possible errors are:
+     * - `ErrorCode::NotInitialized`,
+     * - `ErrorCode::NoCurrentContext`, and
+     * - `ErrorCode::PlatformError`.
+     *
+     * If you don't mind the function throws, use `get_proc_address()` instead.
+     */
+    gl::Proc get_proc_address_noexcept(const char* procname) noexcept;
+
+    /**
+     * @brief Check whether the specified extension is supported by current OpenGL or OpenGL ES context.
+     *
+     * @param extension The name of the extensio in ASCII.
+     * @return True if extension is available or false otherwise.
+     *
+     * @throw error::NotInitialized If GLFW is not initialized.
+     * @throw error::NoCurrentContext If there is no context current at the time this function called.
+     * @throw error::InvalidValue The specified extension is invalid.
+     * @throw error::PlatformError If a platform-specific error occurred.
+     *
+     * If you need to call this function from C (which can't handle exception) you may want to use `noexcept`
+     * version of this function: `extension_supported_noexcept()`.
+     */
+    bool extension_supported(const char* extension);
 
     /**
      * @brief Check whether the specified extension is supported by current OpenGL or OpenGL ES context.
@@ -628,10 +664,15 @@ namespace glfw_cpp
      * @return True if extension is available or false otherwise.
      *
      * This function is a wrapper of `glfwExtensionSupported` function. The error will be logged but this
-     * function won't throw to preserve the behavior from the underlying function. The possible error is
-     * `GLFW_NO_CURRENT_CONTEXT` so make sure to have context current when calling this function.
+     * function won't throw to preserve the behavior from the underlying function. The possible errors are:
+     * - `ErrorCode::NotInitialized`,
+     * - `ErrorCode::NoCurrentContext`,
+     * - `ErrorCode::InvalidValue`, and
+     * - `ErrorCode::PlatformError`.
+     *
+     * If you don't mind the function throws, use `extension_supported()` instead.
      */
-    bool extension_supported(const char* extension) noexcept;
+    bool extension_supported_noexcept(const char* extension) noexcept;
 
     /**
      * @brief Initialize GLFW and returns a RAII handle that will terminate GLFW on destruction.

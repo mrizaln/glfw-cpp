@@ -2,12 +2,12 @@
 #include "glfw_cpp/window.hpp"
 
 #include "util.hpp"
-#include <thread>
 
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
 
 #include <cassert>
+#include <thread>
 #include <utility>
 
 namespace
@@ -590,12 +590,26 @@ namespace glfw_cpp
         return res;
     }
 
-    gl::Proc get_proc_address(const char* procname) noexcept
+    gl::Proc get_proc_address(const char* procname)
+    {
+        auto addr = glfwGetProcAddress(procname);
+        util::check_glfw_error();
+        return addr;
+    }
+
+    gl::Proc get_proc_address_noexcept(const char* procname) noexcept
     {
         return glfwGetProcAddress(procname);
     }
 
-    bool extension_supported(const char* extension) noexcept
+    bool extension_supported(const char* extension)
+    {
+        auto res = glfwExtensionSupported(extension) == GLFW_TRUE;
+        util::check_glfw_error();
+        return res;
+    }
+
+    bool extension_supported_noexcept(const char* extension) noexcept
     {
         return glfwExtensionSupported(extension) == GLFW_TRUE;
     }
