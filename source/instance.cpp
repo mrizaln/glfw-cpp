@@ -483,12 +483,16 @@ namespace glfw_cpp
         glfwSetWindowMaximizeCallback(handle, window_maximize_callback);
         glfwSetWindowContentScaleCallback(handle, window_content_scale_callback);
 
-        int    x_pos, y_pos, real_width, real_height, fb_width, fb_height;
+        int    real_width, real_height, fb_width, fb_height;
         double x_cursor, y_cursor;
-        glfwGetWindowPos(handle, &x_pos, &y_pos);
         glfwGetWindowSize(handle, &real_width, &real_height);
         glfwGetCursorPos(handle, &x_cursor, &y_cursor);
         glfwGetFramebufferSize(handle, &fb_width, &fb_height);
+
+        int x_pos = 0, y_pos = 0;
+        if (platform() != hint::Platform::Wayland) {    // emits GLFW_FEATURE_UNAVAILABLE on wayland
+            glfwGetWindowPos(handle, &x_pos, &y_pos);
+        }
 
         util::check_glfw_error();
 
