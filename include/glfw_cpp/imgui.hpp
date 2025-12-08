@@ -7,9 +7,9 @@
 #include <utility>
 
 #if __has_include(<imgui_impl_glfw.h>)
-#    include <imgui_impl_glfw.h>
+    #include <imgui_impl_glfw.h>
 #else
-#    error "This file requires imgui_impl_glfw.h to be exists and visible."
+    #error "This file requires imgui_impl_glfw.h to be exists and visible."
 #endif
 
 struct GLFWwindow;
