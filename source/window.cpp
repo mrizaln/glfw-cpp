@@ -96,38 +96,56 @@ namespace glfw_cpp
     void Window::iconify() noexcept
     {
         m_attributes.iconified = true;
-        Instance::get().enqueue_task([this] { glfwIconifyWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwIconifyWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::restore() noexcept
     {
         m_attributes.iconified = false;
         m_attributes.maximized = false;
-        Instance::get().enqueue_task([this] { glfwRestoreWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwRestoreWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::maximize() noexcept
     {
         m_attributes.maximized = true;
-        Instance::get().enqueue_task([this] { glfwMaximizeWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwMaximizeWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::show() noexcept
     {
         m_attributes.visible = true;
-        Instance::get().enqueue_task([this] { glfwShowWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwShowWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::hide() noexcept
     {
         m_attributes.visible = false;
-        Instance::get().enqueue_task([this] { glfwHideWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwHideWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::focus() noexcept
     {
         m_attributes.focused = true;
-        Instance::get().enqueue_task([this] { glfwFocusWindow(m_handle); });
+        Instance::get().enqueue_task([this] {
+            glfwFocusWindow(m_handle);
+            util::check_glfw_error();
+        });
     }
 
     void Window::set_vsync(bool value)
@@ -157,6 +175,7 @@ namespace glfw_cpp
         m_attributes.resizable = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_RESIZABLE, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
@@ -165,6 +184,7 @@ namespace glfw_cpp
         m_attributes.decorated = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_RESIZABLE, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
@@ -173,6 +193,7 @@ namespace glfw_cpp
         m_attributes.auto_iconify = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_AUTO_ICONIFY, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
@@ -181,6 +202,7 @@ namespace glfw_cpp
         m_attributes.floating = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_FLOATING, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
@@ -189,6 +211,7 @@ namespace glfw_cpp
         m_attributes.focus_on_show = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_FOCUS_ON_SHOW, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
@@ -197,19 +220,26 @@ namespace glfw_cpp
         m_attributes.mouse_passthrough = value;
         Instance::get().enqueue_task([this, value] {
             glfwSetWindowAttrib(m_handle, GLFW_MOUSE_PASSTHROUGH, value ? GLFW_TRUE : GLFW_FALSE);
+            util::check_glfw_error();
         });
     }
 
     void Window::set_window_size(int width, int height) noexcept
     {
         m_properties.dimensions = { .width = width, .height = height };
-        Instance::get().enqueue_task([this, width, height] { glfwSetWindowSize(m_handle, width, height); });
+        Instance::get().enqueue_task([this, width, height] {
+            glfwSetWindowSize(m_handle, width, height);
+            util::check_glfw_error();
+        });
     }
 
     void Window::set_window_pos(int x, int y) noexcept
     {
         m_properties.position = { .x = x, .y = y };
-        Instance::get().enqueue_task([this, x, y] { glfwSetWindowPos(m_handle, x, y); });
+        Instance::get().enqueue_task([this, x, y] {
+            glfwSetWindowPos(m_handle, x, y);
+            util::check_glfw_error();
+        });
     }
 
     float Window::aspect_ratio() const noexcept
@@ -225,6 +255,7 @@ namespace glfw_cpp
             auto width  = m_properties.dimensions.width;
             auto height = int((float)width / ratio);
             glfwSetWindowAspectRatio(m_handle, width, height);
+            util::check_glfw_error();
         });
     }
 
@@ -233,6 +264,7 @@ namespace glfw_cpp
         Instance::get().enqueue_task([this] {
             auto [width, height] = m_properties.dimensions;
             glfwSetWindowAspectRatio(m_handle, width, height);
+            util::check_glfw_error();
         });
     }
 
@@ -240,6 +272,7 @@ namespace glfw_cpp
     {
         Instance::get().enqueue_task([this] {
             glfwSetWindowAspectRatio(m_handle, GLFW_DONT_CARE, GLFW_DONT_CARE);
+            util::check_glfw_error();
         });
     }
 
@@ -248,6 +281,7 @@ namespace glfw_cpp
         m_properties.title = title;
         Instance::get().enqueue_task([this, &title = m_properties.title] {
             glfwSetWindowTitle(m_handle, title.c_str());
+            util::check_glfw_error();
         });
     }
 
@@ -290,6 +324,7 @@ namespace glfw_cpp
             } else {
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
             }
+            util::check_glfw_error();
         });
     }
 
