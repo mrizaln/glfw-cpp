@@ -402,12 +402,17 @@ namespace glfw_cpp
 
     void Instance::run_tasks()
     {
-        for (auto&& task : util::lock_exchange(m_mutex, m_task_queue, {})) {
+        auto [deletion, tasks] = [&] {
+            auto lock = std::scoped_lock{ m_mutex };
+            return std::pair{ std::exchange(m_window_delete_queue, {}), std::exchange(m_task_queue, {}) };
+        }();
+
+        for (auto&& task : tasks) {
             task();
         }
 
         // window deletion
-        for (auto handle : util::lock_exchange(m_mutex, m_window_delete_queue, {})) {
+        for (auto handle : deletion) {
             if (std::erase(m_windows, handle) != 0) {
                 glfwDestroyWindow(handle);
                 util::check_glfw_error();
