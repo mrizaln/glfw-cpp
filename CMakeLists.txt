@@ -1,20 +1,29 @@
 cmake_minimum_required(VERSION 3.12)
 
 project(
-    glfw-cpp
-    VERSION 0.12.0
-    LANGUAGES CXX
-    DESCRIPTION "C++ GLFW wrapper with multi-window and multithreading in mind"
+  glfw-cpp
+  VERSION 0.12.0
+  LANGUAGES CXX
+  DESCRIPTION "C++ GLFW wrapper with multi-window and multithreading in mind"
 )
 
+string(
+  COMPARE EQUAL
+  "${CMAKE_CURRENT_SOURCE_DIR}"
+  "${CMAKE_SOURCE_DIR}"
+  GLFW_CPP_STANDALONE
+)
 
-set(GLFW_CPP_SOURCES
-    source/window.cpp
-    source/instance.cpp
-    source/monitor.cpp
-    source/input.cpp
-    source/event.cpp
-    source/vulkan.cpp
+option(GLFW_CPP_BUILD_EXAMPLES "Build example programs" ${GLFW_CPP_STANDALONE})
+option(GLFW_CPP_BUILD_TESTS "Build test programs" ${GLFW_CPP_STANDALONE})
+
+set(
+  GLFW_CPP_SOURCES
+  source/window.cpp
+  source/instance.cpp
+  source/monitor.cpp
+  source/input.cpp
+  source/event.cpp
 )
 
 add_library(glfw-cpp STATIC ${GLFW_CPP_SOURCES})
@@ -30,4 +39,12 @@ else()
 
   find_package(glfw3 3.4 REQUIRED)
   target_link_libraries(glfw-cpp PUBLIC glfw)
+endif()
+
+if(GLFW_CPP_BUILD_EXAMPLES)
+  add_subdirectory(example)
+endif()
+
+if(GLFW_CPP_BUILD_TESTS AND NOT EMSCRIPTEN)
+  add_subdirectory(test)
 endif()
