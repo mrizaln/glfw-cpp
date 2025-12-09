@@ -3,15 +3,12 @@ function(create_an_executable NAME)
   target_compile_options(${NAME} PRIVATE -Wall -Wextra -Wconversion)
   target_link_libraries(
     ${NAME}
-    PRIVATE glbinding::glbinding
-            linmath.h::linmath.h
-            glfw-cpp
-            stb::stb
-            tinycthread::tinycthread
-            getopt
-            khrplatform::khrplatform)
-  set_target_properties(${NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY
-                                           ${CMAKE_BINARY_DIR})
+    PRIVATE glbinding linmath glfw-cpp stb tinycthread getopt
+  )
+  set_target_properties(
+    ${NAME}
+    PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}
+  )
 endfunction()
 
 # examples are modified from glfw's original examples on version 3.4

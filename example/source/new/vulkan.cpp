@@ -1,7 +1,8 @@
+#include "print.hpp"
+
+#define VULKAN_HPP_DISPATCH_LOADER_DYNAMIC 1
 #define VULKAN_HPP_NO_CONSTRUCTORS
 #include <vulkan/vulkan.hpp>    // you need to include the vulkan header first
-
-#include <fmt/core.h>
 
 #include <glfw_cpp/glfw_cpp.hpp>
 #include <glfw_cpp/vulkan.hpp>    // vulkan functionality for glfw_cpp is separated
@@ -21,15 +22,18 @@
 #include <stdexcept>
 #include <string>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
-#if !defined(NDEBUG)
-#define ENABLE_VULKAN_VALIDATION_LAYERS 1
+#if defined(NDEBUG)
+    #define ENABLE_VULKAN_VALIDATION_LAYERS 0
 #else
-#define ENABLE_VULKAN_VALIDATION_LAYERS 0
+    #define ENABLE_VULKAN_VALIDATION_LAYERS 1
 #endif
+
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
+
+namespace fs = std::filesystem;
 
 struct QueueFamilyIndices
 {
@@ -191,13 +195,10 @@ public:
         const vk::DebugUtilsMessengerCreateInfoEXT& createInfo
     )
     {
-        DebugMessenger            messenger;
-        vk::DispatchLoaderDynamic dynamicDispatch{ instance, vkGetInstanceProcAddr };
+        DebugMessenger messenger;
 
         messenger.m_instance       = instance;
-        messenger.m_debugMessenger = instance.createDebugUtilsMessengerEXT(
-            createInfo, nullptr, dynamicDispatch
-        );
+        messenger.m_debugMessenger = instance.createDebugUtilsMessengerEXT(createInfo, nullptr);
 
         return messenger;
     }
@@ -226,8 +227,7 @@ public:
             return;
         }
 
-        auto dynamicDispatch = vk::DispatchLoaderDynamic{ m_instance, vkGetInstanceProcAddr };
-        m_instance.destroyDebugUtilsMessengerEXT(m_debugMessenger, nullptr, dynamicDispatch);
+        m_instance.destroyDebugUtilsMessengerEXT(m_debugMessenger, nullptr);
     }
 };
 
@@ -258,19 +258,30 @@ public:
         m_device->waitIdle();
     }
 
-    Vulkan(glfw_cpp::Window& window, const std::string& name)
+    Vulkan(glfw_cpp::Window& window, std::string_view name, fs::path bin_path)
         : m_window{ &window }
     {
-        std::vector extensions = glfw_cpp::vk::get_required_instance_extensions();
+        auto required   = glfw_cpp::vk::get_required_instance_extensions();
+        auto extensions = std::vector<const char*>{ required.begin(), required.end() };
         if constexpr (s_enableValidation) {
             extensions.emplace_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
 
+        println("extensions");
+        for (auto ext : extensions) {
+            println("- {}", ext);
+        }
+
+        VULKAN_HPP_DEFAULT_DISPATCHER.init();
+
         // setup vulkan instance
-        m_instance = createVulkanInstance(name, extensions);
+        auto [instance, validation] = createVulkanInstance(name, extensions);
+        m_instance                  = std::move(instance);
+
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(m_instance.get());
 
         // setup debug messenger if validation layers are enabled
-        if constexpr (s_enableValidation) {
+        if (validation) {
             auto debugCreateInfo = getDebugMessengerCreateInfo();
             m_debugMessenger     = DebugMessenger::create(*m_instance, debugCreateInfo);
         }
@@ -281,7 +292,7 @@ public:
         // configure vulkan physical device
         m_physicalDevice = pickPhysicalDevice(*m_instance, *m_surface);
 
-        fmt::println(
+        println(
             "INFO: [Vulkan] Using physical device: {}", m_physicalDevice.getProperties().deviceName.begin()
         );
 
@@ -290,6 +301,8 @@ public:
             QueueFamilyIndices::getCompleteQueueFamilies(m_physicalDevice, *m_surface)
         };
         m_device = createLogicalDevice(m_physicalDevice, queueFamilies);
+
+        VULKAN_HPP_DEFAULT_DISPATCHER.init(m_device.get());
 
         m_graphicsQueue = m_device->getQueue(queueFamilies.m_graphicsFamily, 0);
         m_presentQueue  = m_device->getQueue(queueFamilies.m_presentFamily, 0);
@@ -304,7 +317,9 @@ public:
 
         // create graphics pipeline
         m_renderPass                                   = createRenderPass(*m_device, m_swapChainImageFormat);
-        std::tie(m_pipelineLayout, m_graphicsPipeline) = createPipelineLayout(*m_device, *m_renderPass);
+        std::tie(m_pipelineLayout, m_graphicsPipeline) = createPipelineLayout(
+            *m_device, *m_renderPass, bin_path
+        );
 
         // create framebuffers
         m_swapChainFramebuffers = createFramebuffers(
@@ -497,18 +512,14 @@ private:
     // NOTE: for some reason, I can't use the c++ bindings for this callback
     // (can't be assigned to vk::DebugUtilsMessengerCreateInfoEXT)
     static VKAPI_ATTR vk::Bool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT      severity,
-        VkDebugUtilsMessageTypeFlagsEXT             type [[maybe_unused]],
-        const VkDebugUtilsMessengerCallbackDataEXT* pData,
-        void*                                       pUserData [[maybe_unused]]
+        vk::DebugUtilsMessageSeverityFlagBitsEXT      severity,
+        vk::DebugUtilsMessageTypeFlagsEXT             type [[maybe_unused]],
+        const vk::DebugUtilsMessengerCallbackDataEXT* pData,
+        void*                                         pUserData [[maybe_unused]]
     )
     {
-        using Severity               = vk::DebugUtilsMessageSeverityFlagBitsEXT;
-        constexpr auto to_underlying = [](Severity flag) {
-            return static_cast<std::underlying_type_t<Severity>>(flag);
-        };
-        if (severity >= to_underlying(Severity::eVerbose)) {
-            fmt::println("VKDEBUG: {}", pData->pMessage);
+        if (severity >= vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose) {
+            println("VKDEBUG: {}", pData->pMessage);
         }
         return VK_FALSE;
     }
@@ -525,13 +536,13 @@ private:
         };
     }
 
-    static vk::UniqueInstance createVulkanInstance(
-        const std::string&       name,
+    static std::pair<vk::UniqueInstance, bool> createVulkanInstance(
+        std::string_view         name,
         std::vector<const char*> extensions
     )
     {
         vk::ApplicationInfo appInfo{
-            .pApplicationName   = name.c_str(),
+            .pApplicationName   = name.data(),
             .applicationVersion = VK_MAKE_VERSION(1, 0, 0),
             .pEngineName        = "No Engine",
             .engineVersion      = VK_MAKE_VERSION(1, 0, 0),
@@ -547,20 +558,22 @@ private:
 
         vk::DebugUtilsMessengerCreateInfoEXT debugCreateInfo;
 
+        auto has_validation_layer = false;
+
         // enable debug utils extension
         if constexpr (s_enableValidation) {
-            if (checkValidationLayerSupport()) {
+            if ((has_validation_layer = checkValidationLayerSupport())) {
                 createInfo.enabledLayerCount   = s_validationLayers.size();
                 createInfo.ppEnabledLayerNames = s_validationLayers.data();
 
                 debugCreateInfo  = getDebugMessengerCreateInfo();
                 createInfo.pNext = &debugCreateInfo;
             } else {
-                fmt::println("ERROR: Validation layers requested but not available");
+                println("ERROR: Validation layers requested but not available");
             }
         }
 
-        return vk::createInstanceUnique(createInfo);
+        return { vk::createInstanceUnique(createInfo), has_validation_layer };
     }
 
     static bool checkValidationLayerSupport()
@@ -591,7 +604,7 @@ private:
             int score = rateDeviceSuitability(device, surface);
             if (score > 0) {
                 candidates.emplace(score, device);
-                fmt::println(
+                println(
                     "INFO: [Vulkan] Found suitable GPU: {} (score: {})",
                     device.getProperties().deviceName.data(),
                     score
@@ -867,11 +880,12 @@ private:
 
     static std::pair<vk::UniquePipelineLayout, vk::UniquePipeline> createPipelineLayout(
         vk::Device&     device,
-        vk::RenderPass& renderPass
+        vk::RenderPass& renderPass,
+        fs::path        bin_path
     )
     {
-        const auto loadShader = [](std::filesystem::path&& filepath) {
-            if (!std::filesystem::exists(filepath)) {
+        const auto loadShader = [](fs::path&& filepath) {
+            if (!fs::exists(filepath)) {
                 throw std::runtime_error(std::format("No such file '{}'", filepath.string()));
             }
 
@@ -896,8 +910,8 @@ private:
             return device.createShaderModuleUnique(createInfo);
         };
 
-        auto vertShaderCode{ loadShader("asset/shader/vert.spv") };
-        auto fragShaderCode{ loadShader("asset/shader/frag.spv") };
+        auto vertShaderCode{ loadShader(bin_path.parent_path() / "asset/shader/vert.spv") };
+        auto fragShaderCode{ loadShader(bin_path.parent_path() / "asset/shader/frag.spv") };
 
         vk::UniqueShaderModule vertShaderModule{ createShaderModule(vertShaderCode) };
         vk::UniqueShaderModule fragShaderModule{ createShaderModule(fragShaderCode) };
@@ -1146,20 +1160,20 @@ private:
     }
 };
 
-int main()
+int main(int, char** argv)
 {
     // tip: search for glfw_cpp word inside this file to see how it is used
 
     auto glfw = glfw_cpp::init({});
 
     glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
-        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+        println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
     });
 
     glfw->apply_hints({ .api = glfw_cpp::api::NoApi{} });
 
     auto window = glfw->create_window(800, 600, "Hello Vulkan from glfw-cpp");
-    auto vulkan = Vulkan{ window, "vulkan program" };
+    auto vulkan = Vulkan{ window, "vulkan program", argv[0] };
 
     while (not window.should_close()) {
         const auto& events = window.swap_events();

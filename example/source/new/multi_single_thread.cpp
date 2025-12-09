@@ -1,5 +1,3 @@
-#include <fmt/core.h>
-
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
 
@@ -25,8 +23,8 @@ int main()
 {
     auto glfw = glfw_cpp::init({});
 
-    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
-        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
     });
 
     glfw->apply_hints({
@@ -41,7 +39,7 @@ int main()
     auto windows = std::array<glfw_cpp::Window, 3>{};
 
     for (auto i : std::views::iota(0u, windows.size())) {
-        windows[i] = glfw->create_window(800, 600, fmt::format("Hello glfw-cpp {}", i));
+        windows[i] = glfw->create_window(800, 600, std::format("Hello glfw-cpp {}", i));
 
         glfw_cpp::make_current(windows[i].handle());
         glbinding::initialize(i, glfw_cpp::get_proc_address);    // initialize current context with handle i

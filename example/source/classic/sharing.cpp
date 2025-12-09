@@ -164,7 +164,7 @@ int main()
     windows[1].set_vsync(false);
 
     // Place the second window to the right of the first
-    {
+    if (glfw->platform() != glfw_cpp::hint::Platform::Wayland) {
         // TODO: implement this
         // int left, right;
         // glfwGetWindowFrameSize(windows[0].handle(), &left, NULL, &right, NULL);

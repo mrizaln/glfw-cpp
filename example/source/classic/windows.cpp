@@ -69,8 +69,10 @@ int main()
         glfw_cpp::make_current(windows[(unsigned)i].handle());
         glbinding::initialize(i, glfw_cpp::get_proc_address);
 
-        // set window pos will be queued inside WindowManager
-        windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
+        if (glfw->platform() != glfw_cpp::hint::Platform::Wayland) {
+            // set window pos will be queued inside WindowManager
+            windows[(unsigned)i].set_window_pos(xpos + size * (1 + (i & 1)), ypos + size * (1 + (i >> 1)));
+        }
 
         glClearColor(colors[i].r, colors[i].g, colors[i].b, 1.f);
     }

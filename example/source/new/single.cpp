@@ -1,4 +1,3 @@
-#include <fmt/core.h>
 #include <glbinding/gl/gl.h>
 #include <glbinding/glbinding.h>
 #include <glfw_cpp/glfw_cpp.hpp>
@@ -15,8 +14,8 @@ int main()
     auto glfw = glfw_cpp::init({ .platform = glfw_cpp::hint::Platform::Any });
 
     // Set error callback for glfw functions.
-    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view message) {
-        fmt::println(stderr, "glfw-cpp [{:<20}]: {}", to_string(code), message);
+    glfw->set_error_callback([](glfw_cpp::ErrorCode code, std::string_view msg) {
+        fprintf(stderr, "glfw-cpp [%20s]: %s\n", to_string(code).data(), msg.data());
     });
 
     // Window creation hints are aggregated into one struct. the function will only set what you explicitly
