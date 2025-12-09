@@ -9,18 +9,20 @@ This wrapper is customized for my needs and isn't a direct one-to-one port of th
 ## Features
 
 - RAII handles.
-- Easy multi-threading (one window/context per thread).
-- Poll based event handling instead of callback-based (`swap_events`).
+- Easy multi-threading (for one window/context per thread or multiple window/context per thread).
+- Poll-based event handling instead of callback-based (`swap_events()` and `EventQueue`).
 - No namespace pollution from including GLFW.
+- Emscripten support (via [`contrib.glfw`](https://github.com/pongasoft/emscripten-glfw) port from Emscripten).
 - Vulkan support.
-- Emscripten support.
 
 ## Dependencies
 
 - C++20
 - GLFW 3.4
 
-You can use your system package manager or c++ package manager like Conan (see [example](./example)) or even manually clone the [GLFW](https://github.com/glfw/glfw) repository and call `add_subdirectory` to add the GLFW dependency.
+You can use your system package manager or c++ package manager like Conan or even manually clone the [GLFW](https://github.com/glfw/glfw) repository and call `add_subdirectory` to add it as GLFW dependency.
+
+> see [example](./example/CMakeLists.txt) and [the instruction to build them](#building-examples)
 
 ## Usage
 
@@ -32,14 +34,11 @@ You can clone this repository (or add as submodule) inside your project. I recom
 # If you are using FetchContent
 # -----------------------------
 include(FetchContent)
+
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
   GIT_TAG v0.12.0)
-
-option(GLFW_CPP_VULKAN_SUPPORT "vulkan support" ON)        # enable Vulkan support (requires Vulkan loader and headers)
-# option(GLFW_CPP_EMSCRIPTEN_PORT "emscripten port" ON)    # enable GLFW port for emscripten (mutually exclusive with above)
-
 FetchContent_MakeAvailable(glfw-cpp)
 
 # # If you clone/submodule the repository instead do this
@@ -48,12 +47,6 @@ FetchContent_MakeAvailable(glfw-cpp)
 add_executable(main main.cpp)
 target_link_libraries(main PRIVATE glfw-cpp ...)  # you don't need to link to glfw here, glfw-cpp already link to it
 ```
-
-### Option
-
-This library supports Vulkan, just set `GLFW_CPP_VULKAN_SUPPORT` before adding this repository to the project to enable it. Note that it requires Vulkan loader and the headers to compile.
-
-This library also supports web/wasm platform. The support is possible thanks to the [GLFW port for emscripten](https://github.com/pongasoft/emscripten-glfw) made by [pongasoft](https://github.com/pongasoft). To enable the port set the `GLFW_CPP_EMSCRIPTEN_PORT` to `ON` before adding this repository to your project.
 
 ### Example
 
@@ -80,15 +73,13 @@ void window_thread(glfw_cpp::Window&& window)
     auto elapsed    = 0.0f;
 
     while (not window.should_close()) {
+        namespace ev = glfw_cpp::event;
+
         // swap events enqueued by glfw_cpp::poll_events()
-        window.swap_events().visit(glfw_cpp::event::Overload{
-            [&](const glfw_cpp::event::KeyPressed& e) {
-                if (e.key == glfw_cpp::KeyCode::Q and e.state == glfw_cpp::KeyState::Press) {
-                    window.request_close();
-                }
-            },
-            [&](const glfw_cpp::event::FramebufferResized& e) { glViewport(0, 0, e.width, e.height); },
-            [&](const auto&) { /* do nothing */ },
+        window.swap_events().visit(ev::Overload{
+            [&](const ev::KeyPressed&         e) { if (e.key == glfw_cpp::KeyCode::Q) window.request_close(); },
+            [&](const ev::FramebufferResized& e) { glViewport(0, 0, e.width, e.height); },
+            [&](const auto&                    ) { /* catch-all; do nothing */ },
         });
 
         elapsed += static_cast<float>(window.delta_time());
@@ -138,6 +129,52 @@ int main()
 No manual cleanup necessary!
 
 The above example is multi threaded with one context and one window per thread. For emscripten example, see [this one](./example/source/emscripten/main.cpp). For other examples, head to [example](./example) directory.
+
+### Building examples
+
+#### Native
+
+To build this project examples you need to have GLFW 3.4 and Vulkan SDK installed on your system.
+
+If you are on Fedora, you can install them by running this command:
+
+```sh
+sudo dnf install glfw glfw-devel vulkan-headers vulkan-loader vulkan-loader-devel vulkan-validation-layers
+```
+
+- Build
+
+  ```sh
+  cmake -S . -B build/Native
+  cmake --build build/Native
+  ```
+
+- Run the executable
+
+  ```sh
+  ./build/Native/<example>
+  ```
+
+#### Emscripten
+
+Make sure you have Emscripten SDK installed and is active for the current shell.
+
+The Emscripten example is built separately since it runs very differently from usual C++ code.
+
+No manual dependencies installation is needed for this one as `glfw-cpp` uses [`contrib.glfw3`](https://github.com/pongasoft/emscripten-glfw) port which will be installed automatically by Emscripten.
+
+- Build
+
+  ```sh
+  emcmake cmake -S . -B build/Emscripten
+  cmake --build build/Emscripten
+  ```
+
+- View the result in browser
+
+  ```sh
+  emrun ./build/Emscripten/emscripten.html
+  ```
 
 ## Documentation
 
