@@ -343,67 +343,40 @@ namespace glfw_cpp
     }
 
     /**
-     * @class IEventInterceptor
-     * @brief An abstract class (interface) that is used to create an event interceptor.
+     * @class DefaultEventInterceptor
+     * @brief An interface that can be used to intercept Window events.
      *
      * The class is used to intercept events before they are inserted into each `Window`'s `EventQueue`, and
      * before any `Window::Properties` is updated. The return value of each function determines whether the
      * event should be forwarded to the `Window` or not.
-     */
-    class IEventInterceptor
-    {
-    public:
-        // allow deletion of derived class through this pointer
-        virtual ~IEventInterceptor() = default;
-
-        // clang-format off
-        virtual bool on_window_moved        (Window& window, event::WindowMoved&        event) noexcept = 0;
-        virtual bool on_window_resized      (Window& window, event::WindowResized&      event) noexcept = 0;
-        virtual bool on_window_closed       (Window& window, event::WindowClosed&       event) noexcept = 0;
-        virtual bool on_window_refreshed    (Window& window, event::WindowRefreshed&    event) noexcept = 0;
-        virtual bool on_window_focused      (Window& window, event::WindowFocused&      event) noexcept = 0;
-        virtual bool on_window_iconified    (Window& window, event::WindowIconified&    event) noexcept = 0;
-        virtual bool on_window_maximized    (Window& window, event::WindowMaximized&    event) noexcept = 0;
-        virtual bool on_window_scale_changed(Window& window, event::WindowScaleChanged& event) noexcept = 0;
-        virtual bool on_framebuffer_resized (Window& window, event::FramebufferResized& event) noexcept = 0;
-        virtual bool on_button_pressed      (Window& window, event::ButtonPressed&      event) noexcept = 0;
-        virtual bool on_cursor_moved        (Window& window, event::CursorMoved&        event) noexcept = 0;
-        virtual bool on_cursor_entered      (Window& window, event::CursorEntered&      event) noexcept = 0;
-        virtual bool on_scrolled            (Window& window, event::Scrolled&           event) noexcept = 0;
-        virtual bool on_key_pressed         (Window& window, event::KeyPressed&         event) noexcept = 0;
-        virtual bool on_char_input          (Window& window, event::CharInput&          event) noexcept = 0;
-        virtual bool on_file_dropped        (Window& window, event::FileDropped&        event) noexcept = 0;
-        // clang-format on
-    };
-
-    /**
-     * @class DefaultEventInterceptor
-     * @brief Default implementation of `IEventInterceptor` that does nothing.
      *
      * This class can be used as a base class for custom event interceptors. You can override only the
      * functions you need to intercept. The return value of each function determines whether the event should
      * be forwarded to the `Window` or not.
      */
-    class DefaultEventInterceptor : public IEventInterceptor
+    class EventInterceptor
     {
     public:
+        // allow deletion of derived class through this pointer
+        virtual ~EventInterceptor() = default;
+
         // clang-format off
-        bool on_window_moved        (Window&, event::WindowMoved&)        noexcept override { return true; }
-        bool on_window_resized      (Window&, event::WindowResized&)      noexcept override { return true; }
-        bool on_window_closed       (Window&, event::WindowClosed&)       noexcept override { return true; }
-        bool on_window_refreshed    (Window&, event::WindowRefreshed&)    noexcept override { return true; }
-        bool on_window_focused      (Window&, event::WindowFocused&)      noexcept override { return true; }
-        bool on_window_iconified    (Window&, event::WindowIconified&)    noexcept override { return true; }
-        bool on_window_maximized    (Window&, event::WindowMaximized&)    noexcept override { return true; }
-        bool on_window_scale_changed(Window&, event::WindowScaleChanged&) noexcept override { return true; }
-        bool on_framebuffer_resized (Window&, event::FramebufferResized&) noexcept override { return true; }
-        bool on_button_pressed      (Window&, event::ButtonPressed&)      noexcept override { return true; }
-        bool on_cursor_moved        (Window&, event::CursorMoved&)        noexcept override { return true; }
-        bool on_cursor_entered      (Window&, event::CursorEntered&)      noexcept override { return true; }
-        bool on_scrolled            (Window&, event::Scrolled&)           noexcept override { return true; }
-        bool on_key_pressed         (Window&, event::KeyPressed&)         noexcept override { return true; }
-        bool on_char_input          (Window&, event::CharInput&)          noexcept override { return true; }
-        bool on_file_dropped        (Window&, event::FileDropped&)        noexcept override { return true; }
+        virtual bool on_window_moved        (Window&, event::WindowMoved&)        noexcept { return true; }
+        virtual bool on_window_resized      (Window&, event::WindowResized&)      noexcept { return true; }
+        virtual bool on_window_closed       (Window&, event::WindowClosed&)       noexcept { return true; }
+        virtual bool on_window_refreshed    (Window&, event::WindowRefreshed&)    noexcept { return true; }
+        virtual bool on_window_focused      (Window&, event::WindowFocused&)      noexcept { return true; }
+        virtual bool on_window_iconified    (Window&, event::WindowIconified&)    noexcept { return true; }
+        virtual bool on_window_maximized    (Window&, event::WindowMaximized&)    noexcept { return true; }
+        virtual bool on_window_scale_changed(Window&, event::WindowScaleChanged&) noexcept { return true; }
+        virtual bool on_framebuffer_resized (Window&, event::FramebufferResized&) noexcept { return true; }
+        virtual bool on_button_pressed      (Window&, event::ButtonPressed&)      noexcept { return true; }
+        virtual bool on_cursor_moved        (Window&, event::CursorMoved&)        noexcept { return true; }
+        virtual bool on_cursor_entered      (Window&, event::CursorEntered&)      noexcept { return true; }
+        virtual bool on_scrolled            (Window&, event::Scrolled&)           noexcept { return true; }
+        virtual bool on_key_pressed         (Window&, event::KeyPressed&)         noexcept { return true; }
+        virtual bool on_char_input          (Window&, event::CharInput&)          noexcept { return true; }
+        virtual bool on_file_dropped        (Window&, event::FileDropped&)        noexcept { return true; }
         // clang-format on
     };
 

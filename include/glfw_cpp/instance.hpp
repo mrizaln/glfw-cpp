@@ -18,7 +18,7 @@ struct GLFWmonitor;
 namespace glfw_cpp
 {
     class Window;
-    class IEventInterceptor;
+    class EventInterceptor;
     struct Event;
 
     namespace gl
@@ -443,7 +443,7 @@ namespace glfw_cpp
          * The interceptor should have a longer lifetime than this `Instance` and the memory management
          * of it is the responsibility of the caller.
          */
-        IEventInterceptor* set_event_interceptor(IEventInterceptor* event_interceptor) noexcept
+        EventInterceptor* set_event_interceptor(EventInterceptor* event_interceptor) noexcept
         {
             return std::exchange(m_event_interceptor, event_interceptor);
         }
@@ -579,9 +579,9 @@ namespace glfw_cpp
          */
         void request_delete_window(GLFWwindow* handle) noexcept;
 
-        std::thread::id    m_attached_thread_id = std::this_thread::get_id();
-        IEventInterceptor* m_event_interceptor  = nullptr;
-        ErrorCallback      m_callback           = nullptr;
+        std::thread::id   m_attached_thread_id = std::this_thread::get_id();
+        EventInterceptor* m_event_interceptor  = nullptr;
+        ErrorCallback     m_callback           = nullptr;
 
         std::vector<GLFWwindow*>           m_windows;
         std::vector<GLFWwindow*>           m_window_delete_queue;
