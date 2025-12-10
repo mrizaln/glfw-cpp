@@ -28,8 +28,6 @@ namespace glfw_cpp
 
         // glfw-cpp error codes (these ones I made up since they are not from the GLFW library)
         AlreadyInitialized = 0x000F0001,
-        AlreadyBound       = 0x000F0002,
-        EmptyLoader        = 0x000F0003,
         WrongThreadAccess  = 0x000F0004,
         UnknownError       = 0x000FFFFF,
     };
@@ -54,9 +52,7 @@ namespace glfw_cpp
         case ErrorCode::FeatureUnimplemented: return "FeatureUnimplemented";
         case ErrorCode::PlatformUnavailable:  return "PlatformUnavailable";
         case ErrorCode::AlreadyInitialized:   return "AlreadyInitialized";
-        case ErrorCode::AlreadyBound:         return "AlreadyBound";
         case ErrorCode::WrongThreadAccess:    return "WrongThreadAccess";
-        case ErrorCode::EmptyLoader:          return "EmptyLoader";
         case ErrorCode::UnknownError:         [[fallthrough]];
         default:                              return "UnknownError";
         }
@@ -239,28 +235,6 @@ namespace glfw_cpp::error
     public:
         AlreadyInitialized()
             : Error{ ErrorCode::AlreadyInitialized, "Instance already initialized" }
-        {
-        }
-    };
-
-    class AlreadyBound : public Error
-    {
-    public:
-        // std::formatter<std::thread::id> only available in C++23, damn it
-        AlreadyBound(std::size_t current, std::size_t other)
-            : Error{ ErrorCode::AlreadyBound,
-                     "The current context is already bound to another thread: current={}, other={}",
-                     current,
-                     other }
-        {
-        }
-    };
-
-    class EmptyLoader : public Error
-    {
-    public:
-        EmptyLoader()
-            : Error{ ErrorCode::EmptyLoader, "The OpenGL/OpenGL ES loader can't be empty" }
         {
         }
     };
