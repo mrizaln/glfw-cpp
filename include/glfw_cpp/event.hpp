@@ -17,15 +17,6 @@ namespace glfw_cpp
     namespace event
     {
         /**
-         * @struct Empty
-         * @brief Empty event, currently unused
-         */
-        struct Empty
-        {
-            constexpr bool operator==(const Empty&) const = default;
-        };
-
-        /**
          * @struct WindowMoved
          * @brief Window move event, corresponds to event handled by callback sets by
          * `glfwSetWindowPosCallback`
@@ -246,7 +237,6 @@ namespace glfw_cpp
         // NOTE: MonitorConnected and JoystickConnected events are not window events but global one, I still
         // don't know how to implement it yet, so I omit them from event list for now
         using Variant = std::variant<
-            Empty,
             WindowMoved,
             WindowResized,
             WindowClosed,
@@ -308,8 +298,7 @@ namespace glfw_cpp
     std::string_view event_name() noexcept
     {
         // clang-format off
-        if      constexpr (std::same_as<E, event::Empty>)              return "Empty";
-        else if constexpr (std::same_as<E, event::WindowMoved>)        return "WindowMoved";
+        if      constexpr (std::same_as<E, event::WindowMoved>)        return "WindowMoved";
         else if constexpr (std::same_as<E, event::WindowResized>)      return "WindowResized";
         else if constexpr (std::same_as<E, event::WindowClosed>)       return "WindowClosed";
         else if constexpr (std::same_as<E, event::WindowRefreshed>)    return "WindowRefreshed";

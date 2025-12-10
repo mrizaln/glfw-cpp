@@ -380,7 +380,6 @@ namespace glfw_cpp
                 [&](event::KeyPressed&         event) { return intr.on_key_pressed         (window, event); },
                 [&](event::CharInput&          event) { return intr.on_char_input          (window, event); },
                 [&](event::FileDropped&        event) { return intr.on_file_dropped        (window, event); },
-                [&](event::Empty&                   ) { return true; /* always true                      */ },
                 // clang-format on
             });
         }
