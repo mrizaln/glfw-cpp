@@ -273,18 +273,27 @@ namespace glfw_cpp
             MayOpt<Opt, const char*> instance_name = may_opt<Opt>("");
         };
 
+        template <bool Opt = true>
+        struct Emscripten
+        {
+            MayOpt<Opt, std::string_view> canvas_selector = default_canvas_selector;
+            MayOpt<Opt, std::string_view> resize_selector = "";    // set to empty string to disable resize
+            MayOpt<Opt, std::string_view> handle_selector = "";    // set to empty string to disable resize
+        };
+
         /**
          * @enum Platform
          * @brief Specifies the platform to use for windowing and input.
          */
         enum class Platform : int
         {
-            Any     = 0x00060000,
-            Win32   = 0x00060001,
-            Cocoa   = 0x00060002,
-            Wayland = 0x00060003,
-            X11     = 0x00060004,
-            Null    = 0x00060005,
+            Any        = 0x00060000,
+            Win32      = 0x00060001,
+            Cocoa      = 0x00060002,
+            Wayland    = 0x00060003,
+            X11        = 0x00060004,
+            Null       = 0x00060005,
+            Emscripten = 0x00060006
         };
 
         /**
@@ -333,6 +342,7 @@ namespace glfw_cpp
         hint::Cocoa<Opt>       cocoa       = {};
         hint::Wayland<Opt>     wayland     = {};
         hint::X11<Opt>         x11         = {};
+        hint::Emscripten<Opt>  emscripten  = {};
     };
 
     using FullHints    = Hints<false>;

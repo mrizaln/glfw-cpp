@@ -10,12 +10,17 @@
 #include <thread>
 #include <utility>
 
+#if __EMSCRIPTEN__
+    #include "emscripten_ctx.hpp"
+    #include <GLFW/emscripten_glfw3.h>
+#endif
+
 namespace
 {
     template <bool Opt, typename A>
     void apply_hints_impl(const glfw_cpp::Hints<Opt>& hints, A adapter)
     {
-        const auto& [api, win, fb, mon, win32, cocoa, wl, x11] = hints;
+        const auto& [api, win, fb, mon, win32, cocoa, wl, x11, em] = hints;
 
         auto window_hint = adapter;
 
@@ -100,6 +105,20 @@ namespace
         // x11
         window_hint(GLFW_X11_CLASS_NAME, x11.class_name);
         window_hint(GLFW_X11_INSTANCE_NAME, x11.instance_name);
+
+        // emscripten
+#if __EMSCRIPTEN__
+        using Ctx = glfw_cpp::EmscriptenCtx;
+
+        auto set_selector = util::VisitOverloaded{
+            [](std::optional<std::string_view> s, auto fn) { s ? fn(*s) : void(); },
+            [](std::string_view s, auto fn) { fn(s); },
+        };
+
+        set_selector(em.canvas_selector, &Ctx::set_canvas_selector);
+        set_selector(em.resize_selector, &Ctx::set_resize_selector);
+        set_selector(em.handle_selector, &Ctx::set_handle_selector);
+#endif
     }
 }
 
@@ -122,6 +141,7 @@ namespace glfw_cpp
             );
         }
     }
+
     void Instance::window_size_callback(GLFWwindow* window, int width, int height)
     {
         if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
@@ -452,6 +472,9 @@ namespace glfw_cpp
     void Instance::apply_hints_default()
     {
         glfwDefaultWindowHints();
+#if __EMSCRIPTEN__
+        EmscriptenCtx::reset();
+#endif
     }
 
     Window Instance::create_window(
@@ -463,6 +486,11 @@ namespace glfw_cpp
     )
     {
         validate_access();
+
+#if __EMSCRIPTEN__
+        auto canvas_selector = EmscriptenCtx::get_canvas_selector();
+        emscripten::glfw3::SetNextWindowCanvasSelector(canvas_selector);
+#endif
 
         const auto handle = glfwCreateWindow(width, height, title.data(), monitor, share);
         if (handle == nullptr) {
@@ -527,6 +555,16 @@ namespace glfw_cpp
         };
 
         util::check_glfw_error();
+
+#if __EMSCRIPTEN__
+        auto resize_selector = EmscriptenCtx::get_resize_selector();
+        auto handle_selector = EmscriptenCtx::get_handle_selector();
+        emscripten::glfw3::MakeCanvasResizable(
+            handle,
+            resize_selector,
+            handle_selector.empty() ? std::nullopt : std::optional<std::string_view>{ handle_selector }
+        );
+#endif
 
         return Window{ handle, std::move(properties), std::move(attributes) };
     }
