@@ -9,6 +9,7 @@ This wrapper is customized for my needs and isn't a direct one-to-one port of th
 ## Features
 
 - RAII handles.
+- Type-safe enums.
 - Easy multi-threading (for one window/context per thread or multiple window/context per thread).
 - Poll-based event handling instead of callback-based (`swap_events()` and `EventQueue`).
 - No namespace pollution from including GLFW.
@@ -38,7 +39,7 @@ include(FetchContent)
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
-  GIT_TAG v0.12.0)
+  GIT_TAG v0.12.1)
 FetchContent_MakeAvailable(glfw-cpp)
 
 # # If you clone/submodule the repository instead do this

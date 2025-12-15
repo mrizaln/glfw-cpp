@@ -7,6 +7,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.1]
+
+### Added
+
+- New `Instance::platform` function to get the current platform used.
+- New `platform_supported` function to check whether GLFW compiled with specified platform support.
+- New `EventInterceptor` class combining `IEventInterceptor` and `DefaultEventInterceptor` class.
+- New `get_proc_address_noexcept` function replacing noexcept `get_proc_address`.
+- New `extension_supported_noexcept` function replacing noexcept `extension_supported`.
+- New `vk::init_vulkan_loader` function that corresponds to `glfwInitVulkanLoader`.
+- New `vk::get_instance_proc_address_noexcept` function for noexcept version of `vk::get_instance_proc_address`.
+
+### Fixed
+
+- Clarify GLFW version supported to be v3.4.
+- Documentation for thrown exceptions refers to outdated definitions.
+- Window creation throws on Wayland.
+- Missing error checks on window attribute actions.
+
+### Changed
+
+- Examples now doesn't require Conan to be built.
+- Vulkan support now can be used out of the box, without any linking required.
+- Emscripten support is automatically detected now.
+- `get_proc_address` can throw now.
+- `extension_supported` can throw now.
+
+### Removed
+
+- Remove variable, `GLFW_CPP_VULKAN_SUPPORT`, for Vulkan support.
+- Remove variable, `GLFW_CPP_EMSCRIPTEN_PORT`, for Emscripten port.
+- Removed `IEventInterceptor` and `DefaultEventInterceptor`.
+- Enumerator `ErrorCode::AlreadyBound` and `ErrorCode::EmptyLoader` since they are for pre-v0.12.0 errors.
+- Error class `error::AlreadyBound` and `error::EmptyLoader` since they are for pre-v0.12.0 errors.
+- Struct `event::Empty` since it never used.
+
 ## [0.12.0]
 
 ### Added
@@ -290,7 +326,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New examples code.
 - New README.md.
 
-[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.0...HEAD
+[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.1...HEAD
+[0.12.1]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.10.0...v0.11.0
 [0.10.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.9.0...v0.10.0
