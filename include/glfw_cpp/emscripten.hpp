@@ -1,7 +1,6 @@
 #ifndef GLFW_CPP_EMSCRIPTEN_HPP
 #define GLFW_CPP_EMSCRIPTEN_HPP
 
-#include <functional>
 #include <optional>
 #include <string_view>
 

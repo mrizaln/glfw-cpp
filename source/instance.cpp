@@ -111,8 +111,8 @@ namespace
         using Ctx = glfw_cpp::EmscriptenCtx;
 
         auto set_selector = util::VisitOverloaded{
-            [](std::optional<std::string_view> s, auto fn) { s ? fn(*s) : void(); },
-            [](std::string_view s, auto fn) { fn(s); },
+            [](std::optional<const char*> s, auto fn) { s ? fn(*s) : void(); },
+            [](const char* s, auto fn) { fn(s); },
         };
 
         set_selector(em.canvas_selector, &Ctx::set_canvas_selector);
@@ -559,11 +559,10 @@ namespace glfw_cpp
 #if __EMSCRIPTEN__
         auto resize_selector = EmscriptenCtx::get_resize_selector();
         auto handle_selector = EmscriptenCtx::get_handle_selector();
-        emscripten::glfw3::MakeCanvasResizable(
-            handle,
-            resize_selector,
-            handle_selector.empty() ? std::nullopt : std::optional<std::string_view>{ handle_selector }
-        );
+
+        if (resize_selector) {
+            emscripten::glfw3::MakeCanvasResizable(handle, *resize_selector, handle_selector);
+        }
 #endif
 
         return Window{ handle, std::move(properties), std::move(attributes) };
