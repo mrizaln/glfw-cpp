@@ -561,7 +561,11 @@ namespace glfw_cpp
         auto handle_selector = EmscriptenCtx::get_handle_selector();
 
         if (resize_selector) {
-            emscripten::glfw3::MakeCanvasResizable(handle, *resize_selector, handle_selector);
+            auto ret = emscripten::glfw3::MakeCanvasResizable(handle, *resize_selector, handle_selector);
+            if (ret != EMSCRIPTEN_RESULT_SUCCESS) {
+                auto msg = std::format("MakeCanvasResizable failed: {}", ret);
+                throw error::PlatformError{ msg.c_str() };
+            }
         }
 #endif
 
