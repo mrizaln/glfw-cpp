@@ -71,20 +71,20 @@ namespace glfw_cpp
         };
     }
 
+    /**
+     * The following note is only relevant if you are using glfw-cpp from emscripten.
+     *
+     * @note emscripten-glfw treats the `GLFW_CLIENT_API` value `GLFW_OPENGL_API` and `GLFW_OPENGLES_API` as
+     * the same. If the hint is set to either, the library will create a WebGL context via emscripten html5
+     * API: `emscripten_webgl_create_context()`. To use the hint for OpenGL and OpenGLES then is misleading,
+     * so I decided to add WebGL struct just for this while disabling OpenGL and OpenGLES on Emscripten. Read
+     * the documentation from emscripten-glfw for more detail:
+     * - https://github.com/pongasoft/emscripten-glfw/blob/master/docs/Usage.md#webglopengl-support
+     */
     namespace api
     {
         using helper::meta::may_opt;
         using helper::meta::MayOpt;
-
-        /**
-         * NOTE: emscripten-glfw treats the GLFW_CLIENT_API value GLFW_OPENGL_API and GLFW_OPENGLES_API as the
-         * same. If the hint is set to either, the library will create a WebGL context via emscripten html5
-         * API: emscripten_webgl_create_context(). To use the hint for OpenGL and OpenGLES then is misleading,
-         * so I decided to add WebGL struct just for this while disabling OpenGL and OpenGLES on Emscripten.
-         *
-         * read the documentation from emscripten-glfw for more detail:
-         * - https://github.com/pongasoft/emscripten-glfw/blob/master/docs/Usage.md#webglopengl-support
-         */
 
 #if __EMSCRIPTEN__
         /**
@@ -765,7 +765,7 @@ namespace glfw_cpp
      * @param platform The platform to query.
      * @return True if platform is supported, false otherwise.
      *
-     * @throw error::InvalidValue if `hint::Platform::Any` is passed as argument.
+     * @throw error::InvalidValue if `hint::Platform::Any` or invalid enum value is passed as argument.
      */
     bool platform_supported(hint::Platform platform);
 

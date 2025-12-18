@@ -7,11 +7,10 @@
 struct GLFWwindow;
 
 /**
- * NOTE: Function for canvas selector for new window (`emscripten_glfw_set_next_window_canvas_selector`)
+ * @note Function for canvas selector for new window (`emscripten_glfw_set_next_window_canvas_selector`)
  * and funciton for canvas resizing (`emscripten_glfw_make_canvas_resizable`) are not directly wrapped in
  * here. Instead, those functionalities are integrated direclty with hints (see `glfw_cpp::hint::Emscripten`).
  */
-
 namespace glfw_cpp::em
 {
 #if __EMSCRIPTEN__
@@ -58,7 +57,7 @@ namespace glfw_cpp::em
     Result request_fullscreen(GLFWwindow* window, bool lock_pointer, bool resize_canvas);
 
     /**
-     * @brief Get timeout of super + <other> key press event before released.
+     * @brief Get timeout for super + <other> key press event before released event trigger.
      *
      * This code is part of workaround for emscripten: in the case when super key + any other key pressed the
      * up (release) event will never trigger. emscripten-glfw fixes this by adding a timeout for the press
@@ -69,7 +68,7 @@ namespace glfw_cpp::em
     SuperPlusKeyTimeout get_super_plus_key_timeout();
 
     /**
-     * @brief Set timeout for super + <other> key release event workaround.
+     * @brief Set timeout for super + <other> key press event before released event trigger.
      *
      * @param timeout The desired timeout.
      *
