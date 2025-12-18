@@ -26,6 +26,13 @@ namespace
 
         // context
         api.visit(util::VisitOverloaded{
+#if __EMSCRIPTEN__
+            [&](const glfw_cpp::api::WebGL<Opt>& api) {
+                glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+                window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
+                window_hint(GLFW_CONTEXT_VERSION_MINOR, api.version_minor);
+            },
+#else
             [&](const glfw_cpp::api::OpenGL<Opt>& api) {
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
                 window_hint(GLFW_CONTEXT_VERSION_MAJOR, api.version_major);
@@ -54,6 +61,7 @@ namespace
                 window_hint(GLFW_CONTEXT_DEBUG, api.debug);
                 window_hint(GLFW_CONTEXT_NO_ERROR, api.no_error);
             },
+#endif
             [](const glfw_cpp::api::NoApi&) {
                 glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);    //
             },

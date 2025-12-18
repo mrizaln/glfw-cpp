@@ -39,9 +39,9 @@ int main()
     });
 
     glfw->apply_hints({
-        .api = glfw_cpp::api::OpenGLES{ 
-            .version_major = 2, 
-            .version_minor = 0, 
+        .api = glfw_cpp::api::WebGL{
+            .version_major = 2,
+            .version_minor = 0,
         },
         .emscripten = {
             .canvas_selector = "#canvas",
