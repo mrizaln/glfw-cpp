@@ -126,6 +126,8 @@ namespace
         set_selector(em.canvas_selector, &Ctx::set_canvas_selector);
         set_selector(em.resize_selector, &Ctx::set_resize_selector);
         set_selector(em.handle_selector, &Ctx::set_handle_selector);
+
+        Ctx::set_has_context(not api.template is<glfw_cpp::api::NoApi>());
 #endif
     }
 }
