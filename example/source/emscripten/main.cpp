@@ -1,10 +1,11 @@
 #include <GLES2/gl2.h>
 #include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
 #include <glfw_cpp/emscripten.hpp>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <cmath>
-#include <iostream>
+#include <cstdio>
 
 template <typename Fn>
 concept Loop = std::move_constructible<Fn> and requires (Fn fn) {
@@ -27,7 +28,7 @@ void set_main_loop(Fn fn)
 template <typename... Args>
 void println(std::format_string<Args...> fmt, Args&&... args)
 {
-    std::cout << std::format(fmt, std::forward<Args>(args)...) << '\n';
+    std::puts(std::format(fmt, std::forward<Args>(args)...).c_str());
 }
 
 int main()
@@ -78,6 +79,8 @@ int main()
                 case KC::F: {
                     if (not glfw_cpp::em::is_window_fullscreen(window.handle())) {
                         glfw_cpp::em::request_fullscreen(window.handle(), false, true);
+                    } else {
+                        auto ret = emscripten_exit_fullscreen();
                     }
                 } break;
                 default: /* nothing */;
