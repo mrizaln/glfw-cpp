@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- New `glfw_cpp/emscripten.hpp` header for extension functions for Emscripten.
+- New `hint::Platform::Emscripten` platform enumerator.
+- New `hint::Emscripten` window creation hint.
+- New `api::WebGL` client API window creation hint (only for Emscripten).
+
+### Fixed
+
+- Window context will always be set to `false` on Emscripten.
+
 ## [0.12.1]
 
 ### Added
