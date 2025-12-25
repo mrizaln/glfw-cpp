@@ -12,6 +12,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - New `glfw_cpp/emscripten.hpp` header for extension functions for Emscripten.
+- New `em` namespace for Emscripten extension functions.
+- New `em::is_window_fullscreen` function for checking if window is fullscreen.
+- New `em::request_fullscreen` function for requesting fullscreen.
+- New `em::get_super_plus_key_timeout` function for getting `super + <other_key>` event timeout.
+- New `em::set_super_plus_key_timeout` function for setting `super + <other_key>` event timeout.
+- New `em::open_url` function for opening url.
+- New `em::is_runtime_platform_apple` to check whether the Emscripten runtime is running on Apple platform.
+- New `em::Result` enumeration that wraps `EMSCRIPTEN_RESULT` enumerators.
 - New `hint::Platform::Emscripten` platform enumerator.
 - New `hint::Emscripten` window creation hint.
 - New `api::WebGL` client API window creation hint (only for Emscripten).
