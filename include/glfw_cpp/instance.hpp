@@ -421,9 +421,10 @@ namespace glfw_cpp
         template <bool Opt = true>
         struct Emscripten
         {
-            MayOpt<Opt, const char*> canvas_selector = default_canvas_selector;    // must not be nullptr
-            MayOpt<Opt, const char*> resize_selector = nullptr;
-            MayOpt<Opt, const char*> handle_selector = nullptr;
+            // must not be nullptr
+            MayOpt<Opt, const char*> canvas_selector = may_opt<Opt>(default_canvas_selector);
+            MayOpt<Opt, const char*> resize_selector = may_opt<Opt>(nullptr);
+            MayOpt<Opt, const char*> handle_selector = may_opt<Opt>(nullptr);
         };
 
         /**
