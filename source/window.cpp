@@ -326,8 +326,6 @@ namespace glfw_cpp
         m_capture_mouse = value;
         Instance::get().enqueue_task([this] {
             if (m_capture_mouse) {
-                auto& [x, y] = m_properties.cursor_position;
-                glfwGetCursorPos(m_handle, &x, &y);    // prevent sudden jump on first capture
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
             } else {
                 glfwSetInputMode(m_handle, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
