@@ -13,13 +13,21 @@
 #include <mutex>
 #include <utility>
 
+#if __EMSCRIPTEN__
+    #include "emscripten_ctx.hpp"
+#endif
+
 namespace glfw_cpp
 {
     Window::Window(Handle handle, Properties&& properties, Attributes&& attributes)
         : m_handle{ handle }
         , m_properties{ std::move(properties) }
         , m_attributes{ std::move(attributes) }
+#if __EMSCRIPTEN__
+        , m_has_context{ EmscriptenCtx::get_has_context() }
+#else
         , m_has_context{ glfwGetWindowAttrib(handle, GLFW_CLIENT_API) != GLFW_NO_API }
+#endif
     {
         glfwSetWindowUserPointer(m_handle, this);
     }

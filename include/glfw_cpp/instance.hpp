@@ -71,11 +71,35 @@ namespace glfw_cpp
         };
     }
 
+    /**
+     * The following note is only relevant if you are using glfw-cpp from emscripten.
+     *
+     * @note emscripten-glfw treats the `GLFW_CLIENT_API` value `GLFW_OPENGL_API` and `GLFW_OPENGLES_API` as
+     * the same. If the hint is set to either, the library will create a WebGL context via emscripten html5
+     * API: `emscripten_webgl_create_context()`. To use the hint for OpenGL and OpenGLES then is misleading,
+     * so I decided to add WebGL struct just for this while disabling OpenGL and OpenGLES on Emscripten. Read
+     * the documentation from emscripten-glfw for more detail:
+     * - https://github.com/pongasoft/emscripten-glfw/blob/master/docs/Usage.md#webglopengl-support
+     */
     namespace api
     {
         using helper::meta::may_opt;
         using helper::meta::MayOpt;
 
+#if __EMSCRIPTEN__
+        /**
+         * @struct WebGL
+         * @brief Describe the WebGL version to use.
+         *
+         * @tparam Opt Indicates whether to use optional fields or not.
+         */
+        template <bool Opt = true>
+        struct WebGL
+        {
+            MayOpt<Opt, int> version_major = may_opt<Opt>(1);
+            MayOpt<Opt, int> version_minor = may_opt<Opt>(0);
+        };
+#else
         /**
          * @struct OpenGL
          * @brief Describe the OpenGL version to use.
@@ -120,7 +144,7 @@ namespace glfw_cpp
             MayOpt<Opt, bool> debug    = may_opt<Opt>(false);
             MayOpt<Opt, bool> no_error = may_opt<Opt>(false);
         };
-
+#endif
         /**
          * @struct NoApi
          * @brief No API is used (for Vulkan applications).
@@ -129,8 +153,13 @@ namespace glfw_cpp
         {
         };
 
+#if __EMSCRIPTEN__
+        template <bool Opt = true>
+        using Variant = std::variant<WebGL<Opt>, NoApi>;
+#else
         template <bool Opt = true>
         using Variant = std::variant<OpenGL<Opt>, OpenGLES<Opt>, NoApi>;
+#endif
 
         template <typename T>
         concept Api = helper::variant::VariantMember<T, Variant<false>>
@@ -240,7 +269,7 @@ namespace glfw_cpp
         template <bool Opt = true>
         struct Cocoa
         {
-            MayOpt<Opt, const char*> frame_name         = may_opt<Opt>("");
+            MayOpt<Opt, const char*> frame_name         = may_opt<Opt>("");    // must not be nullptr
             MayOpt<Opt, bool>        graphics_switching = may_opt<Opt>(false);
         };
 
@@ -255,7 +284,7 @@ namespace glfw_cpp
         template <bool Opt = true>
         struct Wayland
         {
-            MayOpt<Opt, const char*> app_id = may_opt<Opt>("");
+            MayOpt<Opt, const char*> app_id = may_opt<Opt>("");    // must not be nullptr
         };
 
         /**
@@ -269,8 +298,132 @@ namespace glfw_cpp
         template <bool Opt = true>
         struct X11
         {
-            MayOpt<Opt, const char*> class_name    = may_opt<Opt>("");
-            MayOpt<Opt, const char*> instance_name = may_opt<Opt>("");
+            MayOpt<Opt, const char*> class_name    = may_opt<Opt>("");    // must not be nullptr
+            MayOpt<Opt, const char*> instance_name = may_opt<Opt>("");    // must not be nullptr
+        };
+
+        /**
+         * @struct Emscripten
+         * @brief Emscripten-specific option for window creation logic.
+         *
+         * Emscripten port of GLFW (emscripten-glfw) associates the concept of a window to am HTML canvas
+         * element. The framebuffer size of the window is the size of the canvas, the size of the window is
+         * the CSS style size of the canvas, etc.
+         *
+         * Window creation hint:
+         * - `Emscripten::canvas_selector`: canvas in which the window will be rendered.
+         *
+         * Canvas (dynamic) resize behavior:
+         * - `Emscripten::resize_selector`: selector to html element that dictates the canvas size.
+         * - `Emscripten::handle_selector`: selector to the "handle" element for resizing.
+         *
+         * You always want to set these fields to new values for each window (one canvas for each window).
+         *
+         * Set `resize_selector` to `nullptr` to disable the dynamic resize behavior (`handle_selector` is
+         * ignored in this case). You don't need to have "handle" if you don't intend to make the user able to
+         * resize the canvas dynamically (only let the canvas resize whenever the element resize).
+         *
+         * @note For more information regarding the behavior of the canvas and the resize behavior, read the
+         * extension function defined in `<GLFW/emscripten_glfw3.h>` source file in the original
+         * [emscripten-glfw](https://github.com/pongasoft/emscripten-glfw) repostory.
+         *
+         * There are three typical use case for the resize behavior:
+         *
+         * 1. Fill entire browser window:
+         *
+         *    > - set `resize_selector` to `"window"`, and
+         *    > - set `handle_selector` to `nullptr` (initial value).
+         *
+         *    ```html
+         *    <canvas id="canvas1"></canvas>
+         *    ```
+         *
+         *    ```cpp
+         *    glfw->apply_hints({
+         *       .emscripten = {
+         *           .canvas_selector = "#canvas1",
+         *           .resize_selector = "window",
+         *           .handle_selector = nullptr,        // if you left the field, it will use previous value
+         *       },
+         *       // ...
+         *    });
+         *    ```
+         *
+         * 2. The canvas is inside a `div`, in which case the `div` acts as a "container" and the `div` size
+         * is defined by CSS rules, like for example: `width: 85%` so that when the page/browser gets resized,
+         * the `div` is resized automatically, which then triggers the canvas to be resized.
+         *
+         *    > - set `resize_selector` to the css path to the `div`, and
+         *    > - set `handle_selector` to `nullptr` (initial value).
+         *
+         *    ```html
+         *    <style>
+         *      #canvas1-container { width: 85%; height: 85% }
+         *    </style>
+         *
+         *    <div id="canvas1-container">
+         *      <canvas id="canvas1"></canvas>
+         *    </div>
+         *    ```
+         *
+         *    ```cpp
+         *    glfw->apply_hints({
+         *       .emscripten = {
+         *           .canvas_selector = "#canvas1",
+         *           .resize_selector = "#canvas1-container"
+         *           .handle_selector = nullptr,        // if you left the field, it will use previous value
+         *        },
+         *       // ...
+         *    });
+         *    ```
+         *
+         * 3. Like use-case 2 but the `div` is made resizable dynamically via a little "handle".
+         *
+         *    > - set `resize_selector` to the css path to the `div` and
+         *    > - set `handle_selector` to the css path the "handle".
+         *
+         *    ```html
+         *    <style>
+         *      #canvas1-container {
+         *        position: relative;
+         *        <!-- ... -->
+         *      }
+         *
+         *      #canvas1-handle {
+         *        position: absolute;
+         *        bottom: 0;
+         *        right: 0;
+         *        background-color: #444444;
+         *        width: 10px;
+         *        height: 10px;
+         *        cursor:
+         *        nwse-resize;
+         *      }
+         *    </style>
+         *
+         *    <div id="canvas1-container">
+         *      <div id="canvas1-handle" class="handle"></div>
+         *      <canvas id="canvas1"></canvas>
+         *    </div>
+         *    ```
+         *
+         *    ```cpp
+         *    glfw->apply_hints({
+         *       .emscripten = {
+         *           .canvas_selector = "#canvas1",
+         *           .resize_selector = "#canvas1-container",
+         *           .handle_selector = "#canvas1-handle",
+         *       },
+         *       // ...
+         *    });
+         *    ```
+         */
+        template <bool Opt = true>
+        struct Emscripten
+        {
+            MayOpt<Opt, const char*> canvas_selector = default_canvas_selector;    // must not be nullptr
+            MayOpt<Opt, const char*> resize_selector = nullptr;
+            MayOpt<Opt, const char*> handle_selector = nullptr;
         };
 
         /**
@@ -279,12 +432,13 @@ namespace glfw_cpp
          */
         enum class Platform : int
         {
-            Any     = 0x00060000,
-            Win32   = 0x00060001,
-            Cocoa   = 0x00060002,
-            Wayland = 0x00060003,
-            X11     = 0x00060004,
-            Null    = 0x00060005,
+            Any        = 0x00060000,
+            Win32      = 0x00060001,
+            Cocoa      = 0x00060002,
+            Wayland    = 0x00060003,
+            X11        = 0x00060004,
+            Null       = 0x00060005,
+            Emscripten = 0x00060006,    // not officially supported GLFW platform (only on emscripten-glfw)
         };
 
         /**
@@ -325,7 +479,12 @@ namespace glfw_cpp
     template <bool Opt = true>
     struct Hints
     {
-        hint::Api<Opt>         api         = api::OpenGL<Opt>{};
+        hint::Api<Opt> api =
+#if __EMSCRIPTEN__
+            api::WebGL<Opt>{};
+#else
+            api::OpenGL<Opt>{};
+#endif
         hint::Window<Opt>      window      = {};
         hint::Framebuffer<Opt> framebuffer = {};
         hint::Monitor<Opt>     monitor     = {};
@@ -333,6 +492,7 @@ namespace glfw_cpp
         hint::Cocoa<Opt>       cocoa       = {};
         hint::Wayland<Opt>     wayland     = {};
         hint::X11<Opt>         x11         = {};
+        hint::Emscripten<Opt>  emscripten  = {};    // You want to set this to new values for each window
     };
 
     using FullHints    = Hints<false>;
@@ -605,7 +765,7 @@ namespace glfw_cpp
      * @param platform The platform to query.
      * @return True if platform is supported, false otherwise.
      *
-     * @throw error::InvalidValue if `hint::Platform::Any` is passed as argument.
+     * @throw error::InvalidValue if `hint::Platform::Any` or invalid enum value is passed as argument.
      */
     bool platform_supported(hint::Platform platform);
 

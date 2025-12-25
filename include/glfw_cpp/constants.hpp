@@ -12,6 +12,9 @@ namespace glfw_cpp::inline constants
     template <std::integral Int>
     static constexpr auto any_position_v = static_cast<Int>(0x80000000);
     static constexpr auto any_position   = any_position_v<int>;
+
+    // for emscripten
+    static constexpr auto default_canvas_selector = "Module['canvas']";
 }
 
 #endif /* end of include guard: GLFW_CPP_CONSTANTS_HPP */

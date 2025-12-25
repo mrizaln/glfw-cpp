@@ -1,10 +1,11 @@
 #include <GLES2/gl2.h>
-#include <GLFW/emscripten_glfw3.h>
 #include <emscripten/emscripten.h>
+#include <emscripten/html5.h>
+#include <glfw_cpp/emscripten.hpp>
 #include <glfw_cpp/glfw_cpp.hpp>
 
 #include <cmath>
-#include <iostream>
+#include <cstdio>
 
 template <typename Fn>
 concept Loop = std::move_constructible<Fn> and requires (Fn fn) {
@@ -27,7 +28,7 @@ void set_main_loop(Fn fn)
 template <typename... Args>
 void println(std::format_string<Args...> fmt, Args&&... args)
 {
-    std::cout << std::format(fmt, std::forward<Args>(args)...) << '\n';
+    std::puts(std::format(fmt, std::forward<Args>(args)...).c_str());
 }
 
 int main()
@@ -38,11 +39,19 @@ int main()
         println("glfw-cpp [{:-^20}]: {}", to_string(code), msg);
     });
 
-    glfw->apply_hints({ .api = glfw_cpp::api::OpenGLES<true>{ .version_major = 2, .version_minor = 0 } });
+    glfw->apply_hints({
+        .api = glfw_cpp::api::WebGL{
+            .version_major = 2,
+            .version_minor = 0,
+        },
+        .emscripten = {
+            .canvas_selector = "#canvas",
+            .resize_selector = "#canvas-container",
+            .handle_selector = "#canvas-handle",
+        },
+    });
 
-    emscripten::glfw3::SetNextWindowCanvasSelector("#canvas");
-    auto window = glfw->create_window(800, 600, "Hello emscripten from glfw-cpp", nullptr, nullptr);
-    emscripten::glfw3::MakeCanvasResizable(window.handle(), "#canvas-container", "#canvas-handle");
+    auto window = glfw->create_window(800, 600, "Hello emscripten from glfw-cpp");
 
     glfw_cpp::make_current(window.handle());
 
@@ -68,8 +77,10 @@ int main()
                 switch (e.key) {
                 case KC::Q: window.request_close(); break;
                 case KC::F: {
-                    if (not emscripten::glfw3::IsWindowFullscreen(window.handle())) {
-                        emscripten::glfw3::RequestFullscreen(window.handle(), false, true);
+                    if (not glfw_cpp::em::is_window_fullscreen(window.handle())) {
+                        glfw_cpp::em::request_fullscreen(window.handle(), false, true);
+                    } else {
+                        auto ret = emscripten_exit_fullscreen();
                     }
                 } break;
                 default: /* nothing */;

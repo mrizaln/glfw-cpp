@@ -32,6 +32,8 @@ target_compile_features(glfw-cpp PRIVATE cxx_std_20)
 set_target_properties(glfw-cpp PROPERTIES CXX_EXTENSIONS OFF)
 
 if(EMSCRIPTEN)
+  target_sources(glfw-cpp PRIVATE source/emscripten.cpp)
+
   target_compile_options(glfw-cpp PUBLIC "--use-port=contrib.glfw3")
   target_link_options(glfw-cpp PUBLIC "--use-port=contrib.glfw3")
 else()
