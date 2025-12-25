@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.2] - 2025-12-25
+
 ### Added
 
 - New `glfw_cpp/emscripten.hpp` header for extension functions for Emscripten.
@@ -18,7 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Window context will always be set to `false` on Emscripten.
 
-## [0.12.1]
+## [0.12.1] - 2025-12-15
 
 ### Added
 
@@ -54,7 +56,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Error class `error::AlreadyBound` and `error::EmptyLoader` since they are for pre-v0.12.0 errors.
 - Struct `event::Empty` since it never used.
 
-## [0.12.0]
+## [0.12.0] - 2025-12-1
 
 ### Added
 
@@ -337,7 +339,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New examples code.
 - New README.md.
 
-[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.1...HEAD
+[unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.2...HEAD
+[0.12.2]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.11.0...v0.12.0
 [0.11.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.10.0...v0.11.0

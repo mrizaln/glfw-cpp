@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.12)
 
 project(
   glfw-cpp
-  VERSION 0.12.0
+  VERSION 0.12.2
   LANGUAGES CXX
   DESCRIPTION "C++ GLFW wrapper with multi-window and multithreading in mind"
 )

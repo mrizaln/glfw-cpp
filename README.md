@@ -39,7 +39,7 @@ include(FetchContent)
 FetchContent_Declare(
   glfw-cpp
   GIT_REPOSITORY https://github.com/mrizaln/glfw-cpp
-  GIT_TAG v0.12.1)
+  GIT_TAG v0.12.2)
 FetchContent_MakeAvailable(glfw-cpp)
 
 # # If you clone/submodule the repository instead do this
