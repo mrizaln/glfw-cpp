@@ -1,3 +1,5 @@
+set(FETCHCONTENT_QUIET FALSE)
+include(FetchContent)
 
 # ut
 # --
