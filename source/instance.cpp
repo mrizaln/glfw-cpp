@@ -13,6 +13,7 @@
 #if __EMSCRIPTEN__
     #include "emscripten_ctx.hpp"
     #include <GLFW/emscripten_glfw3.h>
+    #include <GLFW/emscripten_glfw3_version.h>
 #endif
 
 namespace
@@ -710,16 +711,20 @@ namespace glfw_cpp
 
     void make_current(GLFWwindow* window)
     {
-#if __EMSCRIPTEN__
-        // emscripten-glfw which is the one used for this library emits an error if window is nullptr,
+        // emscripten-glfw emits an error if window is nullptr before 3.4.0.20251217,
         // see: https://github.com/pongasoft/emscripten-glfw/issues/24
 
-        window ? glfwMakeContextCurrent(window) : void();
-        util::check_glfw_error();
-#else
+        // clang-format off: I want to preserve the digit separator as is
+#if __EMSCRIPTEN__ and EMSCRIPTEN_GLFW_VERSION < 3'4'0'20251217
+        // clang-format on
+
+        if (window == nullptr) {
+            return;
+        }
+#endif
+
         glfwMakeContextCurrent(window);
         util::check_glfw_error();
-#endif
     }
 
     GLFWwindow* get_current()
