@@ -32,6 +32,11 @@ auto render_thread(glfw_cpp::Window& window)
         //       pushing on `glfwPollEvents` thread and general imgui usage in this thread.
         imgui_glfw.process_events(events);
 
+        // // or you can use the single event one
+        // for (const auto& event : events) {
+        //     imgui_glfw.process_event(event);
+        // }
+
         events.visit(ev::Overload{
             [&](const ev::KeyPressed& k) {
                 using K = glfw_cpp::KeyCode;

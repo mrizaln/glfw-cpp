@@ -103,6 +103,34 @@ namespace glfw_cpp::imgui
             });
         }
 
+        /**
+         * @brief Process one event from window.
+         *
+         * @param event The event from window.
+         *
+         * Since glfw_cpp already installs all the callback to GLFW internals and accumulate it into a queue
+         * for each window, we need to send the events to imgui manually.
+         */
+        void process_event(const Event& event)
+        {
+            using namespace event;
+
+            // TODO: handle monitor event
+            event.visit(Overload{
+                // clang-format off
+                [&](const WindowFocused& e) { ImGui_ImplGlfw_WindowFocusCallback(m_window, e.focused); },
+                [&](const CursorEntered& e) { ImGui_ImplGlfw_CursorEnterCallback(m_window, e.entered); },
+                [&](const CursorMoved&   e) { ImGui_ImplGlfw_CursorPosCallback  (m_window, e.x, e.y); },
+                [&](const ButtonPressed& e) { ImGui_ImplGlfw_MouseButtonCallback(m_window, underlying(e.button), underlying(e.state), underlying(e.mods)); },
+                [&](const Scrolled&      e) { ImGui_ImplGlfw_ScrollCallback     (m_window, e.dx, e.dy); },
+                [&](const KeyPressed&    e) { ImGui_ImplGlfw_KeyCallback        (m_window, underlying(e.key), e.scancode, underlying(e.state), underlying(e.mods)); },
+                [&](const CharInput&     e) { ImGui_ImplGlfw_CharCallback       (m_window, e.codepoint); },
+                [&](const auto&           ) { /* do nothing */ },
+                // clang-format on
+
+            });
+        }
+
     private:
         GLFWwindow* m_window = nullptr;
 
