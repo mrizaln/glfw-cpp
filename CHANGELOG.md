@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.12.2] - 2025-12-25
+## [0.12.2] - 2026-01-06
 
 ### Added
 
@@ -23,10 +23,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New `hint::Platform::Emscripten` platform enumerator.
 - New `hint::Emscripten` window creation hint.
 - New `api::WebGL` client API window creation hint (only for Emscripten).
+- New `imgui::ImguiHandle::process_events` for single event processing.
 
 ### Fixed
 
 - Window context will always be set to `false` on Emscripten.
+- Missing version check for Emscripten `make_current` workaround
 
 ## [0.12.1] - 2025-12-15
 
