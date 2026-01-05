@@ -429,6 +429,13 @@ namespace glfw_cpp
          */
         Handle handle() const noexcept { return m_handle; }
 
+        /**
+         * @brief Boolean conversion to check whether the underlying handle is null or not.
+         *
+         * @return False on null, true otherwise.
+         */
+        explicit operator bool() noexcept { return m_handle != nullptr; }
+
     private:
         Window(Handle handle, Properties&& properties, Attributes&& attributes);
 
