@@ -1,10 +1,5 @@
 #include "print.hpp"
 
-// To use glfw_cpp::VideoMode, you need the full definition which glfw_cpp didn't provide, so including glfw C
-// header is necessary. I plan on creating a new type on glfw_cpp that prevents inclusion of this header.
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 #include <glfw_cpp/instance.hpp>
 #include <glfw_cpp/monitor.hpp>
 
