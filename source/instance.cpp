@@ -136,230 +136,239 @@ namespace
 // callbacks
 namespace glfw_cpp
 {
-    void Instance::window_pos_callback(GLFWwindow* window, int x, int y)
+    struct Instance::CallbackHandler
     {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().position;
-            glfw_cpp::Instance::get().push_event(
-                window,
-                glfw_cpp::event::WindowMoved{
-                    .x  = x,
-                    .y  = y,
-                    .dx = x - prev.x,
-                    .dy = y - prev.y,
-                }
-            );
+        static void window_pos(GLFWwindow* window, int x, int y)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                auto  prev   = window.properties().position;
+                Instance::get().push_event(
+                    window,
+                    event::WindowMoved{
+                        .x  = x,
+                        .y  = y,
+                        .dx = x - prev.x,
+                        .dy = y - prev.y,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::window_size_callback(GLFWwindow* window, int width, int height)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().dimensions;
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::WindowResized{
-                    .width         = width,
-                    .height        = height,
-                    .width_change  = width - prev.width,
-                    .height_change = height - prev.height,
-                }
-            );
+        static void window_size(GLFWwindow* window, int width, int height)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                auto  prev   = window.properties().dimensions;
+                Instance::get().push_event(
+                    window,
+                    event::WindowResized{
+                        .width         = width,
+                        .height        = height,
+                        .width_change  = width - prev.width,
+                        .height_change = height - prev.height,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::window_close_callback(GLFWwindow* window)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(window, event::WindowClosed{});
+        static void window_close(GLFWwindow* window)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(window, event::WindowClosed{});
+            }
         }
-    }
 
-    void Instance::window_refresh_callback(GLFWwindow* window)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(window, event::WindowRefreshed{});
+        static void window_refresh(GLFWwindow* window)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(window, event::WindowRefreshed{});
+            }
         }
-    }
 
-    void Instance::window_focus_callback(GLFWwindow* window, int focused)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::WindowFocused{
-                    .focused = focused == GLFW_TRUE,
-                }
-            );
+        static void window_focus(GLFWwindow* window, int focused)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::WindowFocused{
+                        .focused = focused == GLFW_TRUE,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::window_iconify_callback(GLFWwindow* window, int iconified)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::WindowIconified{
-                    .iconified = iconified == GLFW_TRUE,
-                }
-            );
+        static void window_iconify(GLFWwindow* window, int iconified)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::WindowIconified{
+                        .iconified = iconified == GLFW_TRUE,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::framebuffer_size_callback(GLFWwindow* window, int width, int height)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().framebuffer_size;
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::FramebufferResized{
-                    .width         = width,
-                    .height        = height,
-                    .width_change  = width - prev.width,
-                    .height_change = height - prev.height,
-                }
-            );
+        static void framebuffer_size(GLFWwindow* window, int width, int height)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                auto  prev   = window.properties().framebuffer_size;
+                Instance::get().push_event(
+                    window,
+                    event::FramebufferResized{
+                        .width         = width,
+                        .height        = height,
+                        .width_change  = width - prev.width,
+                        .height_change = height - prev.height,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::ButtonPressed{
-                    .button = static_cast<MouseButton>(button),
-                    .state  = static_cast<MouseButtonState>(action),
-                    .mods   = ModifierKey{ mods },
-                }
-            );
+        static void mouse_button(GLFWwindow* window, int button, int action, int mods)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::ButtonPressed{
+                        .button = static_cast<MouseButton>(button),
+                        .state  = static_cast<MouseButtonState>(action),
+                        .mods   = ModifierKey{ mods },
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::cursor_pos_callback(GLFWwindow* window, double x, double y)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            auto  prev   = window.properties().cursor_position;
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::CursorMoved{
-                    .x  = x,
-                    .y  = y,
-                    .dx = x - prev.x,
-                    .dy = y - prev.y,
-                }
-            );
+        static void cursor_pos(GLFWwindow* window, double x, double y)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                auto  prev   = window.properties().cursor_position;
+                Instance::get().push_event(
+                    window,
+                    event::CursorMoved{
+                        .x  = x,
+                        .y  = y,
+                        .dx = x - prev.x,
+                        .dy = y - prev.y,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::cursor_enter_callback(GLFWwindow* window, int entered)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::CursorEntered{
-                    .entered = entered == GLFW_TRUE,
-                }
-            );
+        static void cursor_enter(GLFWwindow* window, int entered)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::CursorEntered{
+                        .entered = entered == GLFW_TRUE,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::scroll_callback(GLFWwindow* window, double x, double y)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::Scrolled{
-                    .dx = x,
-                    .dy = y,
-                }
-            );
+        static void scroll(GLFWwindow* window, double x, double y)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::Scrolled{
+                        .dx = x,
+                        .dy = y,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::KeyPressed{
-                    .key      = static_cast<KeyCode>(key),
-                    .scancode = scancode,
-                    .state    = static_cast<KeyState>(action),
-                    .mods     = ModifierKey{ mods },
-                }
-            );
+        static void key(GLFWwindow* window, int key, int scancode, int action, int mods)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::KeyPressed{
+                        .key      = static_cast<KeyCode>(key),
+                        .scancode = scancode,
+                        .state    = static_cast<KeyState>(action),
+                        .mods     = ModifierKey{ mods },
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::char_callback(GLFWwindow* window, unsigned int codepoint)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::CharInput{
-                    .codepoint = codepoint,
-                }
-            );
+        static void char_input(GLFWwindow* window, unsigned int codepoint)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::CharInput{
+                        .codepoint = codepoint,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::file_drop_callback(GLFWwindow* window, int count, const char** paths)
-    {
-        auto paths_vec = std::vector<std::filesystem::path>(static_cast<std::size_t>(count));
-        for (std::size_t i = 0; i < paths_vec.size(); ++i) {
-            paths_vec[i] = std::filesystem::path{ paths[i] };
+        static void file_drop(GLFWwindow* window, int count, const char** paths)
+        {
+            auto paths_vec = std::vector<std::filesystem::path>(static_cast<std::size_t>(count));
+            for (std::size_t i = 0; i < paths_vec.size(); ++i) {
+                paths_vec[i] = std::filesystem::path{ paths[i] };
+            }
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::FileDropped{
+                        .files = std::move(paths_vec),
+                    }
+                );
+            }
         }
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::FileDropped{
-                    .files = std::move(paths_vec),
-                }
-            );
-        }
-    }
 
-    void Instance::window_maximize_callback(GLFWwindow* window, int maximized)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::WindowMaximized{
-                    .maximized = maximized == GLFW_TRUE,
-                }
-            );
+        static void window_maximize(GLFWwindow* window, int maximized)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::WindowMaximized{
+                        .maximized = maximized == GLFW_TRUE,
+                    }
+                );
+            }
         }
-    }
 
-    void Instance::window_content_scale_callback(GLFWwindow* window, float xscale, float yscale)
-    {
-        if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
-            auto& window = *static_cast<glfw_cpp::Window*>(ptr);
-            glfw_cpp::Instance::get().push_event(
-                window,
-                event::WindowScaleChanged{
-                    .x = xscale,
-                    .y = yscale,
-                }
-            );
+        static void window_content_scale(GLFWwindow* window, float xscale, float yscale)
+        {
+            if (auto* ptr = glfwGetWindowUserPointer(window); ptr != nullptr) {
+                auto& window = *static_cast<Window*>(ptr);
+                Instance::get().push_event(
+                    window,
+                    event::WindowScaleChanged{
+                        .x = xscale,
+                        .y = yscale,
+                    }
+                );
+            }
         }
-    }
+
+        // TODO: Implement these two callbacks
+        /*
+            static void monitor(GLFWmonitor* monitor, int action);
+            static void joystick(int jid, int action);
+        */
+    };
 }
 
 namespace glfw_cpp
@@ -509,22 +518,22 @@ namespace glfw_cpp
         }
         m_windows.emplace_back(handle);
 
-        glfwSetWindowPosCallback(handle, window_pos_callback);
-        glfwSetWindowSizeCallback(handle, window_size_callback);
-        glfwSetWindowCloseCallback(handle, window_close_callback);
-        glfwSetWindowRefreshCallback(handle, window_refresh_callback);
-        glfwSetWindowFocusCallback(handle, window_focus_callback);
-        glfwSetWindowIconifyCallback(handle, window_iconify_callback);
-        glfwSetFramebufferSizeCallback(handle, framebuffer_size_callback);
-        glfwSetMouseButtonCallback(handle, mouse_button_callback);
-        glfwSetCursorPosCallback(handle, cursor_pos_callback);
-        glfwSetCursorEnterCallback(handle, cursor_enter_callback);
-        glfwSetScrollCallback(handle, scroll_callback);
-        glfwSetKeyCallback(handle, key_callback);
-        glfwSetCharCallback(handle, char_callback);
-        glfwSetDropCallback(handle, file_drop_callback);
-        glfwSetWindowMaximizeCallback(handle, window_maximize_callback);
-        glfwSetWindowContentScaleCallback(handle, window_content_scale_callback);
+        glfwSetWindowPosCallback(handle, CallbackHandler::window_pos);
+        glfwSetWindowSizeCallback(handle, CallbackHandler::window_size);
+        glfwSetWindowCloseCallback(handle, CallbackHandler::window_close);
+        glfwSetWindowRefreshCallback(handle, CallbackHandler::window_refresh);
+        glfwSetWindowFocusCallback(handle, CallbackHandler::window_focus);
+        glfwSetWindowIconifyCallback(handle, CallbackHandler::window_iconify);
+        glfwSetFramebufferSizeCallback(handle, CallbackHandler::framebuffer_size);
+        glfwSetMouseButtonCallback(handle, CallbackHandler::mouse_button);
+        glfwSetCursorPosCallback(handle, CallbackHandler::cursor_pos);
+        glfwSetCursorEnterCallback(handle, CallbackHandler::cursor_enter);
+        glfwSetScrollCallback(handle, CallbackHandler::scroll);
+        glfwSetKeyCallback(handle, CallbackHandler::key);
+        glfwSetCharCallback(handle, CallbackHandler::char_input);
+        glfwSetDropCallback(handle, CallbackHandler::file_drop);
+        glfwSetWindowMaximizeCallback(handle, CallbackHandler::window_maximize);
+        glfwSetWindowContentScaleCallback(handle, CallbackHandler::window_content_scale);
 
         int    real_width, real_height, fb_width, fb_height;
         double x_cursor, y_cursor;

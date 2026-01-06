@@ -480,11 +480,10 @@ namespace glfw_cpp
     template <bool Opt = true>
     struct Hints
     {
-        hint::Api<Opt> api =
 #if __EMSCRIPTEN__
-            api::WebGL<Opt>{};
+        hint::Api<Opt> api = api::WebGL<Opt>{};
 #else
-            api::OpenGL<Opt>{};
+        hint::Api<Opt> api = api::OpenGL<Opt>{};
 #endif
         hint::Window<Opt>      window      = {};
         hint::Framebuffer<Opt> framebuffer = {};
@@ -672,6 +671,9 @@ namespace glfw_cpp
         std::thread::id attached_thread_id() const noexcept { return m_attached_thread_id; }
 
     private:
+        struct CallbackHandler;
+        friend CallbackHandler;
+
         inline static Instance* s_instance = nullptr;
 
         /**
@@ -683,29 +685,6 @@ namespace glfw_cpp
          * @brief Safe (in debug) wrapper to get the instance from the global pointer
          */
         static Instance& get();
-
-        static void window_pos_callback(GLFWwindow* window, int x, int y);
-        static void window_size_callback(GLFWwindow* window, int width, int height);
-        static void window_close_callback(GLFWwindow* window);
-        static void window_refresh_callback(GLFWwindow* window);
-        static void window_focus_callback(GLFWwindow* window, int focused);
-        static void window_iconify_callback(GLFWwindow* window, int iconified);
-        static void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-        static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods);
-        static void cursor_pos_callback(GLFWwindow* window, double x, double y);
-        static void cursor_enter_callback(GLFWwindow* window, int entered);
-        static void scroll_callback(GLFWwindow* window, double x, double y);
-        static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods);
-        static void char_callback(GLFWwindow* window, unsigned int codepoint);
-        static void file_drop_callback(GLFWwindow* window, int count, const char** paths);
-        static void window_maximize_callback(GLFWwindow* window, int maximized);
-        static void window_content_scale_callback(GLFWwindow* window, float xscale, float yscale);
-
-        // TODO: Implement these two callbacks
-        /*
-            static void monitor_callback(GLFWmonitor* monitor, int action);
-            static void joystick_callback(int jid, int action);
-        */
 
         /**
          * @brief Check whether caller thread is the same as attached thread.
