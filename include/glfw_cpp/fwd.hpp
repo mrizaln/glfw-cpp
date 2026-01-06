@@ -1,3 +1,6 @@
+#ifndef GLFW_CPP_FWD_HPP
+#define GLFW_CPP_FWD_HPP
+
 struct GLFWwindow;
 struct GLFWmonitor;
 
@@ -139,3 +142,5 @@ namespace glfw_cpp
     class Instance;
     // ------------
 }
+
+#endif    // GLFW_CPP_FWD_HPP

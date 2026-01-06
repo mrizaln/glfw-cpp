@@ -371,7 +371,7 @@ namespace glfw_cpp
             });
         }
 
-        // TODO: Implement these two callbacks
+        // TODO: Implement this callback if joystick wrapper is implemented as well
         /*
             static void joystick(int jid, int action);
         */

@@ -92,7 +92,6 @@ namespace glfw_cpp::helper::variant
         }
 
         template <ConstVisitorComplete<Var> T>
-        // template <typename T>
         decltype(auto) visit(T&& visitor) const&
         {
             return std::visit(std::forward<T>(visitor), std::as_const(variant));

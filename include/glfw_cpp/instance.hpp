@@ -713,8 +713,6 @@ namespace glfw_cpp
          */
         void push_event(event::MonitorConnected event) noexcept;
 
-        // Run queued tasks.
-        // May throw `PlatformError`.
         /**
          * @brief Run queued tasks.
          *
