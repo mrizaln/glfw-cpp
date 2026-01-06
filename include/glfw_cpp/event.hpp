@@ -276,18 +276,6 @@ namespace glfw_cpp
     }
 
     /**
-     * @class Event
-     * @brief Window events wrapper (a variant).
-     *
-     * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
-     * each Window.
-     */
-    struct Event : helper::variant::VariantWrapper<event::Variant>
-    {
-        using VariantWrapper::VariantWrapper;
-    };
-
-    /**
      * @brief Get the name of the event.
      *
      * @param event The event.
@@ -330,6 +318,28 @@ namespace glfw_cpp
     {
         return event_name<E>();
     }
+
+    /**
+     * @class Event
+     * @brief Window events wrapper (a variant).
+     *
+     * Unlike GLFW that uses callback for its event handling, glfw_cpp uses an event queue to store events in
+     * each Window.
+     */
+    struct Event : helper::variant::VariantWrapper<event::Variant>
+    {
+        using VariantWrapper::VariantWrapper;
+
+        /**
+         * @brief Get the name of the stored event.
+         *
+         * The returned string is null-terminated.
+         */
+        std::string_view name() const
+        {
+            return visit([]<typename E>(const E&) { return event_name<E>(); });
+        }
+    };
 
     /**
      * @class DefaultEventInterceptor
