@@ -392,8 +392,8 @@ namespace glfw_cpp
         // this might fail, how should I report the failure?
         glfwTerminate();
 
-        // unregister the gloal instance pointer
         Instance::s_instance = nullptr;
+        glfwSetErrorCallback(nullptr);
     }
 
     Instance& Instance::get()
@@ -726,6 +726,9 @@ namespace glfw_cpp
 
         if (glfwInit() != GLFW_TRUE) {
             instance.reset();
+            Instance::s_instance = nullptr;
+            glfwSetErrorCallback(nullptr);
+
             util::throw_glfw_error();
         }
 
