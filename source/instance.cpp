@@ -363,9 +363,16 @@ namespace glfw_cpp
             }
         }
 
+        static void monitor(GLFWmonitor* monitor, int action)
+        {
+            Instance::get().push_event(event::MonitorConnected{
+                .monitor   = monitor,
+                .connected = action == GLFW_CONNECTED,
+            });
+        }
+
         // TODO: Implement these two callbacks
         /*
-            static void monitor(GLFWmonitor* monitor, int action);
             static void joystick(int jid, int action);
         */
     };
@@ -426,6 +433,13 @@ namespace glfw_cpp
 
         if (forward) {
             window.push_event(std::move(event));
+        }
+    }
+
+    void Instance::push_event(event::MonitorConnected event) noexcept
+    {
+        if (m_event_interceptor) {
+            m_event_interceptor->on_monitor_connected(event);
         }
     }
 
@@ -714,6 +728,9 @@ namespace glfw_cpp
             instance.reset();
             util::throw_glfw_error();
         }
+
+        glfwSetMonitorCallback(Instance::CallbackHandler::monitor);
+        util::check_glfw_error();
 
         return instance;
     }

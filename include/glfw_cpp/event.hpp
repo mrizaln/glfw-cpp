@@ -213,7 +213,7 @@ namespace glfw_cpp
          * @brief Monitor connect event, corresponds to event handled by callback sets by
          * `glfwSetMonitorCallback`
          *
-         * TODO: implement logic surrounding this event
+         * This event is not part of Window event. The event can only be listened by `EventInterceptor`.
          */
         struct MonitorConnected
         {
@@ -336,12 +336,18 @@ namespace glfw_cpp
      * @brief An interface that can be used to intercept Window events.
      *
      * The class is used to intercept events before they are inserted into each `Window`'s `EventQueue`, and
-     * before any `Window::Properties` is updated. The return value of each function determines whether the
-     * event should be forwarded to the `Window` or not.
+     * before any `Window::Properties` is updated. You are free to change the state of the event being
+     * intercepted; they are passed as non-const reference (with exception to `MonitorConnected` event which
+     * is passed by value). The return value of each function determines whether the event should be forwarded
+     * to the `Window` or not.
      *
      * This class can be used as a base class for custom event interceptors. You can override only the
      * functions you need to intercept. The return value of each function determines whether the event should
-     * be forwarded to the `Window` or not.
+     * be forwarded to the `Window` or not. The default intercept behavior is to forward the event as is.
+     *
+     * Unlike other events, `MonitorConnected` event is not tied to any window. There is no reason to pass the
+     * event to each window (and with current design, there is no way to inform each window anyway), so the
+     * return type is void while the event itself is passed by value. The default behavior is do nothing.
      */
     class EventInterceptor
     {
@@ -367,6 +373,8 @@ namespace glfw_cpp
         virtual bool on_char_input          (Window&, event::CharInput&)          noexcept { return true; }
         virtual bool on_file_dropped        (Window&, event::FileDropped&)        noexcept { return true; }
         // clang-format on
+
+        virtual void on_monitor_connected(event::MonitorConnected) noexcept {};
     };
 
     /**

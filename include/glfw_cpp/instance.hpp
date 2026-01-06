@@ -15,6 +15,11 @@
 struct GLFWwindow;
 struct GLFWmonitor;
 
+namespace glfw_cpp::event
+{
+    struct MonitorConnected;
+}
+
 namespace glfw_cpp
 {
     class Window;
@@ -700,6 +705,13 @@ namespace glfw_cpp
          * @param event The event to be pushed.
          */
         void push_event(Window& window, Event event) noexcept;
+
+        /**
+         * @brief Push Monitor event.
+         *
+         * @param event The monitor event.
+         */
+        void push_event(event::MonitorConnected event) noexcept;
 
         // Run queued tasks.
         // May throw `PlatformError`.
