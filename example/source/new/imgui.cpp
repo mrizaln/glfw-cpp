@@ -15,8 +15,10 @@ auto render_thread(glfw_cpp::Window& window)
     ImGui::CreateContext();
     ImGui::StyleColorsDark();
 
-    // replacing `ImGui_ImplGlfw_InitForOpenGL()`
-    auto imgui_glfw = glfw_cpp::imgui::init_for_opengl(window.handle());
+    // NOTE: imgui should not install callback because there is no synchronization between the event
+    //       pushing on `glfwPollEvents` thread and general imgui usage in this thread. This function
+    //       basically a wrapper of `ImGui_ImplGlfw_InitForOpenGL()` with the second parameter set to false.
+    glfw_cpp::imgui::init_for_opengl(window.handle());
     ImGui_ImplOpenGL3_Init();
 
     glClearColor(0.1f, 0.1f, 0.11f, 1.0f);
@@ -28,13 +30,11 @@ auto render_thread(glfw_cpp::Window& window)
         const auto& events = window.swap_events();
 
         // process events manually.
-        // NOTE: imgui should not install callback because there is no synchronization between the event
-        //       pushing on `glfwPollEvents` thread and general imgui usage in this thread.
-        imgui_glfw.process_events(events);
+        glfw_cpp::imgui::process_events(window.handle(), events);
 
         // // or you can use the single event one
         // for (const auto& event : events) {
-        //     imgui_glfw.process_event(event);
+        //     glfw_cpp::imgui::process_event(window.handle(), event);
         // }
 
         events.visit(ev::Overload{
@@ -51,7 +51,7 @@ auto render_thread(glfw_cpp::Window& window)
         glClear(GL_COLOR_BUFFER_BIT);
 
         ImGui_ImplOpenGL3_NewFrame();
-        imgui_glfw.new_frame();    // replacing `ImGui_ImplGlfw_NewFrame()`
+        glfw_cpp::imgui::new_frame();    // basically `ImGui_ImplGlfw_NewFrame()`
         ImGui::NewFrame();
 
         ImGui::ShowDemoWindow();
@@ -63,7 +63,7 @@ auto render_thread(glfw_cpp::Window& window)
     }
 
     ImGui_ImplOpenGL3_Shutdown();
-    imgui_glfw.shutdown();    // replacing `ImGui_ImplGlfw_Shutdown()`
+    glfw_cpp::imgui::shutdown();    // same as `ImGui_ImplGlfw_Shutdown()`
 }
 
 int main()
