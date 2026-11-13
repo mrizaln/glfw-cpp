@@ -3,6 +3,10 @@ include(FetchContent)
 
 # glbinding
 # ---------
+option(OPTION_BUILD_AUX "" OFF)
+option(OPTION_BUILD_TOOLS "" OFF)
+option(OPTION_BUILD_EXAMPLES "" OFF)
+
 FetchContent_Declare(
   glbinding
   URL_HASH SHA256=bb39a97d5d94f70fe6e9c2152e0d8d760758bb031b352e1707fa90f00a43fc69
@@ -12,6 +16,8 @@ FetchContent_MakeAvailable(glbinding)
 
 # glm
 # ---
+option(GLM_BUILD_LIBRARY "" OFF)
+
 FetchContent_Declare(
   glm
   ULR_HASH SHA256=sha256:a41adf423315e35489c1e67689c7bb74c7edd4d207a477b7b19c45cd440c2f67
