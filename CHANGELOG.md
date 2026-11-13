@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.12.3] - 2026-11-13
+
+### Added
+
+- New `glfw_cpp/fwd.hpp` header that forward declare all `glfw_cpp` types
+- Boolean conversion operator for `Window`
+- Event handling for `MonitorConnected` which can be listened on `EventInterceptor`
+- New ability to get event name variant via `Event::name()`.
+
+### Fixed
+
+- GLFW cleanup not setting error callback back to `nullptr`
+- Missing include guards and headers
+
+### Changed
+
+- Remove noexcept guarantee for `Monitor` member functions
+
 ## [0.12.2] - 2026-01-06
 
 ### Added
@@ -350,6 +368,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New README.md.
 
 [unreleased]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.2...HEAD
+[0.12.3]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.2...v0.12.3
 [0.12.2]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.1...v0.12.2
 [0.12.1]: https://github.com/mrizaln/glfw-cpp/compare/v0.12.0...v0.12.1
 [0.12.0]: https://github.com/mrizaln/glfw-cpp/compare/v0.11.0...v0.12.0
