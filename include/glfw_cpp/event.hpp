@@ -5,12 +5,18 @@
 #include "glfw_cpp/input.hpp"
 #include "glfw_cpp/monitor.hpp"
 
+#include <concepts>
 #include <cstddef>
 #include <filesystem>
+#include <iterator>
+#include <limits>
 #include <memory>
 #include <optional>
+#include <span>
+#include <string_view>
 #include <type_traits>
 #include <variant>
+#include <vector>
 
 namespace glfw_cpp
 {

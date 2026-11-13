@@ -2,6 +2,7 @@
 #define GLFW_CPP_HELPER_HPP
 
 #include <concepts>
+#include <cstddef>
 #include <optional>
 #include <type_traits>
 #include <utility>

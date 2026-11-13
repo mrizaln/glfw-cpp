@@ -1,6 +1,7 @@
 #ifndef GLFW_CPP_MONITOR_HPP
 #define GLFW_CPP_MONITOR_HPP
 
+#include <cstddef>
 #include <span>
 #include <string_view>
 #include <vector>

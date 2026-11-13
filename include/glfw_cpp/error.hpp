@@ -3,6 +3,8 @@
 
 #include <format>
 #include <stdexcept>
+#include <string_view>
+#include <cstddef>
 
 namespace glfw_cpp
 {

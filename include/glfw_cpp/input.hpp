@@ -3,6 +3,7 @@
 
 #include <algorithm>
 #include <array>
+#include <concepts>
 #include <cstdint>
 #include <initializer_list>
 #include <span>

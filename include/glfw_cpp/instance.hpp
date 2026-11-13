@@ -8,9 +8,13 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <string_view>
 #include <thread>
 #include <utility>
 #include <variant>
+#include <vector>
 
 struct GLFWwindow;
 struct GLFWmonitor;

@@ -6,10 +6,13 @@
 #include "glfw_cpp/instance.hpp"
 #include "glfw_cpp/monitor.hpp"
 
+#include <concepts>
+#include <cstddef>
 #include <functional>
 #include <mutex>
 #include <optional>
 #include <string>
+#include <string_view>
 
 struct GLFWwindow;
 
