@@ -5,6 +5,7 @@ OUTPUT_DIRECTORY       = docs/doxygen
 ALLOW_UNICODE_NAMES    = YES
 OUTPUT_LANGUAGE        = English
 TAB_SIZE               = 4
+ALIASES                = "thread_safety=@par Thread safety^^"
 MARKDOWN_SUPPORT       = YES
 GENERATE_HTML          = YES
 GENERATE_LATEX         = NO
