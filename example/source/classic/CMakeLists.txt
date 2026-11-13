@@ -1,9 +1,10 @@
 function(create_an_executable NAME)
   add_executable(${NAME} ${NAME}.cpp)
-  target_compile_options(${NAME} PRIVATE -Wall -Wextra -Wconversion)
+  # no -Wconversion since the original C is full of implicit conversion :(
+  target_compile_options(${NAME} PRIVATE -Wall -Wextra)
   target_link_libraries(
     ${NAME}
-    PRIVATE glbinding linmath glfw-cpp stb tinycthread getopt
+    PRIVATE glbinding linmath glfw-cpp stb getopt
   )
   set_target_properties(
     ${NAME}

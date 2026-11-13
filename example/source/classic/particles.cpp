@@ -42,14 +42,11 @@
 
 #include <linmath.h>
 
-#include <tinycthread.h>
-
 #include <chrono>
 #include <cmath>
+#include <condition_variable>
 #include <cstdio>
 #include <cstdlib>
-#include <cstring>
-#include <ctime>
 
 using namespace gl;    // from <glbinding/gl/gl.h>
 
@@ -89,13 +86,13 @@ int wireframe;
 // Thread synchronization
 struct
 {
-    double t;                 // Time (s)
-    float  dt;                // Time since last frame (s)
-    int    p_frame;           // Particle physics frame number
-    int    d_frame;           // Particle draw frame number
-    cnd_t  p_done;            // Condition: particle physics done
-    cnd_t  d_done;            // Condition: particle draw done
-    mtx_t  particles_lock;    // Particles data sharing mutex
+    double                  t;                 // Time (s)
+    float                   dt;                // Time since last frame (s)
+    int                     p_frame;           // Particle physics frame number
+    int                     d_frame;           // Particle draw frame number
+    std::condition_variable p_done;            // Condition: particle physics done
+    std::condition_variable d_done;            // Condition: particle draw done
+    std::mutex              particles_lock;    // Particles data sharing mutex
 } thread_sync;
 
 //========================================================================
@@ -441,18 +438,9 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
     glInterleavedArrays(GL_T2F_C4UB_V3F, 0, vertex_array);
 
     // Wait for particle physics thread to be done
-    mtx_lock(&thread_sync.particles_lock);
+    auto lock = std::unique_lock{ thread_sync.particles_lock };
     while (!window.should_close() && thread_sync.p_frame <= thread_sync.d_frame) {
-        auto time = std::chrono::system_clock::now().time_since_epoch().count();
-        auto ts   = timespec{
-              .tv_sec  = 0,
-              .tv_nsec = time,
-        };
-
-        ts.tv_nsec += 100 * 1000 * 1000;
-        ts.tv_sec  += ts.tv_nsec / (1000 * 1000 * 1000);
-        ts.tv_nsec %= 1000 * 1000 * 1000;
-        cnd_timedwait(&thread_sync.p_done, &thread_sync.particles_lock, &ts);
+        thread_sync.p_done.wait_for(lock, std::chrono::milliseconds{ 100 });
     }
 
     // Store the frame time and delta time for the physics thread
@@ -543,8 +531,8 @@ static void draw_particles(glfw_cpp::Window& window, double t, float dt)
     }
 
     // We are done with the particle data
-    mtx_unlock(&thread_sync.particles_lock);
-    cnd_signal(&thread_sync.d_done);
+    lock.unlock();
+    thread_sync.d_done.notify_one();
 
     // Draw final batch of particles (if any)
     glDrawArrays(GL_QUADS, 0, PARTICLE_VERTS * particle_count);
@@ -850,20 +838,11 @@ static int physics_thread_main(void* arg)
     auto* window = (glfw_cpp::Window*)arg;
 
     for (;;) {
-        mtx_lock(&thread_sync.particles_lock);
+        auto lock = std::unique_lock{ thread_sync.particles_lock };
 
         // Wait for particle drawing to be done
         while (!window->should_close() && thread_sync.p_frame > thread_sync.d_frame) {
-            auto     time = std::chrono::system_clock::now().time_since_epoch().count();
-            timespec ts   = {
-                  .tv_sec  = 0,
-                  .tv_nsec = time,
-            };
-
-            ts.tv_nsec += 100 * 1000 * 1000;
-            ts.tv_sec  += ts.tv_nsec / (1000 * 1000 * 1000);
-            ts.tv_nsec %= 1000 * 1000 * 1000;
-            cnd_timedwait(&thread_sync.d_done, &thread_sync.particles_lock, &ts);
+            thread_sync.d_done.wait_for(lock, std::chrono::milliseconds{ 100 });
         }
 
         if (window->should_close()) {
@@ -877,8 +856,8 @@ static int physics_thread_main(void* arg)
         thread_sync.p_frame++;
 
         // Unlock mutex and signal drawing thread
-        mtx_unlock(&thread_sync.particles_lock);
-        cnd_signal(&thread_sync.p_done);
+        lock.unlock();
+        thread_sync.p_done.notify_one();
     }
 
     return 0;
@@ -890,8 +869,7 @@ static int physics_thread_main(void* arg)
 
 int main(int argc, char** argv)
 {
-    int    ch, width, height;
-    thrd_t physics_thread = 0;
+    int ch, width, height;
 
     auto glfw = glfw_cpp::init({});
 
@@ -999,14 +977,7 @@ int main(int argc, char** argv)
     thread_sync.p_frame = 0;
     thread_sync.d_frame = 0;
 
-    mtx_init(&thread_sync.particles_lock, mtx_timed);
-    cnd_init(&thread_sync.p_done);
-    cnd_init(&thread_sync.d_done);
-
-    if (thrd_create(&physics_thread, physics_thread_main, &window) != thrd_success) {
-        glfw.reset();
-        exit(EXIT_FAILURE);
-    }
+    auto physics_thread = std::jthread{ physics_thread_main, &window };
 
     glfw_cpp::set_time(0.0);
 
@@ -1043,7 +1014,6 @@ int main(int argc, char** argv)
         window.swap_buffers();
     }
 
-    thrd_join(physics_thread, NULL);
-
+    physics_thread.join();
     exit(EXIT_SUCCESS);
 }

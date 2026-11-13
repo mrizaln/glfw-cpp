@@ -75,15 +75,6 @@ FetchContent_MakeAvailable(stb)
 add_library(stb INTERFACE)
 target_include_directories(stb INTERFACE ${stb_SOURCE_DIR}/)
 
-# tinycthread
-# -----------
-FetchContent_Declare(
-  tinycthread
-  GIT_REPOSITORY https://github.com/tinycthread/tinycthread
-  GIT_PROGRESS ON
-  GIT_SHALLOW ON)
-FetchContent_MakeAvailable(tinycthread)
-
 # getopt
 # -----------
 FetchContent_Declare(
