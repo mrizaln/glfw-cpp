@@ -5,7 +5,7 @@ include(FetchContent)
 # ---------
 FetchContent_Declare(
   glbinding
-  ULR_HASH SHA256=b959b8961930258244a8e0061d33d8bcd24f974fd54e9e72689a871788c82ab6
+  URL_HASH SHA256=bb39a97d5d94f70fe6e9c2152e0d8d760758bb031b352e1707fa90f00a43fc69
   URL https://github.com/cginternals/glbinding/archive/refs/tags/v3.5.0.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP ON)
 FetchContent_MakeAvailable(glbinding)
