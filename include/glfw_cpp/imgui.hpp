@@ -20,7 +20,6 @@ namespace glfw_cpp::imgui
      * @brief Initialize imgui for opengl without installing a callback.
      *
      * @param window The window imgui will belong to.
-     * @return An imgui handle for glfw (proper RAII).
      */
     inline void init_for_opengl(GLFWwindow* window) noexcept
     {
@@ -31,7 +30,6 @@ namespace glfw_cpp::imgui
      * @brief Initialize imgui for vulkan without installing a callback.
      *
      * @param window The window imgui will belong to.
-     * @return An imgui handle for glfw (proper RAII).
      */
     inline void init_for_vulkan(GLFWwindow* window) noexcept
     {
@@ -42,7 +40,6 @@ namespace glfw_cpp::imgui
      * @brief Initialize imgui for other without installing a callback.
      *
      * @param window The window imgui will belong to.
-     * @return An imgui handle for glfw (proper RAII).
      */
     inline void init_for_other(GLFWwindow* window) noexcept
     {
